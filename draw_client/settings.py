@@ -35,9 +35,9 @@ load_dotenv(
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-u69m@5_kjct)7fr9n@w%5wpby_)")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True #os.environ.get("DEBUG", "") != "True"
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
-# ALLOWED_HOSTS = ["*"]
+DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
+
 APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
 
 
