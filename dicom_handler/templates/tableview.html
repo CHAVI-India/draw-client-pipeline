@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template Page</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <!-- Header or navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">My Website</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Contact</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <div class="container mt-5">
+        <!-- Existing code block with template logic -->
+        {% if template_name %}
+            <h2>Template: {{ template_name }}</h2>
+            <p>Description: {{ description }}</p>
+            
+            <h3>Selected Models:</h3>
+            <table id="mapinfo-table" class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Model Id</th>
+                        <th>Model Name</th>
+                        <th>Map ID</th>
+                        <th>Structure Name</th>
+                        <th>Config</th>
+                        <th>Trainer Name</th>
+                        <th>View Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for model in selected_models %}
+                    <tr>
+                        <td>{{ model.model_id }}</td>
+                        <td>{{ model.model_name }}</td>
+                        <td>{{ model.mapid }}</td>
+                        <td>{{ model.map_tg263_primary_name }}</td>
+                        <td>{{ model.model_config }}</td>
+                        <td>{{ model.model_config }}</td>
+                        <td><a href="#" class="btn btn-info">View Details</a></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center py-4">
+        <p>&copy; 2025 My Website. All rights reserved.</p>
+    </footer>
+
+    <!-- JavaScript (Bootstrap and jQuery) -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

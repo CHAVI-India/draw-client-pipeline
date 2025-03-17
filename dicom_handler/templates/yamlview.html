@@ -1,0 +1,33 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block content %}
+
+<!-- Main content -->
+<div class="container mt-5">
+    <!-- Template Name and Description -->
+    {% if template_name %}
+    <h2>Template: {{ template_name }}</h2>
+    <p>Description: {{ description }}</p>
+    {% endif %}
+
+    <!-- <h3>Configuration in YAML format:</h3> -->
+    <pre>
+name: {{ template_name }}
+protocol: {{ template_name }}
+models:
+{% for model in grouped_models %}
+{{ model.model_id }}:
+name: {{ model.name }}
+config: {{ model.config }}
+map:
+{% for map_id, map_name in model.map.items %}
+    {{ map_id }}: {{ map_name }}
+{% endfor %}
+trainer_name: {{ model.trainer_name }}
+postprocess: {{ model.postprocess }}
+{% endfor %}
+    </pre>
+</div>
+
+{% endblock %}
+

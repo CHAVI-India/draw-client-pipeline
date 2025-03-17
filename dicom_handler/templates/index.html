@@ -1,0 +1,60 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/responsive/2.2.7/css/responsive.dataTables.min.css" rel="stylesheet">
+    <link href="{% static 'css/custom-style.css' %}" rel="stylesheet">
+    <title>DRAW-CLIENT</title>
+</head>
+
+
+<body>
+    <div class="container">
+        <!-- Bootstrap Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <a class="navbar-brand" href="#">DRAW CLIENT</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'create-yml' %}">Create Template</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'admin:index' %}">Admin Dashboard</a></li>
+                    {% else %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'admin:login' %}">Log In</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main mt-2">
+            {% block content %}
+            {% endblock %}
+
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>&copy; 2025 Team DRAW, Tata Medical Center, Kolakta . All Rights Reserved.</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.7/js/dataTables.responsive.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+    <script src="{% static 'js/action.js' %}"></script>
+
+</body>
+
+</html>

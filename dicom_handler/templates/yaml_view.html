@@ -1,0 +1,124 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YAML File Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .file-list {
+            min-width: 200px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .content-viewer {
+            flex-grow: 1;
+            border: 1px solid #ccc;
+            padding: 20px;
+            min-height: 400px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+            cursor: pointer;
+        }
+        .header {
+            margin-bottom: 20px;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+            background-color: #ffe6e6;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>YAML File Viewer</h1>
+    </div>
+    <div class="container">
+        <div class="file-list">
+            <table id="fileTable">
+                <thead>
+                    <tr>
+                        <th>YAML Files</th>
+                    </tr>
+                </thead>
+                <tbody id="fileList"></tbody>
+            </table>
+        </div>
+        <div id="contentViewer" class="content-viewer">
+            Select a file to view its content
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const fileList = document.getElementById('fileList');
+            const contentViewer = document.getElementById('contentViewer');
+
+            // Function to fetch and display YAML content
+            async function displayYamlContent(fileName) {
+                try {
+                    const response = await fetch(`/yaml-content/${fileName}/`);
+                    const data = await response.json();
+                    
+                    if (data.error) {
+                        contentViewer.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                    } else {
+                        contentViewer.textContent = data.content;
+                    }
+                } catch (error) {
+                    contentViewer.innerHTML = `<div class="error">Error loading file: ${error.message}</div>`;
+                }
+            }
+
+            // Fetch and display list of YAML files
+            try {
+                const response = await fetch('/list-yaml-files/');
+                const files = await response.json();
+                
+                if (Array.isArray(files)) {
+                    files.forEach(file => {
+                        const row = document.createElement('tr');
+                        const cell = document.createElement('td');
+                        cell.textContent = file;
+                        row.appendChild(cell);
+                        
+                        row.addEventListener('click', () => displayYamlContent(file));
+                        fileList.appendChild(row);
+                    });
+                } else {
+                    fileList.innerHTML = `<tr><td class="error">Error: Invalid file list format</td></tr>`;
+                }
+            } catch (error) {
+                fileList.innerHTML = `<tr><td class="error">Error loading file list: ${error.message}</td></tr>`;
+            }
+        });
+    </script>
+</body>
+</html>
