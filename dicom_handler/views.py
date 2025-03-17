@@ -31,9 +31,7 @@ def index(request):
 @require_http_methods(["GET", "POST"])
 def create_yml(request):
     api_url = settings.API_URL
-    username = settings.API_USERNAME
-    password = settings.API_PASSWORD
-
+   
     try:
         response = requests.get(
             api_url,
@@ -43,6 +41,8 @@ def create_yml(request):
         
         response.raise_for_status()
         raw_data = response.json()
+        raw_data["model_api_endpoint"] = "os.getenv"
+        # print(raw_data)
 
     except:
         messages.error(request, "API Error: Unable to fetch data from the API.")
@@ -95,7 +95,11 @@ def create_yml(request):
                 'message': str(e)
             }, status=400)
         
-    return render(request, 'create_yml.html', context={'apidata': raw_data})
+    return render(request, 'create_yml.html', context={
+        'apidata': raw_data, 
+        'api_url': os.getenv("MODEL_API_URL")
+        }
+    )
 
 
 from collections import defaultdict

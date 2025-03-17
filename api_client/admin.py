@@ -5,10 +5,11 @@ from django.utils import timezone
 from .models import DicomTransfer, APIKey, SystemSettings, FolderPaths
 from django.contrib import messages
 from django import forms
-
+from unfold.admin import ModelAdmin
+from unfold.decorators import action
 
 @admin.register(APIKey)
-class APIKeyAdmin(admin.ModelAdmin):
+class APIKeyAdmin(ModelAdmin):
     list_display = ['__str__', 'masked_key', 'updated_at']
     readonly_fields = ['updated_at']
     
@@ -84,7 +85,7 @@ class SystemSettingsForm(forms.ModelForm):
         return instance
 
 @admin.register(SystemSettings)
-class SystemSettingsAdmin(admin.ModelAdmin):
+class SystemSettingsAdmin(ModelAdmin):
     form = SystemSettingsForm
     list_display = ['api_base_url', 'max_retries', 'updated_at']
     readonly_fields = ['updated_at']
@@ -117,7 +118,7 @@ class SystemSettingsAdmin(admin.ModelAdmin):
         return False
 
 @admin.register(FolderPaths)
-class FolderPathsAdmin(admin.ModelAdmin):
+class FolderPathsAdmin(ModelAdmin):
     list_display = ['watch_folder', 'temp_folder', 'archive_folder', 'output_folder', 'updated_at']
     readonly_fields = ['updated_at']
     
@@ -130,7 +131,7 @@ class FolderPathsAdmin(admin.ModelAdmin):
         return False
 
 @admin.register(DicomTransfer)
-class DicomTransferAdmin(admin.ModelAdmin):
+class DicomTransferAdmin(ModelAdmin):
     list_display = [
         'id', 'study_instance_uid', 'status','server_status', 'sent_datetime', 
         'rtstruct_received_datetime', 'rtstruct_checksum_verified'

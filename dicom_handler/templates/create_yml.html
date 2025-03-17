@@ -42,7 +42,8 @@
                     <td>{{ info.model_config }}</td>
                     <td>{{ info.model_trainer_name }}</td>
                     <td>{{ info.model_postprocess }}</td>
-                    <td><a href="http://144.126.254.23/models/{{map.id}}" target="_blank">View Details</a>
+
+                    <td><a href="{{api_url}}/{{map.id}}" target="_blank">View Details</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -55,4 +56,3 @@
 </form>
 
 {% endblock content %}
-
