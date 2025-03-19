@@ -14,92 +14,131 @@ from dicom_handler.dicomutils.create_yml import *
 from django.urls import reverse
 from dicom_handler.models import *
 from .dicomutils.dicomseriesprocessing import *
+from django.views.decorators.csrf import csrf_protect
+
 
 # yaml saving path
-# try:
-#     templatefolderpath = DicomPathConfig.objects.values("templatefolderpath").first()["templatefolderpath"]
-# except:
-templatefolderpath = os.path.join(os.getcwd(), "yaml-templates")
-os.makedirs(templatefolderpath, exist_ok=True)
+try:
+    templatefolderpath = DicomPathConfig.objects.values("templatefolderpath").first()["templatefolderpath"]
+except:
+    templatefolderpath = os.path.join(os.getcwd(), "yaml-templates")
+    os.makedirs(templatefolderpath, exist_ok=True)
     
-
 
 def index(request):
     return render(request, 'index.html')
 
-
+@csrf_protect
 @require_http_methods(["GET", "POST"])
 def create_yml(request):
     api_url = settings.API_URL
-   
+    
+    # Get API data
     try:
-        response = requests.get(
-            api_url,
-            # auth=HTTPBasicAuth(username, password),
-            timeout=10
-        )
-        
+        response = requests.get(api_url, timeout=10)
         response.raise_for_status()
         raw_data = response.json()
-        raw_data["model_api_endpoint"] = "os.getenv"
-        # print(raw_data)
-
-    except:
+        apidata = raw_data  # Make sure this is defined
+    except Exception as e:
         messages.error(request, "API Error: Unable to fetch data from the API.")
+        raw_data = []
+        apidata = []
 
     if request.method == 'POST':
-        data = json.loads(request.body)
-    
-        template_name = data.get('templateName')
-        description = data.get('description')
-        selected_models = data.get('selectedModels', [])
-
         try:
-            data = pd.DataFrame(selected_models)
-            data["model_id"] = data['model_id'].astype(int)
+            # Parse JSON data from request
+            data = json.loads(request.body)
+            
+            # Extract data with detailed validation
+            template_name = data.get('template_name')
+            description = data.get('description')
+            selected_models = data.get('selected_models')
 
-            # yaml save path
+            # Validate required fields with specific messages
+            if not template_name:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Template name is required'
+                }, status=400)
+            
+            if not description:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Description is required'
+                }, status=400)
+                
+            if not selected_models:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Please select at least one model'
+                }, status=400)
+
+            # Convert to DataFrame
+            df = pd.DataFrame(selected_models)
+            df["model_id"] = df['model_id'].astype(int)
+
+            # Create YAML file
             yaml_name = f"{template_name}.yml"
-            yaml_path = os.path.join(
-                templatefolderpath, yaml_name 
-            )
-            print(yaml_path)
-            create_yaml_from_pandas_df(data, templatefolderpath, yaml_name)
+            yaml_path = os.path.join(templatefolderpath, yaml_name)
+            
+            try:
+                create_yaml_from_pandas_df(df, templatefolderpath, yaml_name)
+            except Exception as e:
+               
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Error creating YAML file: {str(e)}'
+                }, status=400)
+
             created_file_hash = calculate_hash(yaml_path)
-            print("hash value: ",created_file_hash)
+            
+            
 
-            ModelYamlInfo.objects.create(
-                yaml_name=yaml_name,
-                yaml_path = yaml_path,
-                protocol = yaml_name,
-                file_hash = created_file_hash,
-                yaml_description=description
-            )
+            # Save to database
+            try:
+                ModelYamlInfo.objects.create(
+                    yaml_name=yaml_name,
+                    yaml_path=yaml_path,
+                    protocol=yaml_name,
+                    file_hash=created_file_hash,
+                    yaml_description=description
+                )
+            except Exception as e:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': f'Error saving to database: {str(e)}'
+                }, status=400)
 
-            # Store data in session for the next page
+            # Store in session
             request.session['template_name'] = template_name
             request.session['description'] = description
             request.session['selected_models'] = selected_models
             request.session['api_data'] = raw_data
 
-            # Return JSON response with success status and redirect URL
             return JsonResponse({
                 'status': 'success',
                 'message': 'YAML file created successfully!',
-                'redirect_url': reverse('autosegmentation_template')
+                'redirect_url': reverse('autosegmentation-template')
             })
-            
-        except Exception as e:
+
+        except json.JSONDecodeError:
             return JsonResponse({
                 'status': 'error',
-                'message': str(e)
+                'message': 'Invalid JSON data format'
             }, status=400)
-        
-    return render(request, 'create_yml.html', context={
-        'apidata': raw_data, 
+        except Exception as e:
+            pass
+            return JsonResponse({
+               
+                'status': 'error',
+                'message': f'Unexpected error: {str(e)}'
+            }, status=400)
+
+    # GET request
+    return render(request, 'create_yml.html', {
+        'apidata': apidata,
         'api_url': os.getenv("MODEL_API_URL")
-        }
-    )
+    })
 
 
 from collections import defaultdict
@@ -145,7 +184,7 @@ def autosegmentation_template(request):
         'description': request.session.get('description'),
         'grouped_models': grouped_models,
     })
-
+    
 
 
 def yaml_viewer(request):
