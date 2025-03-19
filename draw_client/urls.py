@@ -22,5 +22,5 @@ urlpatterns = [
     path('logs/', include('django_log_lens.urls')),
     path('admin/', admin.site.urls),
     path("accounts/", include('allauth.urls')),
-    path('api_client/', include('api_client.urls')),
+    # path('api_client/', include('api_client.urls')),
 ]

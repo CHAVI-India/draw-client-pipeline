@@ -1,4 +1,3 @@
-
 # Register your models here.
 import os
 import zipfile
@@ -40,15 +39,17 @@ class GroupAdmin(BaseGroupAdmin, ModelAdmin):
     pass
 
 
-# Unprocessed
-try:
-    import_dir = DicomPathConfig.objects.values("dicomimportfolderpath").first()["dicomimportfolderpath"]
-    processing_dir = DicomPathConfig.objects.values("dicomprocessingfolderpath").first()
-    unprocessed_dir = DicomPathConfig.objects.values("dicomnonprocessedfolderpath").first()
-    deidentified_dir = DicomPathConfig.objects.values("deidentificationfolderpath").first()
-except:
-    print("DicomPathConfig not set")
-    
+# Function to get DicomPathConfig values when needed, not at module import time
+def get_dicom_path_config():
+    try:
+        import_dir = DicomPathConfig.objects.values("dicomimportfolderpath").first()["dicomimportfolderpath"]
+        processing_dir = DicomPathConfig.objects.values("dicomprocessingfolderpath").first()["dicomprocessingfolderpath"]
+        unprocessed_dir = DicomPathConfig.objects.values("dicomnonprocessedfolderpath").first()["dicomnonprocessedfolderpath"]
+        deidentified_dir = DicomPathConfig.objects.values("deidentificationfolderpath").first()["deidentificationfolderpath"]
+        return import_dir, processing_dir, unprocessed_dir, deidentified_dir
+    except:
+        print("DicomPathConfig not set")
+        return None, None, None, None
    
 admin.site.register(DicomPathConfig, SingletonModelAdmin)
 
@@ -75,6 +76,11 @@ admin.site.register(DicomImportConfig, MyModelAdmin)
 
 @admin.action(description="Send to processing")
 def send_to_processing(modeladmin, request, queryset):
+    # Get DicomPathConfig values when the action is executed
+    import_dir, processing_dir, unprocessed_dir, deidentified_dir = get_dicom_path_config()
+    if not all([processing_dir, unprocessed_dir, deidentified_dir]):
+        messages.error(request, "DicomPathConfig not set properly")
+        return
 
     for obj in queryset:
         try:
@@ -252,37 +258,51 @@ admin.site.register(ModelYamlInfo, ModelYamlInfoAdmin)
 # unzip_dir = "/home/sougata/draw-client-dir-test/uploaddicom"
 @action(description='Send selected files to autosegmentation')
 def send_to_autosegmentation(modeladmin, request, queryset):
+    # Get DicomPathConfig values when the action is executed
+    import_dir, processing_dir, unprocessed_dir, deidentified_dir = get_dicom_path_config()
+    if not all([processing_dir, unprocessed_dir, deidentified_dir]):
+        messages.error(request, "DicomPathConfig not set properly")
+        return
+
     for obj in queryset:
         try:
             with zipfile.ZipFile(obj.dicom_file.path, 'r') as zip_ref:
-                zip_ref.extractall(import_dir)
-            
-            obj.send_to_autosegmentation = True
-            obj.save()
-
-            messages.success(
-                request, 
-                f"Successfully {obj.dicom_file.name.split('/')[-1]} uploaded to autosegmentation"
-            )
-
-            dicom_series_separation(
-                sourcedir = os.path.join(
-                    import_dir,
-                    os.path.splitext(os.path.basename(obj.dicom_file.path))[0]
-                ),
-                processeddir=processing_dir
-            )
-            
-            for i in os.listdir(processing_dir):
-                read_dicom_metadata(
-                    dicom_series_path = os.path.join(processing_dir, i),
-                    unprocess_dicom_path=os.path.join(unprocessed_dir, i),
-                    deidentified_dicom_path=os.path.join(deidentified_dir, i)
-                )
-
-        except:
-            print("Error unzipping file")
-        
+                # Create a directory with the same name as the zip file (without extension)
+                zip_name = os.path.splitext(os.path.basename(obj.dicom_file.name))[0]
+                extract_dir = os.path.join(unprocessed_dir, zip_name)
+                
+                # Create the directory if it doesn't exist
+                os.makedirs(extract_dir, exist_ok=True)
+                
+                # Extract all contents to the directory
+                zip_ref.extractall(extract_dir)
+                
+                # Find all YAML files in the extracted directory
+                yaml_files = []
+                for root, dirs, files in os.walk(extract_dir):
+                    for file in files:
+                        if file.endswith('.yml') or file.endswith('.yaml'):
+                            yaml_files.append(os.path.join(root, file))
+                
+                if yaml_files:
+                    # Use the first YAML file found
+                    yaml_file = yaml_files[0]
+                    
+                    # Move the folder to processing with the YAML file
+                    move_folder_with_yaml_check(
+                        unprocess_dir=extract_dir,
+                        copy_yaml=yaml_file
+                    )
+                    
+                    # Update the object's status
+                    obj.send_to_autosegmentation = True
+                    obj.save()
+                    
+                    messages.success(request, f"Successfully sent {obj.dicom_file.name} to autosegmentation")
+                else:
+                    messages.error(request, f"No YAML file found in {obj.dicom_file.name}")
+        except Exception as e:
+            messages.error(request, f"Error sending {obj.dicom_file.name} to autosegmentation: {str(e)}")
 
 class uploadDicomAdmin(ModelAdmin):
     list_display = (

@@ -196,8 +196,8 @@ STATICFILES_STORAGE = "django.contrib.staticfiles.storage.ManifestStaticFilesSto
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # API Settings
 API_URL = os.getenv('API_URL')
-API_USERNAME = os.getenv('API_USERNAME')
-API_PASSWORD = os.getenv('API_PASSWORD')
+# API_USERNAME = os.getenv('API_USERNAME')
+# API_PASSWORD = os.getenv('API_PASSWORD')
 
 
 # redirect urls
@@ -207,7 +207,6 @@ LOGOUT_REDIRECT_URL = '/'
 
 
 
-ACCOUNT_EMAIL_REQUIRED = True
 # ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 # ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = None
 
