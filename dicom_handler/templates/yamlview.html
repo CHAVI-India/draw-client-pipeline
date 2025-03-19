@@ -20,7 +20,7 @@ models:
 name: {{ model.name }}
 config: {{ model.config }}
 map:
-{% for map_id, map_name in model.map.items %}
+{% for map_id, map_name in model.map.items|dictsort:0  %}
     {{ map_id }}: {{ map_name }}
 {% endfor %}
 trainer_name: {{ model.trainer_name }}
