@@ -75,7 +75,7 @@ class DicomSeriesProcessing(models.Model):
 
 class ModelYamlInfo(models.Model):
     id = models.AutoField(primary_key=True)
-    yaml_name = models.CharField(max_length=255)
+    yaml_name = models.CharField(max_length=255, unique=True)
     yaml_path = models.TextField()
     protocol = models.CharField(max_length=255)
     file_hash = models.CharField(max_length=128, null=True)

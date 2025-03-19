@@ -28,6 +28,12 @@ except:
 def index(request):
     return render(request, 'index.html')
 
+
+def check_yaml_name(request):
+    yaml_name = request.GET.get('yaml_name')
+    exists = ModelYamlInfo.objects.filter(yaml_name=yaml_name).exists()
+    return JsonResponse({'exists': exists})
+
 @csrf_protect
 @require_http_methods(["GET", "POST"])
 def create_yml(request):
@@ -77,25 +83,11 @@ def create_yml(request):
             df = pd.DataFrame(selected_models)
             df["model_id"] = df['model_id'].astype(int)
 
-            # Create YAML file
-            yaml_name = f"{template_name}.yml"
-            yaml_path = os.path.join(templatefolderpath, yaml_name)
-            
-            try:
-                create_yaml_from_pandas_df(df, templatefolderpath, yaml_name)
-            except Exception as e:
-               
-                return JsonResponse({
-                    'status': 'error',
-                    'message': f'Error creating YAML file: {str(e)}'
-                }, status=400)
-
-            created_file_hash = calculate_hash(yaml_path)
-            
-            
-
             # Save to database
             try:
+                yaml_name = f"{template_name}.yml"
+                yaml_path = os.path.join(templatefolderpath, yaml_name)
+
                 ModelYamlInfo.objects.create(
                     yaml_name=yaml_name,
                     yaml_path=yaml_path,
@@ -103,6 +95,17 @@ def create_yml(request):
                     file_hash=created_file_hash,
                     yaml_description=description
                 )
+                # Create YAML file
+                try:
+                    create_yaml_from_pandas_df(df, templatefolderpath, yaml_name)
+                    created_file_hash = calculate_hash(yaml_path)
+                
+                except Exception as e:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': f'Error creating YAML file: {str(e)}'
+                    }, status=400)
+
             except Exception as e:
                 return JsonResponse({
                     'status': 'error',

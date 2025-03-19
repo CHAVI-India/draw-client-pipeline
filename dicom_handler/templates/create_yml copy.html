@@ -1,6 +1,11 @@
 {% extends 'index.html' %}
 {% load static %}
 {% block content %}
+
+<div id="name-error" class="alert alert-danger" style="display:none;">
+    This YAML name already exists. Please choose a different name.
+</div>
+
 <!-- Form -->
 <form class="form">
     {% csrf_token %}
@@ -58,19 +63,45 @@
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
 
 <script type="text/javascript">
-    // Wait for document to be ready
     document.addEventListener('DOMContentLoaded', function () {
-        $.fn.dataTable.ext.errMode = 'none';
+        let nameValidationTimeout;
+        const templateNameInput = document.getElementById('templatename');
+        const submitButton = document.querySelector('button[type="submit"]');
+        
+        // Function to validate yaml name
+        function validateYamlName(yamlName) {
+            if (!yamlName) return;
+            
+            $.ajax({
+                url: '{% url "check-yaml-name" %}',
+                data: { 'yaml_name': yamlName },
+                method: 'GET',
+                success: function(response) {
+                    if (response.exists) {
+                        $('#name-error').show();
+                        submitButton.disabled = true;
+                        templateNameInput.classList.add('is-invalid');
+                    } else {
+                        $('#name-error').hide();
+                        submitButton.disabled = false;
+                        templateNameInput.classList.remove('is-invalid');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error checking YAML name:", error);
+                }
+            });
+        }
 
-        // Initialize DataTable
-        let table = $('#mapinfo-table').DataTable({
-            "paging": true,
-            "searching": true,
-            "lengthChange": true,
-            "ordering": true
+        // Add input event listener with debounce
+        templateNameInput.addEventListener('input', function() {
+            clearTimeout(nameValidationTimeout);
+            nameValidationTimeout = setTimeout(() => {
+                validateYamlName(this.value.trim());
+            }, 300);
         });
 
-        // Form submission
+        // Modify your existing form submission
         $('.form').on('submit', function (event) {
             event.preventDefault();
 
@@ -80,11 +111,17 @@
                 return false;
             }
 
+            if ($('#name-error').is(':visible')) {
+                alert('Please choose a unique YAML name');
+                return false;
+            }
+
             if (!$('#description').val()) {
                 alert('Please enter a description');
                 return false;
             }
 
+            // Your existing form submission code...
             var selectedModels = [];
             table.$('input[type="checkbox"]:checked').each(function () {
                 var row = $(this).closest('tr');
@@ -106,44 +143,55 @@
                 selected_models: selectedModels
             };
 
-            console.log("Form Data", formData);
-
-            // Send AJAX request
-            $.ajax({
-                type: 'POST',
-                url: '{% url "create-yml" %}',
-                data: JSON.stringify({
-                    template_name: $('#templatename').val(),
-                    description: $('#description').val(),
-                    selected_models: selectedModels
-                }),
-                contentType: 'application/json charset=utf-8',
-                headers: {
-                    'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
-                },
-                success: function (response) {
-                    if (response.status === 'success' && response.redirect_url) {
-                        window.location.href = response.redirect_url;
+            // Final validation before submission
+            validateYamlName($('#templatename').val().trim());
+            
+            if (!$('#name-error').is(':visible')) {
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url "create-yml" %}',
+                    data: JSON.stringify(formData),
+                    contentType: 'application/json; charset=utf-8',
+                    headers: {
+                        'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+                    },
+                    success: function (response) {
+                        if (response.status === 'success' && response.redirect_url) {
+                            window.location.href = response.redirect_url;
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error:", xhr.responseText);
                     }
-                },
-                error: function (xhr, status, error) {
-                    // Remove alert and just log to console
-                    console.error("Error:", xhr.responseText);
-                }
-            });
+                });
+            }
         });
+
+        // Your existing DataTable initialization...
     });
 </script>
 
 <style>
-    .table-container {
-        margin: 20px 0;
-        width: 100%;
-        overflow-x: auto;
+    .is-invalid {
+        border-color: #dc3545;
+        padding-right: calc(1.5em + .75rem);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(.375em + .1875rem) center;
+        background-size: calc(.75em + .375rem) calc(.75em + .375rem);
     }
 
-    .form-group {
-        margin-bottom: 15px;
+    .alert {
+        padding: .75rem 1.25rem;
+        margin-bottom: 1rem;
+        border: 1px solid transparent;
+        border-radius: .25rem;
+    }
+
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
     }
 </style>
 {% endblock content %}
