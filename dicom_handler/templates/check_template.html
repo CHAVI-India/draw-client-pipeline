@@ -1,0 +1,168 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+    <div class="page-header mb-4">
+        <h2>Create DRAW Template</h2>
+        <p class="text-muted">Step 1: Enter Template Details</p>
+    </div>
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="templateDetailsForm" method="POST">
+                {% csrf_token %}
+                <div id="templateDetails" class="mb-4">
+                    <div class="form-group mb-4">
+                        <label for="templatename" class="form-label">Template Name</label>
+                        <input type="text"
+                            class="form-control form-control-lg"
+                            id="templatename"
+                            name="templatename"
+                            value="{{ template_name }}"
+                            placeholder="Enter template name"
+                            required>
+                        <small class="form-text text-muted">Template name must be unique</small>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control"
+                            id="description"
+                            name="description"
+                            rows="4"
+                            placeholder="Enter template description"
+                            required>{{ description }}</textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="ri-arrow-right-line me-2"></i>Next: Select Models
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-lg ms-2" onclick="resetForm()">
+                        <i class="ri-refresh-line me-2"></i>Reset
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if template_exists %}
+    <!-- Template Exists Modal -->
+    <div class="modal fade show" id="existingFileModal" tabindex="-1" style="display: block;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">
+                        <i class="ri-error-warning-line me-2"></i>Template Already Exists
+                    </h5>
+                    <button type="button" class="btn-close" onclick="closeModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <p>A template with this name already exists. Would you like to:</p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" onclick="generateNewName()">
+                            <i class="ri-magic-line me-2"></i>Generate New Name
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="closeModal()">
+                            <i class="ri-edit-line me-2"></i>Enter Different Name
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+    {% endif %}
+</div>
+
+<style>
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        padding: 0.75rem 1rem;
+    }
+    .form-control:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .form-control-lg {
+        font-size: 1.125rem;
+    }
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    .btn-primary {
+        background-color: #2563eb;
+        border: none;
+    }
+    .btn-primary:hover {
+        background-color: #1d4ed8;
+        transform: translateY(-1px);
+    }
+    .btn-outline-secondary {
+        border: 2px solid #64748b;
+        color: #64748b;
+    }
+    .btn-outline-secondary:hover {
+        background-color: #64748b;
+        color: white;
+    }
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1040;
+    }
+    .modal {
+        z-index: 1050;
+    }
+    .modal-content {
+        border-radius: 15px;
+        border: none;
+    }
+    .modal-header {
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+        padding: 1rem 1.5rem;
+    }
+    .modal-body {
+        padding: 1.5rem;
+    }
+    .btn-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        padding: 0;
+        margin: 0;
+    }
+    .btn-close:hover {
+        opacity: 0.75;
+    }
+</style>
+
+<script>
+function resetForm() {
+    document.getElementById('templateDetailsForm').reset();
+}
+
+function closeModal() {
+    document.getElementById('existingFileModal').style.display = 'none';
+    document.querySelector('.modal-backdrop').remove();
+}
+
+function generateNewName() {
+    const currentName = document.getElementById('templatename').value;
+    const timestamp = new Date().getTime();
+    document.getElementById('templatename').value = `${currentName}_${timestamp}`;
+    closeModal();
+}
+</script>
+{% endblock content %}

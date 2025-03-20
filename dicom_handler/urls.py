@@ -10,5 +10,5 @@ urlpatterns = [
     path('autosegmentation-template/', autosegmentation_template, name='autosegmentation-template'),
     path('list-yaml-files/', list_yaml_files, name='list_yaml_files'),
     path('yaml-content/<str:filename>/', get_yaml_content, name='get_yaml_content'),
-    path('check-yaml-name/', check_yaml_name, name='check-yaml-name'),
+    path('check-template/', check_template, name='check-template'),
 ]

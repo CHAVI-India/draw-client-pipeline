@@ -169,3 +169,42 @@ def create_yaml_from_pandas_df(data, save_yaml_path, yaml_name):
     except Exception as e:
         logger.error(f"Unexpected error in create_yaml_from_pandas_df: {str(e)}")
         raise
+
+
+
+# def create_yaml_from_pandas_df(df, folder_path, yaml_name):
+#     """Create YAML file from pandas DataFrame"""
+#     try:
+#         # Ensure the directory exists
+#         os.makedirs(folder_path, exist_ok=True)
+        
+#         # Convert DataFrame to list of dictionaries
+#         records = df.to_dict(orient='records')
+        
+#         # Create the YAML structure
+#         yaml_data = {
+#             'models': {}
+#         }
+        
+#         # Group by model_id
+#         for record in records:
+#             model_id = record['model_id']
+#             if model_id not in yaml_data['models']:
+#                 yaml_data['models'][model_id] = {
+#                     'name': record['model_name'],
+#                     'config': record['model_config'],
+#                     'trainer_name': record['model_trainer_name'],
+#                     'postprocess': record['model_postprocess'],
+#                     'map': {}
+#                 }
+#             # Add map information
+#             yaml_data['models'][model_id]['map'][record['mapid']] = record['structure_name']
+        
+#         # Write to YAML file
+#         yaml_path = os.path.join(folder_path, yaml_name)
+#         with open(yaml_path, 'w') as file:
+#             yaml.dump(yaml_data, file, default_flow_style=False, sort_keys=False)
+            
+#     except Exception as e:
+#         print(f"Error creating YAML file: {str(e)}")
+#         raise
