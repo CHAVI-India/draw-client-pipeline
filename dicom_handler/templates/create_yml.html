@@ -28,8 +28,8 @@
                                         <th>Map ID</th>
                                         <th>Structure Name</th>
                                         <th>Config</th>
-                                        <th>Trainer Name</th>
-                                        <th>Postprocess</th>
+                                        <!-- <th>Trainer Name</th> -->
+                                        <!-- <th>Postprocess</th> -->
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -48,8 +48,8 @@
                                         <td>{{ map.mapid }}</td>
                                         <td>{{ map.map_tg263_primary_name }}</td>
                                         <td>{{ info.model_config|default:'' }}</td>
-                                        <td>{{ info.model_trainer_name|default:'' }}</td>
-                                        <td>{{ info.model_postprocess|default:'' }}</td>
+                                        <!-- <td>{{ info.model_trainer_name|default:'' }}</td> -->
+                                        <!-- <td>{{ info.model_postprocess|default:'' }}</td> -->
                                     </tr>
                                     {% endfor %}
                                     {% endfor %}
@@ -62,7 +62,7 @@
                     <div class="col-md-4">
                         <div id="selectedModelsDisplay" class="card" style="display: none;">
                             <div class="card-header">
-                                <h5 class="mb-0">Selected Models</h5>
+                                <h5 class="mb-0">Selected Models and Structures</h5>
                             </div>
                             <div class="card-body">
                                 <div id="selectedModelsList"></div>
