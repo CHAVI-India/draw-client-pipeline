@@ -14,18 +14,27 @@
     <title>DRAW-CLIENT</title>
     <style>
         :root {
-            --primary-color: #2563eb;    /* Modern Blue */
-            --secondary-color: #4f46e5;  /* Indigo */
-            --accent-color: #f0f9ff;     /* Light Blue Background */
-            --text-primary: #1e293b;     /* Slate 800 */
-            --text-secondary: #64748b;   /* Slate 500 */
-            --success-color: #059669;    /* Emerald 600 */
-            --warning-color: #eab308;    /* Yellow 500 */
-            --error-color: #dc2626;      /* Red 600 */
+            --primary-color: #9333ea;
+            /* Modern Blue  #2563eb; */
+            --secondary-color: #4f46e5;
+            /* Indigo */
+            --accent-color: #f0f9ff;
+            /* Light Blue Background */
+            --text-primary: #1e293b;
+            /* Slate 800 */
+            --text-secondary: #64748b;
+            /* Slate 500 */
+            --success-color: #059669;
+            /* Emerald 600 */
+            --warning-color: #eab308;
+            /* Yellow 500 */
+            --error-color: #dc2626;
+            /* Red 600 */
         }
 
         body {
-            background-color: #f8fafc;  /* Slate 50 */
+            background-color: #f8fafc;
+            /* Slate 50 */
             color: var(--text-primary);
         }
 
@@ -43,6 +52,9 @@
             color: var(--text-primary) !important;
             font-weight: 500;
             transition: all 0.3s ease;
+            padding: 0.5rem 1rem !important;
+            background: none !important;
+            border: none !important;
         }
 
         .nav-link:hover {
@@ -118,42 +130,43 @@
 <body class="bg-light">
     <!-- Modern Navbar with shadow -->
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm fixed-top">
-    <div class="container">
+        <div class="container">
             <a class="navbar-brand fw-bold" href="#">
-               DRAW CLIENT
+                DRAW CLIENT
             </a>
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Update the navbar items HTML - remove btn btn-outline-dark classes -->
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
-                   
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-dark mx-2" href="{% url 'check-template' %}">
+                        <a class="nav-link mx-2" href="{% url 'check-template' %}">
                             <i class="ri-add-line me-1"></i>Create Template
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-dark mx-2" href="">  
+                        <a class="nav-link mx-2"
+                            href="{{ request.build_absolute_uri }}admin/dicom_handler/modelyamlinfo/">
                             <i class="ri-file-list-line me-1"></i>View Templates
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-dark" href="{% url 'admin:index' %}">
+                        <a class="nav-link mx-2" href="{% url 'admin:index' %}">
                             <i class="ri-dashboard-line me-1"></i>Admin Dashboard
                         </a>
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link btn btn-outline-dark" href="{% url 'admin:login' %}">
+                        <a class="nav-link mx-2" href="{% url 'admin:login' %}">
                             <i class="ri-login-box-line me-1"></i>Log In
                         </a>
                     </li>
                     {% endif %}
                 </ul>
-        </div>
+            </div>
         </div>
     </nav>
 
@@ -163,8 +176,8 @@
             <div class="card-body">
                 {% block content %}
                 {% endblock %}
+            </div>
         </div>
-    </div>
     </div>
 
     <!-- Modern Footer -->
