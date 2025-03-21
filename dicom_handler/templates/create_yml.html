@@ -84,6 +84,45 @@
 
         </div>
     </div>
+    <!-- Add this before closing container div -->
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmationModalLabel">
+                        <i class="fas fa-check-circle me-2"></i>Confirm Template Creation
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="confirmation-details">
+                        <div class="mb-3">
+                            <label class="fw-bold">Template Name:</label>
+                            <span id="templateNameConfirm"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Selected Models:</label>
+                            <span id="selectedCountConfirm"></span>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Are you sure you want to create this template with the selected models?
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" id="confirmSubmit">
+                        <i class="fas fa-check me-2"></i>Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 </div>
@@ -276,6 +315,30 @@
         }
 
         // Form submission handler
+        // $('form').on('submit', function (e) {
+        //     e.preventDefault();
+
+        //     if (selectedModels.size === 0) {
+        //         alert('Please select at least one model');
+        //         return false;
+        //     }
+
+        //     // Add selected models to form data
+        //     selectedModels.forEach(value => {
+        //         const modelData = allModelData[value];
+        //         if (modelData) {
+        //             $(this).append(`
+        //                 <input type="hidden" name="selected_model_ids" value="${modelData.modelId}">
+        //                 <input type="hidden" name="selected_map_ids" value="${modelData.mapId}">
+        //             `);
+        //         }
+        //     });
+
+        //     // Submit the form
+        //     this.submit();
+        // });
+
+        // Form submission handler
         $('form').on('submit', function (e) {
             e.preventDefault();
 
@@ -284,19 +347,34 @@
                 return false;
             }
 
+            // Update confirmation modal with details
+            $('#templateNameConfirm').text($('input[name="templateName"]').val());
+            $('#selectedCountConfirm').text(selectedModels.size + ' models');
+
+            // Show confirmation modal
+            $('#confirmationModal').modal('show');
+        });
+
+        // Handle confirmation submit
+        $('#confirmSubmit').on('click', function () {
+            const form = $('form');
+
             // Add selected models to form data
             selectedModels.forEach(value => {
                 const modelData = allModelData[value];
                 if (modelData) {
-                    $(this).append(`
-                        <input type="hidden" name="selected_model_ids" value="${modelData.modelId}">
-                        <input type="hidden" name="selected_map_ids" value="${modelData.mapId}">
-                    `);
+                    form.append(`
+                <input type="hidden" name="selected_model_ids" value="${modelData.modelId}">
+                <input type="hidden" name="selected_map_ids" value="${modelData.mapId}">
+            `);
                 }
             });
 
+            // Hide modal
+            $('#confirmationModal').modal('hide');
+
             // Submit the form
-            this.submit();
+            form[0].submit();
         });
 
         // Initial display update
@@ -304,6 +382,58 @@
     });
 </script>
 <style>
+    /* Modal Styling */
+    .modal-content {
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 1rem 1.5rem;
+    }
+
+    .modal-title {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .confirmation-details {
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        padding: 1rem;
+    }
+
+    .confirmation-details label {
+        color: #495057;
+        min-width: 120px;
+        display: inline-block;
+    }
+
+    .confirmation-details span {
+        color: #2c3e50;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #dee2e6;
+        padding: 1rem 1.5rem;
+    }
+
+    .modal-footer .btn {
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+    }
+
+    .alert {
+        margin-bottom: 0;
+    }
+
     .table-container {
         margin: 10px 0 0 0;
         width: 100%;
