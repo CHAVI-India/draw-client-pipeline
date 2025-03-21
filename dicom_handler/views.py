@@ -70,7 +70,7 @@ def create_yml(request):
             description = request.POST.get('description')
             selected_model_ids = request.POST.getlist('selected_model_ids')  # Changed from selected_models
             selected_map_ids = request.POST.getlist('selected_map_ids')  # Added to get map IDs
-            
+
             # print("Selected Model IDs:", selected_model_ids)
             # print("Selected Map IDs:", selected_map_ids)
 
@@ -129,6 +129,7 @@ def create_yml(request):
         # For GET request
         return render(request, 'create_yml.html', {
             'apidata': raw_data,
+            'model_details_api': os.getenv('MODEL_DETAILS_API'),
             'template_name': request.session.get('template_name'),
             'description': request.session.get('description')
         })
