@@ -2,8 +2,7 @@
 {% load static %}
 {% block content %}
 <div class="container">
-    <h4>Step 2: Select Models</h4>
-    <p><strong>Template Name:</strong> {{ template_name }}</p>
+
     <!-- <p><strong>Description:</strong> {{ description }}</p> -->
     <!-- Display Template Details -->
     <div class="card mb-4">
@@ -16,6 +15,8 @@
                 <input type="hidden" name="description" value="{{ description }}">
 
                 <div class="row">
+                    <h4>Step 2: Select Models</h4>
+                    <p><strong>Template Name:</strong> {{ template_name }}</p>
                     <!-- Table Container -->
                     <div class="col-md-8">
                         <div class="table-container">
