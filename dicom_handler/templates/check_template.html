@@ -54,7 +54,7 @@
                         <i class="ri-refresh-line me-2"></i>Reset
                     </button>
                 </div>
-                
+
             </form>
         </div>
     </div>
@@ -102,8 +102,8 @@
     }
 
     .form-control:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        border-color: #9333ea;
+        box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
     }
 
     .form-control-lg {
@@ -117,12 +117,12 @@
     }
 
     .btn-primary {
-        background-color: #2563eb;
+        background-color: #9333ea;
         border: none;
     }
 
     .btn-primary:hover {
-        background-color: #1d4ed8;
+        background-color: #7e22ce;
         transform: translateY(-1px);
     }
 
@@ -132,11 +132,11 @@
     }
 
     .btn-outline-secondary:hover {
-        background-color: #64748b;
+        background-color: #9333ea;
+        border-color: #9333ea;
         color: white;
     }
 
-    
     .modal-backdrop {
         background-color: rgba(0, 0, 0, 0.5);
         position: fixed;
@@ -186,7 +186,6 @@
         width: 100%;
     }
 
-    /* Optional: Add some hover effects to footer links if you have any */
     .footer a {
         color: #6c757d;
         text-decoration: none;
@@ -194,19 +193,7 @@
     }
 
     .footer a:hover {
-        color: #007bff;
-    }
-
-    /* Optional: Add responsive adjustments */
-    @media (max-width: 767.98px) {
-        .footer {
-            text-align: center;
-        }
-
-        .footer .text-md-end {
-            text-align: center !important;
-            margin-top: 10px;
-        }
+        color: #9333ea;
     }
 
     /* Step Diagram Styles */
@@ -273,22 +260,22 @@
 
     /* Active and Completed States */
     .step-item.active .step-circle {
-        background-color: #007bff;
+        background-color: #9333ea;
         color: white;
-        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+        box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.2);
     }
 
     .step-item.active .step-title {
-        color: #007bff;
+        color: #9333ea;
     }
 
     .step-item.completed .step-circle {
-        background-color: #28a745;
+        background-color: #9333ea;
         color: white;
     }
 
     .step-item.completed .step-line {
-        background-color: #28a745;
+        background-color: #9333ea;
     }
 
     /* Hover Effects */
@@ -300,6 +287,28 @@
         text-align: center;
         font-weight: bold;
         margin-bottom: 1.5rem;
+    }
+
+    /* Animation */
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4);
+        }
+
+        70% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 10px rgba(147, 51, 234, 0);
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(147, 51, 234, 0);
+        }
+    }
+
+    .step-item.active .step-circle {
+        animation: pulse 2s infinite;
     }
 
     /* Responsive Adjustments */
@@ -325,28 +334,18 @@
         }
     }
 
-    /* Optional: Animation */
-    @keyframes pulse {
-        0% {
-            transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.4);
+    @media (max-width: 767.98px) {
+        .footer {
+            text-align: center;
         }
 
-        70% {
-            transform: scale(1.05);
-            box-shadow: 0 0 0 10px rgba(0, 123, 255, 0);
+        .footer .text-md-end {
+            text-align: center !important;
+            margin-top: 10px;
         }
-
-        100% {
-            transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
-        }
-    }
-
-    .step-item.active .step-circle {
-        animation: pulse 2s infinite;
     }
 </style>
+
 
 <script>
     function resetForm() {
