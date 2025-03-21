@@ -1,10 +1,10 @@
 {% extends 'index.html' %}
 {% load static %}
 {% block content %}
-<div class="container mt-4">
-    <h2>Step 2: Select Models</h2>
+<div class="container">
+    <h4>Step 2: Select Models</h4>
     <p><strong>Template Name:</strong> {{ template_name }}</p>
-    <p><strong>Description:</strong> {{ description }}</p>
+    <!-- <p><strong>Description:</strong> {{ description }}</p> -->
     <!-- Display Template Details -->
     <div class="card mb-4">
         <div class="card-body">
@@ -149,18 +149,37 @@
         }
 
         // Select All functionality
+        // Select All functionality
         $('#selectAll').on('click', function () {
             const isChecked = $(this).prop('checked');
 
-            // Only affect visible checkboxes
-            $('.model-checkbox:visible').each(function () {
+            // Get all visible rows from DataTable
+            const visibleRows = table.rows({ 'search': 'applied' }).nodes();
+
+            // Update checkboxes and selectedModels set
+            $(visibleRows).find('.model-checkbox').each(function () {
                 const value = $(this).val();
                 if (isChecked) {
                     selectedModels.add(value);
+                    $(this).prop('checked', true);
+
+                    // Store model data if not already stored
+                    if (!allModelData[value]) {
+                        const row = $(this).closest('tr');
+                        allModelData[value] = {
+                            modelId: row.find('td:eq(1)').text().trim(),
+                            modelName: row.find('td:eq(2)').text().trim(),
+                            mapId: row.find('td:eq(3)').text().trim(),
+                            structureName: row.find('td:eq(4)').text().trim(),
+                            config: row.find('td:eq(5)').text().trim(),
+                            trainerName: row.find('td:eq(6)').text().trim(),
+                            postprocess: row.find('td:eq(7)').text().trim()
+                        };
+                    }
                 } else {
                     selectedModels.delete(value);
+                    $(this).prop('checked', false);
                 }
-                $(this).prop('checked', isChecked);
             });
 
             updateSelectedDisplay();
@@ -285,7 +304,7 @@
 </script>
 <style>
     .table-container {
-        margin: 20px 0;
+        margin: 10px 0 0 0;
         width: 100%;
         overflow-x: auto;
     }
@@ -359,7 +378,7 @@
     /* DataTables Customization */
     .dataTables_wrapper .dataTables_length,
     .dataTables_wrapper .dataTables_filter {
-        margin-bottom: 15px;
+        margin-bottom: 5px;
     }
 
     .dataTables_wrapper .dataTables_info,
@@ -369,7 +388,7 @@
 
     /* Modern DataTable Styling */
     .dataTables_wrapper {
-        padding: 20px 0;
+        padding: 20px 0 0 0;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
 
@@ -509,6 +528,45 @@
             margin-left: 0;
             margin-top: 5px;
         }
+    }
+
+    /* Update the #selectedModelsDisplay styles */
+    #selectedModelsDisplay {
+        position: sticky;
+        top: 20px;
+        height: calc(100% - 20px);
+        /* Match parent height */
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Add styles for the card body to enable scrolling */
+    #selectedModelsDisplay .card-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+    }
+
+    /* Add this to ensure the row takes full height */
+    .row {
+        min-height: 600px;
+        /* Set a minimum height or adjust as needed */
+    }
+
+    /* Update table container styles */
+    .table-container {
+        margin: 10px 0 0 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    /* Add this to ensure consistent heights */
+    .col-md-8,
+    .col-md-4 {
+        display: flex;
+        flex-direction: column;
     }
 </style>
 {% endblock content %}
