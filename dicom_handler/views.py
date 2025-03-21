@@ -1,5 +1,3 @@
-
-
 from django.shortcuts import render, redirect
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
@@ -15,6 +13,7 @@ from django.urls import reverse
 from dicom_handler.models import *
 from .dicomutils.dicomseriesprocessing import *
 from django.views.decorators.csrf import csrf_protect
+from collections import defaultdict
 
 
 # yaml saving path
@@ -71,8 +70,10 @@ def create_yml(request):
             description = request.POST.get('description')
             selected_model_ids = request.POST.getlist('selected_model_ids')  # Changed from selected_models
             selected_map_ids = request.POST.getlist('selected_map_ids')  # Added to get map IDs
+            
             # print("Selected Model IDs:", selected_model_ids)
             # print("Selected Map IDs:", selected_map_ids)
+
             if not selected_model_ids:
                 messages.error(request, 'Please select at least one model')
                 return render(request, 'create_yml.html', {
@@ -99,7 +100,7 @@ def create_yml(request):
                                 })
 
             # Print for debugging
-            print("Selected Data --- :", selected_data)
+            # print("Selected Data --- :", selected_data)
 
             # Create DataFrame
             df = pd.DataFrame(selected_data)
@@ -150,101 +151,6 @@ def create_yml(request):
 
 
 
-# def create_yml(request):
-#     api_url = settings.API_URL
-    
-#     try:
-#         response = requests.get(
-#             api_url,
-#             # auth=HTTPBasicAuth(username, password),
-#             timeout=10
-#         )
-        
-#         response.raise_for_status()
-#         raw_data = response.json()
-
-#     except:
-#         messages.error(request, "API Error: Unable to fetch data from the API.")
-
-#     if request.method == 'POST':
-#         try:
-#             data = json.loads(request.body)
-        
-#             template_name = data.get('templateName')
-#             description = data.get('description')
-#             selected_models = data.get('selectedModels', [])
-
-#             # Print received data for debugging
-#             print("Received Data:")
-#             print("Template Name:", template_name)
-#             print("Description:", description)
-#             print("Selected Models:", selected_models)
-
-#             # Prepare data for DataFrame
-#             processed_data = []
-#             for model in selected_models:
-#                 processed_data.append({
-#                     'model_id': model['modelId'],
-#                     'model_name': model['modelName'],
-#                     'mapid': model['mapId'],
-#                     'structure_name': model['structureName'],
-#                     'model_config': model.get('config', ''),
-#                     'model_trainer_name': model.get('trainerName', ''),
-#                     'model_postprocess': model.get('postprocess', '')
-#                 })
-
-#             # Create DataFrame
-#             df = pd.DataFrame(processed_data)
-#             df["model_id"] = df['model_id'].astype(int)
-
-#             # yaml save path
-#             yaml_name = f"{template_name}.yml"
-#             yaml_path = os.path.join(templatefolderpath, yaml_name)
-            
-#             print("Creating YAML at:", yaml_path)
-            
-#             # Create YAML file
-#             create_yaml_from_pandas_df(df, templatefolderpath, yaml_name)
-#             created_file_hash = calculate_hash(yaml_path)
-
-#             # Save to database
-#             ModelYamlInfo.objects.create(
-#                 yaml_name=yaml_name,
-#                 yaml_path=yaml_path,
-#                 protocol=yaml_name,
-#                 file_hash=created_file_hash,
-#                 yaml_description=description
-#             )
-
-#             # Store data in session for the next page
-#             request.session['template_name'] = template_name
-#             request.session['description'] = description
-#             request.session['selected_models'] = processed_data
-
-#             return JsonResponse({
-#                 'status': 'success',
-#                 'message': 'YAML file created successfully!',
-#                 'redirect_url': reverse('autosegmentation-template')
-#             })
-            
-#         except Exception as e:
-#             print("Error creating template:", str(e))
-#             return JsonResponse({
-#                 'status': 'error',
-#                 'message': str(e)
-#             }, status=400)
-        
-
-#     return render(request, 'create_yml.html', {
-#                 'apidata': raw_data,
-#                 'template_name': request.session.get('template_name'),
-#                 'description': request.session.get('description')
-#             })
-
-
-from collections import defaultdict
-
-
 @require_http_methods(["GET"])
 def autosegmentation_template(request):
     try:
@@ -256,7 +162,7 @@ def autosegmentation_template(request):
         with open(yaml_path, 'r') as file:
             yaml_data = yaml.safe_load(file)
         
-        print("Loaded YAML data:", yaml_data)
+        # print("Loaded YAML data:", yaml_data)
 
         # Extract models data
         models_data = yaml_data.get('models', {})
@@ -273,46 +179,15 @@ def autosegmentation_template(request):
             'grouped_models': grouped_models,
         }
 
-        return render(request, 'yamlview.html', context)
+        return render(request, 'yaml_view.html', context)
 
     except ModelYamlInfo.DoesNotExist:
         messages.error(request, 'No templates found.')
         return redirect('create-yml')
+    
     except Exception as e:
         print(f"Error in yaml view: {str(e)}")
         messages.error(request, f'Error loading template: {str(e)}')
         return redirect('create-yml')
 
 
-
-
-
-def yaml_viewer(request):
-    return render(request, 'yaml_view.html')
-
-def list_yaml_files(request):
-    try:
-        # Specify your YAML files directory relative to your project
-        yaml_dir = os.path.join("/home/sougata/sougata/DRAW-Pipeline-Prediction/config_yaml")
-        yaml_files = [f for f in os.listdir(yaml_dir) if f.endswith('.yml')]
-        return JsonResponse(yaml_files, safe=False)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
-def get_yaml_content(request, filename):
-    try:
-        yaml_dir =os.path.join("/home/sougata/sougata/DRAW-Pipeline-Prediction/config_yaml")
-        file_path = os.path.join(yaml_dir, filename)
-
-        # Check if file path is safe (within yaml_dir)
-        if not file_path.startswith(yaml_dir):
-            raise Exception("Invalid file path")
-
-        with open(file_path, 'r') as file:
-            yaml_content = file.read()
-            # Parse and dump YAML to ensure proper formatting
-            yaml_data = yaml.safe_load(yaml_content)
-            formatted_yaml = yaml.dump(yaml_data, default_flow_style=False, sort_keys=False)
-            return JsonResponse({'content': formatted_yaml})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)

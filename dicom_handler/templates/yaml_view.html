@@ -1,124 +1,72 @@
+{% extends 'index.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YAML File Viewer</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 0;
-        }
-        .container {
-            display: flex;
-            gap: 20px;
-        }
-        .file-list {
-            min-width: 200px;
-            border: 1px solid #ccc;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .content-viewer {
-            flex-grow: 1;
-            border: 1px solid #ccc;
-            padding: 20px;
-            min-height: 400px;
-            white-space: pre-wrap;
-            font-family: monospace;
-            background-color: #f5f5f5;
-            border-radius: 4px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 8px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        tr:hover {
-            background-color: #f5f5f5;
-            cursor: pointer;
-        }
-        .header {
-            margin-bottom: 20px;
-        }
-        .error {
-            color: red;
-            padding: 10px;
-            background-color: #ffe6e6;
-            border-radius: 4px;
-            margin-bottom: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>YAML File Viewer</h1>
-    </div>
-    <div class="container">
-        <div class="file-list">
-            <table id="fileTable">
-                <thead>
-                    <tr>
-                        <th>YAML Files</th>
-                    </tr>
-                </thead>
-                <tbody id="fileList"></tbody>
-            </table>
+{% block content %}
+
+<div class="container">
+    <!-- {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
         </div>
-        <div id="contentViewer" class="content-viewer">
-            Select a file to view its content
+        {% endfor %}
+    </div>
+    {% endif %} -->
+
+    <!-- Template Name and Description -->
+    {% if template_name %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Template: {{ template_name }}</h2>
+            <p class="card-text">Description: {{ description }}</p>
         </div>
     </div>
+    {% endif %}
 
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            const fileList = document.getElementById('fileList');
-            const contentViewer = document.getElementById('contentViewer');
+    <!-- YAML Configuration -->
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Configuration</h3>
+            <pre class="bg-light p-3 rounded">
+name: {{ template_name }}
+protocol: {{ template_name }}
+models:
+{% for model in grouped_models %}
+  {{ model.model_id }}:
+    name: {{ model.name }}
+    config: {{ model.config }}
+    map:
+    {% for map_id, structure_name in model.map.items %}
+      {{ map_id }}: {{ structure_name }}
+    {% endfor %}
+    trainer_name: {{ model.trainer_name }}
+    postprocess: {{ model.postprocess }}
+{% endfor %}
+            </pre>
+        </div>
+    </div>
+</div>
 
-            // Function to fetch and display YAML content
-            async function displayYamlContent(fileName) {
-                try {
-                    const response = await fetch(`/yaml-content/${fileName}/`);
-                    const data = await response.json();
-                    
-                    if (data.error) {
-                        contentViewer.innerHTML = `<div class="error">Error: ${data.error}</div>`;
-                    } else {
-                        contentViewer.textContent = data.content;
-                    }
-                } catch (error) {
-                    contentViewer.innerHTML = `<div class="error">Error loading file: ${error.message}</div>`;
-                }
-            }
+<style>
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    font-family: monospace;
+}
+.card {
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.card-title {
+    color: #333;
+    margin-bottom: 15px;
+}
+.alert {
+    margin-bottom: 20px;
+}
+</style>
 
-            // Fetch and display list of YAML files
-            try {
-                const response = await fetch('/list-yaml-files/');
-                const files = await response.json();
-                
-                if (Array.isArray(files)) {
-                    files.forEach(file => {
-                        const row = document.createElement('tr');
-                        const cell = document.createElement('td');
-                        cell.textContent = file;
-                        row.appendChild(cell);
-                        
-                        row.addEventListener('click', () => displayYamlContent(file));
-                        fileList.appendChild(row);
-                    });
-                } else {
-                    fileList.innerHTML = `<tr><td class="error">Error: Invalid file list format</td></tr>`;
-                }
-            } catch (error) {
-                fileList.innerHTML = `<tr><td class="error">Error loading file list: ${error.message}</td></tr>`;
-            }
-        });
-    </script>
-</body>
-</html>
+{% endblock %}
