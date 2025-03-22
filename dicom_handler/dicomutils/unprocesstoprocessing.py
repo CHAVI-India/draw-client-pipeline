@@ -3,9 +3,10 @@ import os
 import glob
 import logging
 from dicom_handler.models import DicomPathConfig
+from django.conf import settings
 
 # Get logger
-logger = logging.getLogger('django_log_lens.client')
+logger = logging.getLogger('dicom_handler_logs')
 
 def check_and_delete_yaml(folder_path):
     """
@@ -52,13 +53,10 @@ def move_folder_with_yaml_check(unprocess_dir, copy_yaml):
     logger.info("Starting folder move operation with YAML check")
     
     try:
-        # Get processing directory path
-        logger.debug("Retrieving processing directory path from DicomPathConfig")
-        processing_dir = DicomPathConfig.objects.values("dicomprocessingfolderpath").first()["dicomprocessingfolderpath"]
-        
-        if not processing_dir:
-            logger.error("Processing directory path not found in DicomPathConfig")
-            raise ValueError("Processing directory path not configured")
+        # Get the path to the dicom_processing_folder
+        processing_dir = os.path.join(settings.BASE_DIR, 'dicom_processing_folder')
+        if not os.path.exists(processing_dir):
+            os.makedirs(processing_dir)
             
         logger.debug(f"Processing directory path: {processing_dir}")
         

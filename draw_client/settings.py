@@ -15,6 +15,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
+from celery.schedules import crontab
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -301,72 +302,62 @@ UNFOLD = {
                         "icon": "rule",
                         "link": reverse_lazy("admin:dicom_handler_ruleset_changelist"),
                     },
-                     {
-                        "title": _("Rules"),
-                        "icon": "rule_folder",
-                        "link": reverse_lazy("admin:dicom_handler_rule_changelist"),
-                    },
+                    #  {
+                    #     "title": _("Rules"),
+                    #     "icon": "rule_folder",
+                    #     "link": reverse_lazy("admin:dicom_handler_rule_changelist"),
+                    # },
                 ],
             },
 
             {
-                "title": _("Scheduler"),
+                "title": _("Task Scheduling"),
                 "separator": True,
                 "collapsible": True,
                 "items": [
                     {
-                        "title": _("Django APScheduler"),
+                        "title": _("Celery Tasks Status"),
                         "icon": "schedule",
-                        "link": reverse_lazy("admin:django_apscheduler_djangojobexecution_changelist"),
+                        "link": reverse_lazy("admin:django_celery_results_taskresult_changelist"),
                     },
                     {
-                        "title": _("Scheduled Jobs"),
+                        "title": _("Scheduled Tasks"),
                         "icon": "calendar_today",
-                        "link": reverse_lazy("admin:django_apscheduler_djangojob_changelist"),
+                        "link": reverse_lazy("admin:django_celery_beat_periodictask_changelist"),
                     },
                 ],
             },
 
             {
-                "title": _("Copy Dicom"),
+                "title": _("DICOM Processing"),
                 "separator": True,
                 "collapsible": True,
                 "items": [
                     {
-                        "title": _("Copy Dicom"),
+                        "title": _("Copied DICOM Data"),
                         "icon": "folder",
                         "link": reverse_lazy("admin:dicom_handler_copydicom_changelist"),
-                    }
-                ],
-            },
-            {
-                "title": _("Processing Workflow"),
-                "separator": True,
-                "collapsible": True,
-                "items": [
+                    },
+                    {
+                        "title": _("Dicom Series for Processing"),
+                        "icon": "folder",
+                        "link": reverse_lazy("admin:dicom_handler_dicomseriesprocessing_changelist"),
+                    },
                     {
                         "title": _("Processing Status"),
                         "icon": "task_alt",
                         "link": reverse_lazy("admin:dicom_handler_processingstatus_changelist"),
-                    }
-                ],
-            },
-            {
-                "title": _("Unprocessed"),
-                "separator": True,
-                "collapsible": True,
-                "items": [
+                    },
                     {
                         "title": _("Send to Processing"),
                         "icon": "pending",
                         "link": reverse_lazy("admin:dicom_handler_dicomunprocessed_changelist"),
-                    }
-                    
+                    }                    
                 ],
             },
 
             {
-                "title": _("Upload DICOM"),
+                "title": _("Upload DICOM File Manually"),
                 "separator": True,
                 "collapsible": True,
                 "items": [
@@ -495,17 +486,79 @@ LOGGING = {
             "class": "logging.FileHandler",
             "filename": str(LOG_FOLDER / "critical.log"),
             "formatter": "default",
+        },
+        # Dedicated handlers for specific apps
+        "django_file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler",
+            "filename": str(LOG_FOLDER / "django.log"),
+            "formatter": "default",
+        },
+        "dicom_handler_file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler",
+            "filename": str(LOG_FOLDER / "dicom_handler.log"),
+            "formatter": "default",
+        },
+        "deidapp_file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler",
+            "filename": str(LOG_FOLDER / "deidapp.log"),
+            "formatter": "default",
+        },
+        "celery_file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler", 
+            "filename": str(LOG_FOLDER / "celery.log"),
+            "formatter": "default",
+        },
+        "celery_beat_file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler", 
+            "filename": str(LOG_FOLDER / "celery_beat.log"),
+            "formatter": "default",
+        },
+        "api_client_file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler", 
+            "filename": str(LOG_FOLDER / "api_client.log"),
+            "formatter": "default",
         }
     },
     "loggers": {
-        "django_log_lens.client": {
-            "handlers": ["debug_file", "info_file", "warning_file", "error_file", "critical_file"],
+        "django": {
+            "handlers": ["django_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file"],
+            "level": "DEBUG", 
+            "propagate": True
+        },
+        "dicom_handler_logs": {
+            "handlers": ["dicom_handler_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file"],
             "level": "DEBUG",
             "propagate": True
         },
-        "django": {
-            "handlers": ["debug_file", "info_file", "warning_file", "error_file", "critical_file"],
-            "level": "DEBUG", 
+        "deidapp": {
+            "handlers": ["deidapp_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file"],
+            "level": "DEBUG",
+            "propagate": True
+        },
+        "celery": {
+            "handlers": ["celery_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file"],
+            "level": "DEBUG",
+            "propagate": True
+        },
+        "celery.task": {
+            "handlers": ["celery_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file"],
+            "level": "DEBUG",
+            "propagate": True
+        },
+        "celery.beat": {
+            "handlers": ["celery_beat_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file"],
+            "level": "DEBUG",
+            "propagate": True
+        },
+        "api_client": {
+            "handlers": ["api_client_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file"],
+            "level": "DEBUG",
             "propagate": True
         }
     }
@@ -517,3 +570,10 @@ LOGGING = {
 
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_CACHE_BACKEND = 'django-cache'
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Kolkata'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BEAT_PERIODIC = True

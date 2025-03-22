@@ -3,10 +3,20 @@
 *.log
 *.pot
 *.pyc
+*.log
+*.dcm 
+*.zip
 __pycache__
 db.sqlite3
 *.sqlite3
 media
+
+# Project specific folders
+unprocessed_dicom_folder/
+deidentified_dicom_folder/
+processed_dicom_folder/
+dicom_processing_folder/
+uploaddicom/
 
 # Backup files # 
 *.bak 

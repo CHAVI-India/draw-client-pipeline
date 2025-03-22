@@ -1,22 +1,74 @@
 # Register your models here.
 import os
 import zipfile
+import logging
 from django.contrib import admin
 from django.contrib import messages
-from solo.admin import SingletonModelAdmin
-from .models import DicomPathConfig, DicomImportConfig, DicomUnprocessed, ProcessingStatus, ModelYamlInfo
-from .models import Rule, RuleSet, TagName, uploadDicom, CopyDicom
+from dicom_handler.models import *
 from dicom_handler.dicomutils.unprocesstoprocessing import move_folder_with_yaml_check
 from dicom_handler.dicomutils.dicomseriesprocessing import read_dicom_metadata, dicom_series_separation
-
+from dicom_handler.dicomutils.manual_dicom_zip_processing import send_to_autosegmentation
+from django.conf import settings
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.models import User, Group
-from unfold.admin import ModelAdmin
+from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import action
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
+from django_celery_beat.models import (
+    ClockedSchedule,
+    CrontabSchedule,
+    IntervalSchedule,
+    PeriodicTask,
+    SolarSchedule,
+)
+
+from unfold.widgets import UnfoldAdminSelectWidget, UnfoldAdminTextInputWidget
 from allauth.account.decorators import secure_admin_login
+from django_celery_beat.admin import ClockedScheduleAdmin as BaseClockedScheduleAdmin
+from django_celery_beat.admin import CrontabScheduleAdmin as BaseCrontabScheduleAdmin
+from django_celery_beat.admin import PeriodicTaskAdmin as BasePeriodicTaskAdmin
+from django_celery_beat.admin import PeriodicTaskForm, TaskSelectWidget
+
+admin.site.unregister(PeriodicTask)
+admin.site.unregister(IntervalSchedule)
+admin.site.unregister(CrontabSchedule)
+admin.site.unregister(SolarSchedule)
+admin.site.unregister(ClockedSchedule)
+
+class UnfoldTaskSelectWidget(UnfoldAdminSelectWidget, TaskSelectWidget):
+    pass
+
+class UnfoldPeriodicTaskForm(PeriodicTaskForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["task"].widget = UnfoldAdminTextInputWidget()
+        self.fields["regtask"].widget = UnfoldTaskSelectWidget()
+
+
+@admin.register(PeriodicTask)
+class PeriodicTaskAdmin(BasePeriodicTaskAdmin, ModelAdmin):
+    form = UnfoldPeriodicTaskForm
+
+
+@admin.register(IntervalSchedule)
+class IntervalScheduleAdmin(ModelAdmin):
+    pass
+
+
+@admin.register(CrontabSchedule)
+class CrontabScheduleAdmin(BaseCrontabScheduleAdmin, ModelAdmin):
+    pass
+
+
+@admin.register(SolarSchedule)
+class SolarScheduleAdmin(ModelAdmin):
+    pass
+
+@admin.register(ClockedSchedule)
+class ClockedScheduleAdmin(BaseClockedScheduleAdmin, ModelAdmin):
+    pass
 
 admin.autodiscover()
 admin.site.login = secure_admin_login(admin.site.login)
@@ -25,7 +77,7 @@ admin.site.login = secure_admin_login(admin.site.login)
 admin.site.unregister(User)
 admin.site.unregister(Group)
 
-
+logger = logging.getLogger('dicom_handler_logs')
 @admin.register(User)
 class UserAdmin(BaseUserAdmin, ModelAdmin):
     # Forms loaded from `unfold.forms`
@@ -38,20 +90,54 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
 class GroupAdmin(BaseGroupAdmin, ModelAdmin):
     pass
 
+@admin.register(DicomSeriesProcessing)
+class DicomSeriesProcessingAdmin(ModelAdmin):
+    list_display = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
+    search_fields = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
+    list_filter = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
+
+@admin.register(DicomPathConfig)
+class DicomPathConfigAdmin(ModelAdmin):
+    list_display = ('datastorepath', 'import_dicom')
+    search_fields = ('datastorepath', 'import_dicom')
+    list_filter = ('datastorepath', 'import_dicom')
 
 # Function to get DicomPathConfig values when needed, not at module import time
 def get_dicom_path_config():
     try:
         import_dir = DicomPathConfig.objects.values("dicomimportfolderpath").first()["dicomimportfolderpath"]
-        processing_dir = DicomPathConfig.objects.values("dicomprocessingfolderpath").first()["dicomprocessingfolderpath"]
-        unprocessed_dir = DicomPathConfig.objects.values("dicomnonprocessedfolderpath").first()["dicomnonprocessedfolderpath"]
-        deidentified_dir = DicomPathConfig.objects.values("deidentificationfolderpath").first()["deidentificationfolderpath"]
-        return import_dir, processing_dir, unprocessed_dir, deidentified_dir
-    except:
-        print("DicomPathConfig not set")
-        return None, None, None, None
+        # Define the deidentified, unprocessed and processing folder paths
+        deidentified_dir = os.path.join(settings.BASE_DIR, 'deidentified_dicom_folder')
+        unprocessed_dir = os.path.join(settings.BASE_DIR, 'unprocessed_dicom_folder')
+        processing_dir = os.path.join(settings.BASE_DIR, 'dicom_processing_folder')
+
+        # Create the deidentified, unprocessed and processing folder if they don't exist
+        os.makedirs(deidentified_dir, exist_ok=True)
+        os.makedirs(unprocessed_dir, exist_ok=True)
+        os.makedirs(processing_dir, exist_ok=True)
+
+        return import_dir, deidentified_dir, unprocessed_dir, processing_dir   
+    except Exception as e:
+        logger.error(f"DicomPathConfig error: {str(e)}")
+        # Create default directories even if DicomPathConfig is not set
+        deidentified_dir = os.path.join(settings.BASE_DIR, 'deidentified_dicom_folder')
+        unprocessed_dir = os.path.join(settings.BASE_DIR, 'unprocessed_dicom_folder')
+        processing_dir = os.path.join(settings.BASE_DIR, 'dicom_processing_folder')
+        
+        # Create the directories if they don't exist
+        os.makedirs(deidentified_dir, exist_ok=True)
+        os.makedirs(unprocessed_dir, exist_ok=True)
+        os.makedirs(processing_dir, exist_ok=True)
+        
+        # Use a default import directory
+        import_dir = os.path.join(settings.BASE_DIR, 'import_dicom_folder')
+        os.makedirs(import_dir, exist_ok=True)
+        
+        logger.warning(f"Using default DicomPathConfig paths: {import_dir}")
+        return import_dir, deidentified_dir, unprocessed_dir, processing_dir
    
-admin.site.register(DicomPathConfig, SingletonModelAdmin)
+# admin.site.register(DicomPathConfig, SingletonModelAdmin)
+
 
 
 class MyModelAdmin(ModelAdmin):
@@ -77,30 +163,30 @@ admin.site.register(DicomImportConfig, MyModelAdmin)
 @admin.action(description="Send to processing")
 def send_to_processing(modeladmin, request, queryset):
     # Get DicomPathConfig values when the action is executed
-    import_dir, processing_dir, unprocessed_dir, deidentified_dir = get_dicom_path_config()
-    if not all([processing_dir, unprocessed_dir, deidentified_dir]):
+    import_dir, deidentified_dir, unprocessed_dir, processing_dir = get_dicom_path_config()
+    if not all([import_dir, deidentified_dir, unprocessed_dir, processing_dir]):
         messages.error(request, "DicomPathConfig not set properly")
         return
+    
+
 
     for obj in queryset:
         try:
-            print("#######")
-            # print(ModelYamlInfo.objects.filter(id = obj.yaml_attached))
-            print(obj.yaml_attached.yaml_path)
-            print(obj.series_folder_location)
-            print("-" * 50)
 
             move_folder_with_yaml_check(
                 unprocess_dir=obj.series_folder_location,
                 copy_yaml=obj.yaml_attached.yaml_path
             )
+            logger.info(f"Successfully moved {obj.series_folder_location} to processing")
            
             instance = DicomUnprocessed.objects.get(id=obj.id)
+            logger.info(f"Successfully updated {instance.id} to unprocessed")
             instance.unprocessed = False
             instance.series_folder_location = os.path.join(
                 processing_dir, os.path.basename(obj.series_folder_location)
             )
             instance.save()
+            logger.info(f"Successfully updated {instance.id} to unprocessed")
 
             read_dicom_metadata(
                 dicom_series_path = os.path.join(
@@ -124,7 +210,7 @@ def send_to_processing(modeladmin, request, queryset):
             instance = DicomUnprocessed.objects.get(id=obj.id)
             instance.unprocessed = True
             instance.save()
-            
+            logger.info(f"Successfully updated {instance.id} to unprocessed")
             messages.error(request, f"Error sending {obj.patientid} to processing")
             print(e)
 
@@ -254,62 +340,14 @@ class ModelYamlInfoAdmin(ModelAdmin):
 admin.site.register(ModelYamlInfo, ModelYamlInfoAdmin)
 
 
-# Upload dicom
-# unzip_dir = "/home/sougata/draw-client-dir-test/uploaddicom"
-@action(description='Send selected files to autosegmentation')
-def send_to_autosegmentation(modeladmin, request, queryset):
-    # Get DicomPathConfig values when the action is executed
-    import_dir, processing_dir, unprocessed_dir, deidentified_dir = get_dicom_path_config()
-    if not all([processing_dir, unprocessed_dir, deidentified_dir]):
-        messages.error(request, "DicomPathConfig not set properly")
-        return
-
-    for obj in queryset:
-        try:
-            with zipfile.ZipFile(obj.dicom_file.path, 'r') as zip_ref:
-                # Create a directory with the same name as the zip file (without extension)
-                zip_name = os.path.splitext(os.path.basename(obj.dicom_file.name))[0]
-                extract_dir = os.path.join(unprocessed_dir, zip_name)
-                
-                # Create the directory if it doesn't exist
-                os.makedirs(extract_dir, exist_ok=True)
-                
-                # Extract all contents to the directory
-                zip_ref.extractall(extract_dir)
-                
-                # Find all YAML files in the extracted directory
-                yaml_files = []
-                for root, dirs, files in os.walk(extract_dir):
-                    for file in files:
-                        if file.endswith('.yml') or file.endswith('.yaml'):
-                            yaml_files.append(os.path.join(root, file))
-                
-                if yaml_files:
-                    # Use the first YAML file found
-                    yaml_file = yaml_files[0]
-                    
-                    # Move the folder to processing with the YAML file
-                    move_folder_with_yaml_check(
-                        unprocess_dir=extract_dir,
-                        copy_yaml=yaml_file
-                    )
-                    
-                    # Update the object's status
-                    obj.send_to_autosegmentation = True
-                    obj.save()
-                    
-                    messages.success(request, f"Successfully sent {obj.dicom_file.name} to autosegmentation")
-                else:
-                    messages.error(request, f"No YAML file found in {obj.dicom_file.name}")
-        except Exception as e:
-            messages.error(request, f"Error sending {obj.dicom_file.name} to autosegmentation: {str(e)}")
 
 class uploadDicomAdmin(ModelAdmin):
     list_display = (
         'id', 
         'dicom_file',
         'send_to_autosegmentation',
-        'created_at'
+        'created_at',
+        'modified_at'
     )
 
     list_filter = ('send_to_autosegmentation','created_at',)
@@ -323,12 +361,20 @@ admin.site.register(uploadDicom, uploadDicomAdmin)
 class CopyDicomAdmin(ModelAdmin):
     list_display = (
         "sourcedirname",
+        "destinationdirname",
         "dirsize",
-        "copydate" 
+        "processing_status",
+        "dirmodifieddate",
+        "dircreateddate",
+        "copydate",
     )
     list_per_page = 14
-    search_fields = ('sourcedirname',)
-    list_filter = ('copydate',)
+    search_fields = ('sourcedirname', 'destinationdirname')
+    list_filter = ('copydate',
+                   'dirmodifieddate',
+                   'dircreateddate',
+                   'processing_status',
+                   )
 
 
 admin.site.register(CopyDicom, CopyDicomAdmin)
@@ -350,7 +396,7 @@ class RuleAdmin(ModelAdmin):
 admin.site.register(Rule, RuleAdmin)
 
 # RuleSet admin
-class RuleInline(admin.TabularInline):
+class RuleInline(TabularInline):
     model = Rule
     extra = 1
     

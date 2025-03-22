@@ -2,23 +2,28 @@ from django.db import models
 import os
 from django.core.exceptions import ValidationError
 from urllib.parse import urlparse
-from solo.models import SingletonModel
 
 
 
-class DicomPathConfig(SingletonModel):
+class DicomPathConfig(models.Model):
     id = models.AutoField(primary_key=True)
-    datastorepath = models.TextField(null=True)
-    dicomimportfolderpath = models.TextField(null=True)
-    dicomprocessingfolderpath = models.TextField(null=True)
-    dicomnonprocessedfolderpath = models.TextField(null=True)
-    deidentificationfolderpath = models.TextField(null=True)
-    finalrtstructfolderpath = models.TextField(null=True)
-    templatefolderpath = models.TextField(null=True)
+    datastorepath = models.TextField(null=True, help_text="Enter the full path to the datastore which is the remote folder from the DICOM data will be imported.")
+    import_dicom = models.TextField(null=True, help_text="Enter the full path to the import_dicom folder which is the local folder where the DICOM data will be imported.")
 
     class Meta:
         db_table = "dicom_path_config"
-        verbose_name = "Dicom Path Configaration"
+        verbose_name = "Dicom Path Configuration"
+
+    def save(self, *args, **kwargs):
+        if DicomPathConfig.objects.exists() and not self.pk:
+            # If you're trying to create a second instance, don't save
+            raise ValidationError("There can only be one DicomPathConfig instance")
+        return super().save(*args, **kwargs)
+        
+    @classmethod
+    def get_instance(cls):
+        instance, created = cls.objects.get_or_create(pk=1)
+        return instance
 
 
 # import config
@@ -26,6 +31,10 @@ class DicomImportConfig(models.Model):
     id = models.AutoField(primary_key=True)
     pullinterval = models.PositiveIntegerField()
 
+class ProcessingStatusChoices(models.TextChoices):
+    COPIED = 'COPIED', 'COPIED'
+    PROCESSED = 'PROCESSED', 'PROCESSED'
+    FAILED = 'FAILED', 'FAILED'
 
 # Dicom copy
 class CopyDicom(models.Model):
@@ -35,6 +44,7 @@ class CopyDicom(models.Model):
     dircreateddate = models.DateTimeField(null=True)
     dirmodifieddate = models.DateTimeField(null=True)
     dirsize = models.PositiveIntegerField()
+    processing_status = models.CharField(max_length=255, choices=ProcessingStatusChoices.choices, null=True)
     copydate = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -42,7 +52,8 @@ class CopyDicom(models.Model):
     
     class Meta:
         db_table = 'copy_dicom'
-        verbose_name = 'Copy Dicom'
+        verbose_name = 'Copied DICOM Data'
+        verbose_name_plural = 'Copied DICOM Data'
 
 
 class DicomSeriesProcessing(models.Model):
@@ -56,7 +67,6 @@ class DicomSeriesProcessing(models.Model):
     studydate = models.DateField()
     modality = models.CharField(max_length=10)
     protocol = models.CharField(max_length=255, null=True)
-    sop_instance_uid = models.CharField(max_length=255, unique=True, null=True)
     description = models.CharField(max_length=255)
     dicomcount = models.PositiveSmallIntegerField(null=True)
     series_split_done = models.BooleanField(default=False)
@@ -70,7 +80,8 @@ class DicomSeriesProcessing(models.Model):
     
     class Meta:
         db_table = "dicom_import"
-        verbose_name = "Dicom Import"
+        verbose_name = "Dicom Series for Processing"
+        verbose_name_plural = "Dicom Series for Processing"
 
 
 class ModelYamlInfo(models.Model):
@@ -162,9 +173,9 @@ class SeriesMetaData(models.Model):
 
 class RuleSet(models.Model):
     id = models.AutoField(primary_key=True)
-    rule_set_name = models.CharField(max_length=255, unique=True)
-    description = models.CharField(max_length=255)
-    model_yaml = models.OneToOneField(ModelYamlInfo, on_delete=models.CASCADE, null=True)
+    rule_set_name = models.CharField(max_length=255, unique=True,help_text="Enter a name for the rule set. This must be a unique name and not match any other existing rule set.")
+    description = models.CharField(max_length=255, help_text="Enter a description for the rule set.")
+    model_yaml = models.OneToOneField(ModelYamlInfo, on_delete=models.CASCADE, null=True, help_text="Select the model yaml file for the rule set.")
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     modified_at = models.DateTimeField(auto_now=True, null=True)
     
@@ -178,7 +189,7 @@ class RuleSet(models.Model):
     
 class TagName(models.Model):
     id = models.AutoField(primary_key=True)
-    tag_name = models.CharField(max_length=255)
+    tag_name = models.CharField(max_length=255, help_text="Enter the DICOM tag name. Please ensure that it matches the DICOM tag name properly")
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     modified_at = models.DateTimeField(auto_now=True, null=True)
     

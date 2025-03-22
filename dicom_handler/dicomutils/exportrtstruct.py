@@ -6,7 +6,7 @@ from dicom_handler.models import *
 import logging
 
 # Get logger
-logger = logging.getLogger('django_log_lens.client')
+logger = logging.getLogger('dicom_handler_logs')
 
 def get_seriesUID_from_rtstruct(ds):
     """Extract SeriesInstanceUID from RTSTRUCT DICOM file."""

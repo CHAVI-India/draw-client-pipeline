@@ -17,11 +17,8 @@ from collections import defaultdict
 
 
 # yaml saving path
-try:
-    templatefolderpath = DicomPathConfig.objects.values("templatefolderpath").first()["templatefolderpath"]
-except:
-    templatefolderpath = os.path.join(os.getcwd(), "yaml-templates")
-    os.makedirs(templatefolderpath, exist_ok=True)
+templatefolderpath = os.path.join(settings.BASE_DIR, "yaml-templates")
+os.makedirs(templatefolderpath, exist_ok=True)
         
 
 def index(request):

@@ -1,4 +1,3 @@
-
 import os
 import yaml
 import glob
@@ -13,7 +12,7 @@ from dicom_handler.models import DicomSeriesProcessing, ModelYamlInfo, Rule, Rul
 import logging
 
 # Get logger
-logger = logging.getLogger('django_log_lens.client')
+logger = logging.getLogger('dicom_handler_logs')
 
 
 ## Function to get all files in a directory
@@ -73,88 +72,179 @@ def update_dicom_tags(dicom_path, tags_to_check):
 
 ## DICOM Series Separation
 def dicom_series_separation(sourcedir, processeddir):
+    """
+    Separates DICOM files from a source directory into folders by series.
+    
+    This function processes DICOM files from a source directory, groups them by
+    SeriesInstanceUID, and copies them into separate series-specific directories.
+    It also creates database entries for each unique series if they don't already exist.
+    
+    The function implements a two-pass approach:
+    1. First pass: Groups all DICOM files by their SeriesInstanceUID
+    2. Second pass: Processes each unique series, creating directories and database entries
+    
+    Args:
+        sourcedir (str): Source directory containing unsorted DICOM files
+        processeddir (str): Target directory where series-specific folders will be created
+        
+    Returns:
+        list: List of paths to all series directories that were created
+            
+    Implementation Details:
+    - Only processes files with modalities CT, MR, or PT
+    - Avoids duplicate database entries by checking if series already exists
+    - Creates database entries with DicomSeriesProcessing model for each unique series
+    - Always copies files regardless of whether the series exists in the database
+    - Counts the number of files per series and stores this in the database
+    - Series folders are named as "{patient_dir}-{seriesUID}"
+    
+    Database fields populated:
+    - patientid: Patient ID from DICOM
+    - patientname: Patient name from DICOM
+    - gender: Patient sex from DICOM
+    - studyid: Study Instance UID from DICOM
+    - seriesid: Series Instance UID from DICOM
+    - seriesfilepath: Path to first file in the series
+    - studydate: Study date from DICOM
+    - modality: Modality from DICOM
+    - protocol: Protocol name from DICOM
+    - description: Series description from DICOM
+    - dicomcount: Number of files in the series
+    - processing_start/end: Timestamps for processing
+    """
     logger.info("=== Starting DICOM Series Separation ===")
     logger.info(f"Source Directory: {sourcedir}")
     logger.info(f"Processing Directory: {processeddir}")
+    
+    # List to store all separated series directory paths
+    separated_series_dirs = []
     
     try:
         filespath = get_all_files(sourcedir)
         logger.info(f"Found {len(filespath)} files to process")
         
+        # Dictionary to group files by series
+        series_groups = {}
+        
+        # First pass: Group all files by SeriesInstanceUID
         for i, file in enumerate(filespath, 1):
             try:
                 logger.debug(f"Processing file {i}/{len(filespath)}: {file}")
                 dcm = pydicom.dcmread(file)
                 
-                if dcm.Modality in ["CT", "MR"]:
+                if dcm.Modality in ["CT", "MR", "PT"]:
                     logger.debug(f"Valid modality found: {dcm.Modality}")
                     
-                    patient_id = dcm.PatientID.replace("/", "_")
                     seriesUID = dcm.SeriesInstanceUID
-                    sopinstanceUID = dcm.SOPInstanceUID
-
-                    patient_dir = os.path.join(processeddir, patient_id)
-                    separated_series_dir = os.path.join(processeddir, f"{patient_dir}-{seriesUID}")
-
-                    series_exists = DicomSeriesProcessing.objects.filter(sop_instance_uid=sopinstanceUID).exists()
                     
-                    if not series_exists:
-                        logger.debug("Creating new DICOM series processing record")
-                        
-                        # Log DICOM details
-                        logger.info(f"""
-                            DICOM Details:
-                            Patient ID: {getattr(dcm, 'PatientID', '')}
-                            Patient Name: {getattr(dcm, 'PatientName', '')}
-                            Study Date: {getattr(dcm, 'StudyDate', '')}
-                            Modality: {getattr(dcm, 'Modality', '')}
-                            Protocol: {getattr(dcm, 'ProtocolName', '')}
-                        """)
-
-                        try:
-                            series_obj = DicomSeriesProcessing.objects.create(
-                                patientid=getattr(dcm, 'PatientID', ''),
-                                patientname=getattr(dcm, 'PatientName', ''),
-                                gender=getattr(dcm, 'PatientSex', ''),
-                                studyid=getattr(dcm, 'StudyInstanceUID', ''),
-                                seriesid=getattr(dcm, 'SeriesInstanceUID', ''),
-                                seriesfilepath=file,
-                                studydate=getattr(dcm, 'StudyDate', ''),
-                                modality=getattr(dcm, 'Modality', ''),
-                                protocol=getattr(dcm, 'ProtocolName', ''),
-                                sop_instance_uid=getattr(dcm, 'SOPInstanceUID', ''),
-                                description=getattr(dcm, 'SeriesDescription', ''),
-                                processing_start=timezone.now()
-                            )
-                            
-                            logger.info("Successfully created DicomSeriesProcessing record")
-                            
-                            os.makedirs(separated_series_dir, exist_ok=True)
-                            shutil.copy2(file, separated_series_dir)
-                            
-                            DicomSeriesProcessing.objects.filter(id=series_obj.id).update(
-                                series_split_done=True,
-                                processing_end=timezone.now()
-                            )
-                            logger.info(f"Successfully processed and copied file to {separated_series_dir}")
-                            
-                        except Exception as e:
-                            logger.error(f"Error creating/updating database record: {str(e)}")
+                    # Add to series group
+                    if seriesUID not in series_groups:
+                        series_groups[seriesUID] = {
+                            'files': [],
+                            'first_dcm': dcm,
+                            'first_file_path': file
+                        }
                     
-                    else:
-                        logger.debug(f"Skipping existing series: {sopinstanceUID}")
-                
+                    series_groups[seriesUID]['files'].append(file)
+                    
                 else:
                     logger.debug(f"Skipping file - invalid modality: {dcm.Modality}")
 
+                
             except Exception as e:
-                logger.error(f"Error processing individual file {file}: {str(e)}")
+                logger.error(f"Error reading file {file}: {e}")
+                logger.warning(f"Deleting non-DICOM file: {file}")
+                try:
+                    os.remove(file)
+                    logger.info(f"Successfully deleted: {file}")
+                except Exception as delete_error:
+                    logger.error(f"Failed to delete file {file}: {delete_error}")
                 continue
+        
+        # Second pass: Process each series once
+        logger.info(f"Found {len(series_groups)} unique series to process")
+        
+        for seriesUID, series_data in series_groups.items():
+            try:
+                dcm = series_data['first_dcm']
+                file_path = series_data['first_file_path']
+                files = series_data['files']
+                
+                patient_id = dcm.PatientID.replace("/", "_")
+                patient_dir = os.path.join(processeddir, patient_id)
+                separated_series_dir = os.path.join(processeddir, f"{patient_dir}-{seriesUID}")
+                
+                # Always create the directory and copy files for this series
+                logger.debug(f"Creating series directory and copying files for: {seriesUID}")
+                os.makedirs(separated_series_dir, exist_ok=True)
+                
+                for dicom_file in files:
+                    shutil.copy2(dicom_file, separated_series_dir)
+                
+                logger.info(f"Successfully copied {len(files)} files to {separated_series_dir}")
+                
+                # Add the series directory path to the list
+                separated_series_dirs.append(separated_series_dir)
+                
+                # Check if this series already exists in the database - only skip DB creation if it exists
+                series_exists = DicomSeriesProcessing.objects.filter(seriesid=seriesUID).exists()
+                
+                if not series_exists:
+                    logger.debug(f"Creating new DICOM series processing record for series: {seriesUID}")
+                    
+                    # Log DICOM details
+                    logger.info(f"""
+                        DICOM Series Details:
+                        Patient ID: {getattr(dcm, 'PatientID', '')}
+                        Patient Name: {getattr(dcm, 'PatientName', '')}
+                        Study Date: {getattr(dcm, 'StudyDate', '')}
+                        Modality: {getattr(dcm, 'Modality', '')}
+                        Protocol: {getattr(dcm, 'ProtocolName', '')}
+                        Series Description: {getattr(dcm, 'SeriesDescription', '')}
+                        DICOM Count: {len(files)}
+                    """)
+
+                    try:
+                        # Create a single database entry for the entire series
+                        series_obj = DicomSeriesProcessing.objects.create(
+                            patientid=getattr(dcm, 'PatientID', ''),
+                            patientname=getattr(dcm, 'PatientName', ''),
+                            gender=getattr(dcm, 'PatientSex', ''),
+                            studyid=getattr(dcm, 'StudyInstanceUID', ''),
+                            seriesid=getattr(dcm, 'SeriesInstanceUID', ''),
+                            seriesfilepath=file_path,
+                            studydate=getattr(dcm, 'StudyDate', ''),
+                            modality=getattr(dcm, 'Modality', ''),
+                            protocol=getattr(dcm, 'ProtocolName', ''),
+                            description=getattr(dcm, 'SeriesDescription', ''),
+                            dicomcount=len(files),
+                            processing_start=timezone.now()
+                        )
+                        
+                        logger.info(f"Successfully created DicomSeriesProcessing record for series with {len(files)} files")
+                        
+                        # Mark series as processed
+                        DicomSeriesProcessing.objects.filter(id=series_obj.id).update(
+                            series_split_done=True,
+                            processing_end=timezone.now()
+                        )
+                        
+                    except Exception as e:
+                        logger.error(f"Error creating/updating database record for series {seriesUID}: {str(e)}")
+                
+                else:
+                    logger.info(f"Series {seriesUID} already exists in database - skipping database creation only")
+            
+            except Exception as e:
+                logger.error(f"Error processing series {seriesUID}: {str(e)}")
 
     except Exception as e:
         logger.error(f"Error in main processing loop: {str(e)}")
     
     logger.info("=== DICOM Series Separation Complete ===")
+    
+    # Return the list of separated series directories
+    return separated_series_dirs
 
 
 ## Hash Calculation
@@ -211,12 +301,18 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
             if ModelYamlInfo.objects.filter(file_hash=yaml_file_hash).exists():
                 yaml_file_name = ModelYamlInfo.objects.get(file_hash=yaml_file_hash).yaml_name
                 logger.info(f"Matching YAML file found: {yaml_file_name}")
-                
+
+                # Check if the directory to which the files will be moved already exists
+                dest_dir = os.path.join(deidentified_dicom_path, os.path.basename(dicom_series_path))
+                if os.path.exists(dest_dir):
+                    shutil.rmtree(dest_dir)
+                    logger.info(f"Successfully removed existing directory: {dest_dir}")
+
                 logger.debug(f"Moving directory to: {deidentified_dicom_path}")
                 shutil.move(dicom_series_path, deidentified_dicom_path)
-
+                logger.info(f"Successfully moved directory to: {deidentified_dicom_path}")
                 DicomUnprocessed.objects.filter(id=processing.id).update(
-                    series_folder_location=deidentified_dicom_path
+                    series_folder_location=f"{dest_dir}"
                 )
                 
                 ProcessingStatus.objects.create(
@@ -228,8 +324,15 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
 
             else:
                 logger.warning("Protocol key does not exist, moving to unprocessed folder")
-                shutil.move(dicom_series_path, unprocess_dicom_path)
+                dest_dir = os.path.join(unprocess_dicom_path, os.path.basename(dicom_series_path))
+                if os.path.exists(dest_dir):
+                    shutil.rmtree(dest_dir)
+                    logger.info(f"Successfully removed existing directory: {dest_dir}")
 
+                logger.info(f"Moving directory to: {unprocess_dicom_path}")
+
+                shutil.move(dicom_series_path, unprocess_dicom_path)
+                logger.info(f"Successfully moved directory to: {unprocess_dicom_path}")
                 ProcessingStatus.objects.create(
                     patient_id=DicomUnprocessed.objects.get(id=processing.id),
                     status="Invalid Template file",
@@ -237,7 +340,7 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                 )
 
                 DicomUnprocessed.objects.filter(id=processing.id).update(
-                    series_folder_location=unprocess_dicom_path,
+                    series_folder_location=f"{dest_dir}",
                     unprocessed=True
                 )
 
@@ -291,15 +394,22 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                         id=filter_match_rule["rule_set__id"].unique()[0]
                     ).values("model_yaml__yaml_name").first()["model_yaml__yaml_name"]
 
+                    # Check if the directory to which the files will be moved already exists
+                    dest_dir = os.path.join(deidentified_dicom_path, os.path.basename(dicom_series_path))
+                    if os.path.exists(dest_dir):
+                        shutil.rmtree(dest_dir)
+                        logger.info(f"Successfully removed existing directory: {dest_dir}")                    
+
                     logger.debug(f"Copying YAML file: {model_yaml_path}")
                     shutil.copy2(
                         model_yaml_path,
                         os.path.join(dicom_series_path)
                     )
+                    logger.info(f"Successfully copied YAML file to: {dicom_series_path}")
 
                     logger.debug(f"Moving directory to: {deidentified_dicom_path}")
                     shutil.move(dicom_series_path, deidentified_dicom_path)
-
+                    logger.info(f"Successfully moved directory to: {deidentified_dicom_path}")
                     ProcessingStatus.objects.create(
                         patient_id=DicomUnprocessed.objects.get(id=processing.id),
                         status=f"{model_yaml_name} Template file Attached",
@@ -308,12 +418,18 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                     )
 
                     DicomUnprocessed.objects.filter(id=processing.id).update(
-                        series_folder_location=deidentified_dicom_path)
+                        series_folder_location=f"{dest_dir}")
                     
                 elif len(filter_match_rule) > 1:
                     logger.warning("Multiple rule matches found")
-                    shutil.move(dicom_series_path, unprocess_dicom_path)
+                    dest_dir = os.path.join(unprocess_dicom_path, os.path.basename(dicom_series_path))
+                    if os.path.exists(dest_dir):
+                        shutil.rmtree(dest_dir)
+                        logger.info(f"Successfully removed existing directory: {dest_dir}")
 
+                    logger.info(f"Moving directory to: {unprocess_dicom_path}")
+                    shutil.move(dicom_series_path, unprocess_dicom_path)
+                    logger.info(f"Successfully moved directory to: {unprocess_dicom_path}")
                     multiple_rules = ', '.join(rule_set_table_df["rule_set__rule_set_name"].unique().tolist())
                     logger.info(f"Matched rules: {multiple_rules}")
 
@@ -324,11 +440,17 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                     )
 
                     DicomUnprocessed.objects.filter(id=processing.id).update(
-                        series_folder_location=unprocess_dicom_path,
+                        series_folder_location=f"{dest_dir}",
                         unprocessed=True
                     )
                 else:
                     logger.warning("No matching rules found")
+                    dest_dir = os.path.join(unprocess_dicom_path, os.path.basename(dicom_series_path))
+                    if os.path.exists(dest_dir):
+                        shutil.rmtree(dest_dir)
+                        logger.info(f"Successfully removed existing directory: {dest_dir}")
+
+                    logger.info(f"Moving directory to: {unprocess_dicom_path}")
                     shutil.move(dicom_series_path, unprocess_dicom_path)
                     ProcessingStatus.objects.create(
                         patient_id=DicomUnprocessed.objects.get(id=processing.id),
@@ -337,7 +459,7 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                     )
 
                     DicomUnprocessed.objects.filter(id=processing.id).update(
-                        series_folder_location=unprocess_dicom_path,
+                        series_folder_location=f"{dest_dir}",
                         unprocessed=True
                     )
 
@@ -347,6 +469,12 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
 
         else:
             logger.warning(f"Multiple YAML files found ({len(yaml_files)}), moving to unprocessed folder")
+            dest_dir = os.path.join(unprocess_dicom_path, os.path.basename(dicom_series_path))
+            if os.path.exists(dest_dir):
+                shutil.rmtree(dest_dir)
+                logger.info(f"Successfully removed existing directory: {dest_dir}")
+
+            logger.info(f"Moving directory to: {unprocess_dicom_path}")
             shutil.move(dicom_series_path, unprocess_dicom_path)
 
             ProcessingStatus.objects.create(
@@ -356,7 +484,7 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
             )
 
             DicomUnprocessed.objects.filter(id=processing.id).update(
-                series_folder_location=unprocess_dicom_path,
+                series_folder_location=f"{dest_dir}",
                 unprocessed=True
             )
 
