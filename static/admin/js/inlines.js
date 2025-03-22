@@ -32,7 +32,9 @@
         el.id = el.id.replace(id_regex, replacement);
       }
       if (el.name) {
-        el.name = el.name.replace(id_regex, replacement);
+        // !CHANGED from original
+        // el.name = el.name.replace(id_regex, replacement);
+        el.setAttribute("name", el.name.replace(id_regex, replacement));
       }
     };
     const totalForms = $("#id_" + options.prefix + "-TOTAL_FORMS").prop(
@@ -223,11 +225,24 @@
       }
     };
 
-    $this.each(function (i) {
-      $(this)
-        .not("." + options.emptyCssClass)
-        .addClass(options.formCssClass);
-    });
+    // !CHANGED from original. Business logic for tabular inlines is different.
+    if ($this.parent().is("tbody")) {
+      $this
+        .parent()
+        .parent()
+        .find("tr.form-row")
+        .each(function (i) {
+          $(this)
+            .not("." + options.emptyCssClass)
+            .addClass(options.formCssClass);
+        });
+    } else {
+      $this.each(function (i) {
+        $(this)
+          .not("." + options.emptyCssClass)
+          .addClass(options.formCssClass);
+      });
+    }
 
     // Create the delete buttons for all unsaved inlines:
     $this

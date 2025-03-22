@@ -22,7 +22,7 @@ def cleanup_old_transfers():
         for transfer in completed_transfers:
             try:
                 # Delete archived files
-                archive_path = Path(folders.archive_folder) / transfer.study_instance_uid / transfer.series_instance_uid
+                archive_path = folders.get_archive_folder_path() / transfer.study_instance_uid / transfer.series_instance_uid
                 if archive_path.exists():
                     for file_path in archive_path.glob('*'):
                         file_path.unlink()

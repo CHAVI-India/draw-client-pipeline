@@ -19,7 +19,6 @@ from django.utils.translation import gettext_lazy as _
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-print(BASE_DIR)
 load_dotenv(
     os.path.join(
         BASE_DIR, ".env"
@@ -57,7 +56,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    "whitenoise.runserver_nostatic",    
+    "whitenoise.runserver_nostatic",
+    'celery',       
+    'django_celery_results',
+    'django_celery_beat',
     # Your apps
     'django_apscheduler',
     'solo',
@@ -260,7 +262,7 @@ UNFOLD = {
         "show_all_applications": False,  # Dropdown with all applications and models
         "navigation": [
             {
-                "title": _("Path Configuration"),
+                "title": _("DICOMPath Configuration"),
                 "separator": False,  # Top border
                 "collapsible": True,  # Collapsible group of links
                 "items": [
@@ -285,7 +287,7 @@ UNFOLD = {
                 ],
             },
             {
-                "title": _("Ruleset"),
+                "title": _("Template Rulesets"),
                 "separator": True,
                 "collapsible": True,
                 "items": [
@@ -295,12 +297,12 @@ UNFOLD = {
                         "link": reverse_lazy("admin:dicom_handler_tagname_changelist"),
                     },
                      {
-                        "title": _("Rule Set"),
+                        "title": _("Rule Sets"),
                         "icon": "rule",
                         "link": reverse_lazy("admin:dicom_handler_ruleset_changelist"),
                     },
                      {
-                        "title": _("Rule"),
+                        "title": _("Rules"),
                         "icon": "rule_folder",
                         "link": reverse_lazy("admin:dicom_handler_rule_changelist"),
                     },
@@ -378,22 +380,62 @@ UNFOLD = {
             },
 
             {
-                "title": _("API Client"),
+                "title": _("API Settings and Transfers"),
                 "separator": True,
                 "collapsible": True,
                 "items": [
                     {
-                        "title": _("api key"),
-                        "icon": "api",
-                        "link": reverse_lazy("admin:api_client_apikey_changelist"),
-                    },
-                    {
-                        "title": _("Scheduled Jobs"),
-                        "icon": "SystemSettings",
+                        "title": _("Client Settings"),
+                        "icon": "settings",
                         "link": reverse_lazy("admin:api_client_systemsettings_changelist"),
                     },
+                    {
+                        "title": _("Processing Folder Paths"),
+                        "icon": "folder",
+                        "link": reverse_lazy("admin:api_client_folderpaths_changelist"),
+                    },
+                    {
+                        "title": _("DICOM Processing Status"),
+                        "icon": "cycle",
+                        "link": reverse_lazy("admin:api_client_dicomtransfer_changelist"),
+                    },                    
                     
                 ],
+            },
+
+            {
+                'title': 'Deidentification Application',
+                'separator': True,
+                'collapsible': True,
+                'items': [
+                    {
+                        'title': 'Patient',
+                        'icon': 'person',
+                        'link': reverse_lazy("admin:deidapp_patient_changelist"),
+                    },
+                    {
+                        'title': 'Dicom Study',
+                        'icon': 'folder',
+                        'link': reverse_lazy("admin:deidapp_dicomstudy_changelist"),
+                    },
+                    {
+                        'title': 'Dicom Series',
+                        'icon': 'folder',
+                        'link': reverse_lazy("admin:deidapp_dicomseries_changelist"),
+                    },
+                    {
+                        'title': 'Dicom Instance',
+                        'icon': 'folder',
+                        'link': reverse_lazy("admin:deidapp_dicominstance_changelist"),
+                    },
+                    {
+                        'title': 'RT Structure File',
+                        'icon': 'draft',
+                        'link': reverse_lazy("admin:deidapp_rtstructfile_changelist"),
+                    },
+                    
+                ],    
+                               
             },
 
         ],
@@ -470,3 +512,8 @@ LOGGING = {
 }
 
 # ALLOW_JS_LOGGING = DEBUG # it's recommendable not to allow client logging in production
+
+# Celery Configuration
+
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_CACHE_BACKEND = 'django-cache'

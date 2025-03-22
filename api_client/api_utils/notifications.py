@@ -1,13 +1,14 @@
 import logging
 from django.db import transaction
-from ..models import DicomTransfer, SystemSettings
-from .dicom_export import DicomExporter
+from api_client.models import DicomTransfer, SystemSettings
+from api_client.api_utils.dicom_export import DicomExporter
 
 logger = logging.getLogger(__name__)
 
 def notify_completed_transfers():
     """
     Send status updates to server for completed transfers that haven't been notified.
+    This confirms successful RTSTRUCT transfer and allows server cleanup.
     """
     try:
         exporter = DicomExporter()
@@ -17,25 +18,36 @@ def notify_completed_transfers():
         with transaction.atomic():
             completed_transfers = DicomTransfer.objects.select_for_update().filter(
                 status='COMPLETED',
-                server_notified=False
+                server_notified=False  # For BooleanField, we can use False directly
             )
             
             for transfer in completed_transfers:
                 try:
-                    # Send notification to server
+                    # Send notification to server using the endpoint from settings
                     response = exporter._make_request(
                         'POST',
                         settings.notify_endpoint.format(task_id=transfer.server_token),
-                        json={'status': 'COMPLETED'}
                     )
                     
-                    # If we get here, the request was successful since _make_request raises on error
-                    transfer.server_notified = True
-                    transfer.save()
-                    logger.info(f"Successfully notified completion of transfer {transfer.id}")
+                    # Verify response format
+                    if response.get('message') == "Transfer confirmation received, files cleaned up":
+                        transfer.server_notified = True
+                        transfer.status = 'COMPLETED_NOTIFIED'
+                        transfer.save()
+                        logger.info(f"Successfully notified completion of transfer {transfer.id}")
+                    else:
+                        logger.error(f"Unexpected response format for transfer {transfer.id}")
                         
                 except Exception as e:
-                    logger.error(f"Error notifying transfer {transfer.id}: {str(e)}")
+                    error_msg = str(e)
+                    if "401" in error_msg:
+                        logger.error(f"Authentication failed for transfer {transfer.id}: {error_msg}")
+                    elif "404" in error_msg:
+                        logger.error(f"Transaction not found for transfer {transfer.id}: {error_msg}")
+                    elif "500" in error_msg:
+                        logger.error(f"Server error during cleanup for transfer {transfer.id}: {error_msg}")
+                    else:
+                        logger.error(f"Error notifying transfer {transfer.id}: {error_msg}")
                 
     except Exception as e:
         logger.error(f"Error in notify_completed_transfers: {str(e)}")

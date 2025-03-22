@@ -28,9 +28,9 @@ def scan_dicom_folder():
     """
     try:
         folders = FolderPaths.load()
-        dicom_folder = Path(folders.watch_folder)
-        temp_folder = Path(folders.temp_folder)
-        archive_folder = Path(folders.archive_folder)
+        dicom_folder = folders.get_watch_folder_path()
+        temp_folder = folders.get_temp_folder_path()
+        archive_folder = folders.get_archive_folder_path()
         
         if not all(folder.exists() for folder in [dicom_folder, temp_folder, archive_folder]):
             logger.error("One or more required folders do not exist")

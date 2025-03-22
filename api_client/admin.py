@@ -2,41 +2,15 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils import timezone
-from .models import DicomTransfer, APIKey, SystemSettings, FolderPaths
+from .models import DicomTransfer, SystemSettings, FolderPaths
 from django.contrib import messages
 from django import forms
+from django.db import models
 from unfold.admin import ModelAdmin
+from unfold.contrib.forms.widgets import *
 from unfold.decorators import action
 
-@admin.register(APIKey)
-class APIKeyAdmin(ModelAdmin):
-    list_display = ['__str__', 'masked_key', 'updated_at']
-    readonly_fields = ['updated_at']
-    
-    fieldsets = (
-        (None, {
-            'fields': ('encrypted_key',),
-            'description': 'Enter the DRAW API key. It will be automatically encrypted when saved.'
-        }),
-        ('System Information', {
-            'fields': ('updated_at',),
-            'classes': ('collapse',)
-        }),
-    )
-    
-    def masked_key(self, obj):
-        """Show masked value for the encrypted key."""
-        return '********'
-    
-    masked_key.short_description = 'API Key'
-    
-    def has_add_permission(self, request):
-        # Only allow adding if no instance exists
-        return not APIKey.objects.exists()
-    
-    def has_delete_permission(self, request, obj=None):
-        # Prevent deletion of the singleton instance
-        return False
+
 
 class SystemSettingsForm(forms.ModelForm):
     bearer_token = forms.CharField(
@@ -55,12 +29,28 @@ class SystemSettingsForm(forms.ModelForm):
     
     class Meta:
         model = SystemSettings
-        fields = [
-            'api_base_url', 'client_id', 'max_retries',
-            'upload_endpoint', 'status_endpoint', 'download_endpoint', 'notify_endpoint',
-            'bearer_token', 'refresh_token', 'token_expiry'
-        ]
-        exclude = ['encrypted_bearer_token', 'encrypted_refresh_token']
+
+        fieldsets = (
+            ('API Configuration', {
+                'fields': ('api_base_url', 'client_id', 'max_retries'),
+                'description': 'Configure the connection to the DRAW API server'
+            }),
+            ('API Endpoints', {
+                'fields': ('upload_endpoint', 'status_endpoint', 'download_endpoint', 'notify_endpoint'),
+                'description': 'Configure the API endpoints'
+            }),
+            ('Authentication', {
+                'fields': ('bearer_token', 'refresh_token', 'token_expiry'),
+                'description': 'Configure authentication tokens. These will be encrypted when saved.'
+            }),
+        )
+
+        # fields = [
+        #     'api_base_url', 'client_id', 'max_retries',
+        #     'upload_endpoint', 'status_endpoint', 'download_endpoint', 'notify_endpoint',
+        #     'bearer_token', 'refresh_token', 'token_expiry'
+        # ]
+        exclude = ['encrypted_bearer_token', 'encrypted_refresh_token','updated_at']
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -102,10 +92,6 @@ class SystemSettingsAdmin(ModelAdmin):
         ('Authentication', {
             'fields': ('bearer_token', 'refresh_token', 'token_expiry'),
             'description': 'Configure authentication tokens. These will be encrypted when saved.'
-        }),
-        ('System Information', {
-            'fields': ('updated_at',),
-            'classes': ('collapse',)
         }),
     )
     

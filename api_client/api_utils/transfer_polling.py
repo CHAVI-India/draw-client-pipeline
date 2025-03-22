@@ -98,7 +98,7 @@ def poll_pending_transfers():
                             logger.warning(f"No X-File-Checksum header received for transfer {transfer.id}. Will compute checksum locally.")
                         
                         # Save RTSTRUCT file
-                        rtstruct_path = Path(folder_paths.output_folder) / f"{transfer.series_instance_uid}_rtstruct.dcm"
+                        rtstruct_path = folder_paths.get_output_folder_path() / f"{transfer.series_instance_uid}_rtstruct.dcm"
                         logger.info(f"Saving RTSTRUCT to: {rtstruct_path}")
                         
                         with open(rtstruct_path, 'wb') as f:
@@ -129,8 +129,8 @@ def poll_pending_transfers():
                         logger.info(f"Transfer {transfer.id} marked as completed with RTSTRUCT at {rtstruct_path}")
 
                         # Clean up zip file after successful RTSTRUCT receipt
-                        zip_path = Path(transfer.zip_file_path)
-                        if zip_path.exists():
+                        zip_path = transfer.get_zip_file_path()
+                        if zip_path and zip_path.exists():
                             try:
                                 zip_path.unlink()
                                 logger.info(f"Cleaned up zip file for transfer {transfer.id}: {zip_path}")

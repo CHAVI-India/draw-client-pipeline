@@ -6,52 +6,9 @@ from cryptography.fernet import Fernet
 import base64
 import os
 import logging
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
-
-class APIKey(models.Model):
-    """Singleton model for storing the encrypted API key."""
-    
-    encrypted_key = models.TextField()
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        verbose_name = "API Key"
-        verbose_name_plural = "API Keys"
-    
-    def save(self, *args, **kwargs):
-        self.pk = 1
-        if not hasattr(self, '_encrypted'):
-            # Only encrypt if the key is being set/changed
-            self.encrypted_key = self.encrypt_value(self.encrypted_key)
-            self._encrypted = True
-        super().save(*args, **kwargs)
-    
-    @staticmethod
-    def get_encryption_key():
-        """Generate a Fernet key from Django's SECRET_KEY."""
-        # Use Django's SECRET_KEY to derive a Fernet key
-        key = base64.urlsafe_b64encode(settings.SECRET_KEY.encode()[:32].ljust(32, b'\0'))
-        return key
-    
-    def encrypt_value(self, value):
-        """Encrypt a value using Fernet."""
-        f = Fernet(self.get_encryption_key())
-        return f.encrypt(value.encode()).decode()
-    
-    def decrypt_value(self):
-        """Decrypt the stored API key."""
-        f = Fernet(self.get_encryption_key())
-        return f.decrypt(self.encrypted_key.encode()).decode()
-    
-    @classmethod
-    def load(cls):
-        """Get or create the API key instance."""
-        obj, created = cls.objects.get_or_create(pk=1)
-        return obj
-    
-    def __str__(self):
-        return "DRAW API Key"
 
 class SystemSettings(models.Model):
     """
@@ -102,19 +59,19 @@ class SystemSettings(models.Model):
         verbose_name="Status Endpoint",
         max_length=200,
         default='api/upload/{task_id}/status/',
-        help_text="Endpoint for checking segmentation status. Use {task_id} as placeholder."
+        help_text="Endpoint for checking segmentation status. Use {task_id} as placeholder for the transaction ID provided by the server.."
     )
     download_endpoint = models.CharField(
         verbose_name="Download Endpoint",
         max_length=200,
         default='api/rtstruct/{task_id}',
-        help_text="Endpoint for downloading RTSTRUCT files. Use {task_id} as placeholder."
+        help_text="Endpoint for downloading RTSTRUCT files. Use {task_id} as placeholder for the transaction ID provided by the server.."
     )
     notify_endpoint = models.CharField(
         verbose_name="Notify Endpoint",
         max_length=200,
-        default='segmentation/notify/{task_id}',
-        help_text="Endpoint for notifying about RTSTRUCT receipt. Use {task_id} as placeholder."
+        default='api/rtstruct/{task_id}/confirm',
+        help_text="Endpoint for notifying about RTSTRUCT receipt. Use {task_id} as placeholder for the transaction ID provided by the server."
     )
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -194,27 +151,31 @@ class SystemSettings(models.Model):
 class FolderPaths(models.Model):
     """
     Singleton model for folder path configurations.
-    All paths are required and will be created if they don't exist.
+    All paths are relative to the project's base directory and will be created if they don't exist.
     """
     watch_folder = models.CharField(
         max_length=512,
         verbose_name="DICOM Watch Folder",
-        help_text="Directory to monitor for new DICOM files"
+        default='processed_dicom',
+        help_text="Directory to monitor for new DICOM files (relative to base directory)"
     )
     temp_folder = models.CharField(
         max_length=512,
         verbose_name="Temporary Folder",
-        help_text="Temporary directory for processing DICOM files"
+        default='temporary',
+        help_text="Temporary directory for processing DICOM files (relative to base directory)"
     )
     archive_folder = models.CharField(
         max_length=512,
         verbose_name="Archive Folder",
-        help_text="Archive directory for processed DICOM files"
+        default='archive',
+        help_text="Archive directory for processed DICOM files (relative to base directory)"
     )
     output_folder = models.CharField(
         max_length=512,
         verbose_name="Output Folder",
-        help_text="Output directory for received RTSTRUCT files"
+        default='rtstruct',
+        help_text="Output directory for received RTSTRUCT files (relative to base directory)"
     )
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -222,11 +183,31 @@ class FolderPaths(models.Model):
         verbose_name = "Folder Paths"
         verbose_name_plural = "Folder Paths"
     
+    def get_absolute_path(self, relative_path):
+        """Convert a relative path to an absolute path based on the project's base directory."""
+        return Path(settings.BASE_DIR) / relative_path
+    
+    def get_watch_folder_path(self):
+        """Get the absolute path for the watch folder."""
+        return self.get_absolute_path(self.watch_folder)
+    
+    def get_temp_folder_path(self):
+        """Get the absolute path for the temporary folder."""
+        return self.get_absolute_path(self.temp_folder)
+    
+    def get_archive_folder_path(self):
+        """Get the absolute path for the archive folder."""
+        return self.get_absolute_path(self.archive_folder)
+    
+    def get_output_folder_path(self):
+        """Get the absolute path for the output folder."""
+        return self.get_absolute_path(self.output_folder)
+    
     def save(self, *args, **kwargs):
         self.pk = 1
         # Create directories if they don't exist
         for field in ['watch_folder', 'temp_folder', 'archive_folder', 'output_folder']:
-            path = getattr(self, field)
+            path = self.get_absolute_path(getattr(self, field))
             try:
                 os.makedirs(path, exist_ok=True)
             except Exception as e:
@@ -253,7 +234,10 @@ class DicomTransfer(models.Model):
 
     study_instance_uid = models.CharField(max_length=255)
     series_instance_uid = models.CharField(max_length=255)
-    zip_file_path = models.CharField(max_length=512)
+    zip_file_path = models.CharField(
+        max_length=512,
+        help_text="Path to the zip file (relative to base directory)"
+    )
     sent_datetime = models.DateTimeField(null=True, blank=True)
     rtstruct_received_datetime = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
@@ -263,7 +247,12 @@ class DicomTransfer(models.Model):
     server_task_id = models.CharField(max_length=255, null=True, blank=True)
     server_token = models.CharField(max_length=255, null=True, blank=True)
     server_status = models.CharField(max_length=255, null=True, blank=True, help_text="Status reported by the server")
-    rtstruct_file_path = models.CharField(max_length=512, null=True, blank=True)
+    rtstruct_file_path = models.CharField(
+        max_length=512,
+        null=True,
+        blank=True,
+        help_text="Path to the RTSTRUCT file (relative to base directory)"
+    )
     cleaned_up = models.BooleanField(default=False)
     last_poll_attempt = models.DateTimeField(null=True, blank=True)
     poll_attempts = models.IntegerField(default=0)
@@ -285,6 +274,20 @@ class DicomTransfer(models.Model):
     def __str__(self):
         return f"Transfer {self.id} - Study: {self.study_instance_uid} - Status: {self.status}"
 
+    def get_absolute_path(self, relative_path):
+        """Convert a relative path to an absolute path based on the project's base directory."""
+        if not relative_path:
+            return None
+        return Path(settings.BASE_DIR) / relative_path
+
+    def get_zip_file_path(self):
+        """Get the absolute path for the zip file."""
+        return self.get_absolute_path(self.zip_file_path)
+
+    def get_rtstruct_file_path(self):
+        """Get the absolute path for the RTSTRUCT file."""
+        return self.get_absolute_path(self.rtstruct_file_path)
+
     def mark_as_sent(self):
         self.sent_datetime = timezone.now()
         self.status = 'SENT'
@@ -293,7 +296,13 @@ class DicomTransfer(models.Model):
     def mark_as_completed(self, rtstruct_path):
         self.rtstruct_received_datetime = timezone.now()
         self.status = 'COMPLETED'
-        self.rtstruct_file_path = rtstruct_path
+        # Convert absolute path to relative path before saving
+        try:
+            rtstruct_path = Path(rtstruct_path)
+            self.rtstruct_file_path = str(rtstruct_path.relative_to(settings.BASE_DIR))
+        except ValueError:
+            # If the path is not relative to BASE_DIR, store it as-is
+            self.rtstruct_file_path = str(rtstruct_path)
         self.save()
 
     def mark_as_notified(self):

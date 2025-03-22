@@ -4,6 +4,7 @@ import os
 from django.utils import timezone
 from pathlib import Path
 from ..models import DicomTransfer, SystemSettings
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -321,6 +322,13 @@ class DicomExporter:
             # Update transfer record with transaction token
             transfer.server_task_id = response.get('transaction_token')
             transfer.server_token = response.get('transaction_token')
+            # Convert absolute path to relative path before saving
+            try:
+                zip_path = Path(zip_file_path)
+                transfer.zip_file_path = str(zip_path.relative_to(settings.BASE_DIR))
+            except ValueError:
+                # If the path is not relative to BASE_DIR, store it as-is
+                transfer.zip_file_path = zip_file_path
             transfer.mark_as_sent()
             
             logger.info(f"Transfer initiated successfully. ID: {transfer.id}, Transaction Token: {transfer.server_token}, Token: {transfer.server_token}")
