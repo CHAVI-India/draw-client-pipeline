@@ -223,3 +223,26 @@ def read_dicom_metadata_task(dicom_series_path=None):
         processing_time = timezone.now() - start_time
         logger.error(f"Task {task_id}: Error in read_dicom_metadata task after {processing_time.total_seconds():.2f} seconds for {dicom_series_path}: {str(e)}")
         return False
+
+@shared_task
+def export_rtstruct_task():
+    """
+    This task will export RTSTRUCT files from the processing folder to the datastore folder.
+    It will be triggered after the reidentify_rtstruct task completes.
+    """
+    try:
+        task_id = export_rtstruct_task.request.id
+        logger.info(f"[Task ID: {task_id}] Starting RTSTRUCT export task")
+        result = export_rtstruct()
+        if result:
+            logger.info(f"[Task ID: {task_id}] RTSTRUCT export completed successfully")
+        else:
+            logger.warning(f"[Task ID: {task_id}] RTSTRUCT export completed with issues")
+        
+        return result
+    
+    except Exception as e:
+        task_id = getattr(export_rtstruct_task, 'request', None)
+        task_id = task_id.id if task_id else 'unknown'
+        logger.error(f"[Task ID: {task_id}] Error during RTSTRUCT export task: {str(e)}")
+        raise e

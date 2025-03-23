@@ -212,7 +212,7 @@ def dicom_series_separation(sourcedir, processeddir):
                             gender=getattr(dcm, 'PatientSex', ''),
                             studyid=getattr(dcm, 'StudyInstanceUID', ''),
                             seriesid=getattr(dcm, 'SeriesInstanceUID', ''),
-                            seriesfilepath=file_path,
+                            seriesfilepath=separated_series_dir,
                             studydate=getattr(dcm, 'StudyDate', ''),
                             modality=getattr(dcm, 'Modality', ''),
                             protocol=getattr(dcm, 'ProtocolName', ''),

@@ -63,3 +63,4 @@ def reidentify_rtstruct():
         task_id = task_id.id if task_id else 'unknown'
         logger.error(f"[Task ID: {task_id}] Error during RTSTRUCT reidentification task: {str(e)}")
         raise e
+
