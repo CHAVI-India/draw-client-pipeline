@@ -55,6 +55,11 @@ def reidentify_rtstruct_files(source_dir=None, target_dir=None):
                 except:
                     logger.warning(f"Invalid DICOM file: {file_path}")
                     continue
+                
+                # Check if this file has already been successfully processed
+                if RTStructFile.objects.filter(original_file_path=file_path, processing_status='SUCCESS').exists():
+                    logger.info(f"File already successfully processed: {file_path}")
+                    continue
 
                 # Step 2: Check if modality is RTSTRUCT
                 if not hasattr(ds, 'Modality') or ds.Modality != 'RTSTRUCT':
