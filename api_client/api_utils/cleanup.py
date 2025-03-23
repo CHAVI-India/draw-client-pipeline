@@ -1,9 +1,10 @@
 import logging
 import os
 from pathlib import Path
-from ..models import DicomTransfer, FolderPaths
+from ..models import DicomTransfer
+from django.conf import settings
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('api_client')
 
 def cleanup_old_transfers():
     """
@@ -11,7 +12,9 @@ def cleanup_old_transfers():
     Only processes transfers that are in COMPLETED status and have not been cleaned up yet.
     """
     try:
-        folders = FolderPaths.load()
+        # Get archive folder path - convert to Path object
+        archive_folder = Path(os.path.join(settings.BASE_DIR, 'folder_archive'))
+
         
         # Get completed transfers that haven't been cleaned up
         completed_transfers = DicomTransfer.objects.filter(
@@ -22,7 +25,7 @@ def cleanup_old_transfers():
         for transfer in completed_transfers:
             try:
                 # Delete archived files
-                archive_path = folders.get_archive_folder_path() / transfer.study_instance_uid / transfer.series_instance_uid
+                archive_path = archive_folder / transfer.study_instance_uid / transfer.series_instance_uid
                 if archive_path.exists():
                     for file_path in archive_path.glob('*'):
                         file_path.unlink()

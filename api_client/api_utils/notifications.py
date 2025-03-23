@@ -3,7 +3,7 @@ from django.db import transaction
 from api_client.models import DicomTransfer, SystemSettings
 from api_client.api_utils.dicom_export import DicomExporter
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('api_client')
 
 def notify_completed_transfers():
     """
@@ -12,7 +12,7 @@ def notify_completed_transfers():
     """
     try:
         exporter = DicomExporter()
-        settings = SystemSettings.load()
+        system_settings = SystemSettings.load()
         
         # Use select_for_update to prevent concurrent access
         with transaction.atomic():
@@ -26,7 +26,7 @@ def notify_completed_transfers():
                     # Send notification to server using the endpoint from settings
                     response = exporter._make_request(
                         'POST',
-                        settings.notify_endpoint.format(task_id=transfer.server_token),
+                        system_settings.notify_endpoint.format(task_id=transfer.server_token),
                     )
                     
                     # Verify response format

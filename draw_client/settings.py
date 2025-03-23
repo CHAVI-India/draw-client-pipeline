@@ -276,12 +276,12 @@ UNFOLD = {
             },
 
             {
-                "title": _("DRAW Templates"),
+                "title": _("Autsegmentation Templates"),
                 "separator": True,
                 "collapsible": True,
                 "items": [
                     {
-                        "title": _("Model Yaml"),
+                        "title": _("Autosegmentation Templates"),
                         "icon": "draw",
                         "link": reverse_lazy("admin:dicom_handler_modelyamlinfo_changelist"),
                     },
@@ -380,11 +380,11 @@ UNFOLD = {
                         "icon": "settings",
                         "link": reverse_lazy("admin:api_client_systemsettings_changelist"),
                     },
-                    {
-                        "title": _("Processing Folder Paths"),
-                        "icon": "folder",
-                        "link": reverse_lazy("admin:api_client_folderpaths_changelist"),
-                    },
+                    # {
+                    #     "title": _("Processing Folder Paths"),
+                    #     "icon": "folder",
+                    #     "link": reverse_lazy("admin:api_client_folderpaths_changelist"),
+                    # },
                     {
                         "title": _("DICOM Processing Status"),
                         "icon": "cycle",

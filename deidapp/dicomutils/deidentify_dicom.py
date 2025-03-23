@@ -11,7 +11,7 @@ import calendar
 import logging
 
 # Setup logging
-logger = logging.getLogger('deidapp_logs')
+logger = logging.getLogger('deidapp')
 
 # Add Celery's logger
 celery_logger = logging.getLogger('celery.task')

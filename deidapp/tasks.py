@@ -6,7 +6,7 @@ from django.utils import timezone
 from deidapp.models import *
 from deidapp.dicomutils.deidentify_dicom import process_pending_deidentifications
 # Create a dedicated logger for deidentification tasks
-logger = logging.getLogger('deidapp_logs')
+logger = logging.getLogger('deidapp')
 # Add Celery's logger
 celery_logger = logging.getLogger('celery.task')
 

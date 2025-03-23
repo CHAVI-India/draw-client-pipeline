@@ -148,79 +148,79 @@ class SystemSettings(models.Model):
     def __str__(self):
         return "System Settings"
 
-class FolderPaths(models.Model):
-    """
-    Singleton model for folder path configurations.
-    All paths are relative to the project's base directory and will be created if they don't exist.
-    """
-    watch_folder = models.CharField(
-        max_length=512,
-        verbose_name="DICOM Watch Folder",
-        default='processed_dicom',
-        help_text="Directory to monitor for new DICOM files (relative to base directory)"
-    )
-    temp_folder = models.CharField(
-        max_length=512,
-        verbose_name="Temporary Folder",
-        default='temporary',
-        help_text="Temporary directory for processing DICOM files (relative to base directory)"
-    )
-    archive_folder = models.CharField(
-        max_length=512,
-        verbose_name="Archive Folder",
-        default='archive',
-        help_text="Archive directory for processed DICOM files (relative to base directory)"
-    )
-    output_folder = models.CharField(
-        max_length=512,
-        verbose_name="Output Folder",
-        default='rtstruct',
-        help_text="Output directory for received RTSTRUCT files (relative to base directory)"
-    )
-    updated_at = models.DateTimeField(auto_now=True)
+# class FolderPaths(models.Model):
+#     """
+#     Singleton model for folder path configurations.
+#     All paths are relative to the project's base directory and will be created if they don't exist.
+#     """
+#     watch_folder = models.CharField(
+#         max_length=512,
+#         verbose_name="DICOM Watch Folder",
+#         default='processed_dicom',
+#         help_text="Directory to monitor for new DICOM files (relative to base directory)"
+#     )
+#     temp_folder = models.CharField(
+#         max_length=512,
+#         verbose_name="Temporary Folder",
+#         default='temporary',
+#         help_text="Temporary directory for processing DICOM files (relative to base directory)"
+#     )
+#     archive_folder = models.CharField(
+#         max_length=512,
+#         verbose_name="Archive Folder",
+#         default='archive',
+#         help_text="Archive directory for processed DICOM files (relative to base directory)"
+#     )
+#     output_folder = models.CharField(
+#         max_length=512,
+#         verbose_name="Output Folder",
+#         default='rtstruct',
+#         help_text="Output directory for received RTSTRUCT files (relative to base directory)"
+#     )
+#     updated_at = models.DateTimeField(auto_now=True)
     
-    class Meta:
-        verbose_name = "Folder Paths"
-        verbose_name_plural = "Folder Paths"
+#     class Meta:
+#         verbose_name = "Folder Paths"
+#         verbose_name_plural = "Folder Paths"
     
-    def get_absolute_path(self, relative_path):
-        """Convert a relative path to an absolute path based on the project's base directory."""
-        return Path(settings.BASE_DIR) / relative_path
+#     def get_absolute_path(self, relative_path):
+#         """Convert a relative path to an absolute path based on the project's base directory."""
+#         return Path(settings.BASE_DIR) / relative_path
     
-    def get_watch_folder_path(self):
-        """Get the absolute path for the watch folder."""
-        return self.get_absolute_path(self.watch_folder)
+#     def get_watch_folder_path(self):
+#         """Get the absolute path for the watch folder."""
+#         return self.get_absolute_path(self.watch_folder)
     
-    def get_temp_folder_path(self):
-        """Get the absolute path for the temporary folder."""
-        return self.get_absolute_path(self.temp_folder)
+#     def get_temp_folder_path(self):
+#         """Get the absolute path for the temporary folder."""
+#         return self.get_absolute_path(self.temp_folder)
     
-    def get_archive_folder_path(self):
-        """Get the absolute path for the archive folder."""
-        return self.get_absolute_path(self.archive_folder)
+#     def get_archive_folder_path(self):
+#         """Get the absolute path for the archive folder."""
+#         return self.get_absolute_path(self.archive_folder)
     
-    def get_output_folder_path(self):
-        """Get the absolute path for the output folder."""
-        return self.get_absolute_path(self.output_folder)
+#     def get_output_folder_path(self):
+#         """Get the absolute path for the output folder."""
+#         return self.get_absolute_path(self.output_folder)
     
-    def save(self, *args, **kwargs):
-        self.pk = 1
-        # Create directories if they don't exist
-        for field in ['watch_folder', 'temp_folder', 'archive_folder', 'output_folder']:
-            path = self.get_absolute_path(getattr(self, field))
-            try:
-                os.makedirs(path, exist_ok=True)
-            except Exception as e:
-                raise ValidationError({field: f"Could not create directory: {str(e)}"})
-        super().save(*args, **kwargs)
+#     def save(self, *args, **kwargs):
+#         self.pk = 1
+#         # Create directories if they don't exist
+#         for field in ['watch_folder', 'temp_folder', 'archive_folder', 'output_folder']:
+#             path = self.get_absolute_path(getattr(self, field))
+#             try:
+#                 os.makedirs(path, exist_ok=True)
+#             except Exception as e:
+#                 raise ValidationError({field: f"Could not create directory: {str(e)}"})
+#         super().save(*args, **kwargs)
     
-    @classmethod
-    def load(cls):
-        obj, created = cls.objects.get_or_create(pk=1)
-        return obj
+#     @classmethod
+#     def load(cls):
+#         obj, created = cls.objects.get_or_create(pk=1)
+#         return obj
     
-    def __str__(self):
-        return "Folder Paths"
+#     def __str__(self):
+#         return "Folder Paths"
 
 class DicomTransfer(models.Model):
     STATUS_CHOICES = [

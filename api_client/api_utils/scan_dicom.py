@@ -2,13 +2,15 @@ import logging
 import pydicom
 import zipfile
 import hashlib
+import os
 from pathlib import Path
 from datetime import datetime, timedelta
 from django.utils import timezone
-from ..models import DicomTransfer, FolderPaths, SystemSettings
-from .dicom_export import DicomExporter
+from api_client.models import DicomTransfer, SystemSettings
+from api_client.api_utils.dicom_export import DicomExporter
+from django.conf import settings
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('api_client')
 
 def compute_file_checksum(file_path):
     """
@@ -27,12 +29,18 @@ def scan_dicom_folder():
     If all files in a folder are older than 10 minutes, zip the folder contents.
     """
     try:
-        folders = FolderPaths.load()
-        dicom_folder = folders.get_watch_folder_path()
-        temp_folder = folders.get_temp_folder_path()
-        archive_folder = folders.get_archive_folder_path()
+        # Create dicom_folder if it doesn't exist
+        dicom_folder = Path(os.path.join(settings.BASE_DIR, 'folder_post_deidentification'))
+        if not os.path.exists(dicom_folder):
+            os.makedirs(dicom_folder, exist_ok=True)
+        temp_folder = Path(os.path.join(settings.BASE_DIR, 'folder_temp'))
+        if not os.path.exists(temp_folder):
+            os.makedirs(temp_folder, exist_ok=True)
+        archive_folder = Path(os.path.join(settings.BASE_DIR, 'folder_archive'))
+        if not os.path.exists(archive_folder):
+            os.makedirs(archive_folder, exist_ok=True)
         
-        if not all(folder.exists() for folder in [dicom_folder, temp_folder, archive_folder]):
+        if not all(os.path.exists(folder) for folder in [dicom_folder, temp_folder, archive_folder]):
             logger.error("One or more required folders do not exist")
             return
 
@@ -75,8 +83,8 @@ def scan_dicom_folder():
                 study_uid = ds.StudyInstanceUID
 
                 # Get client name from settings
-                settings = SystemSettings.load()
-                client_name = settings.client_id
+                system_settings = SystemSettings.load()
+                client_name = system_settings.client_id
                 # Sanitize client name for use in filename
                 client_name = client_name.replace(' ', '_').replace('/', '_').replace('\\', '_')
                 client_name = ''.join(c for c in client_name if c.isalnum() or c in '_-')

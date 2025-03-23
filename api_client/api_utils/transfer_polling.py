@@ -1,11 +1,12 @@
 import logging
 import hashlib
 import requests
+import os
 from pathlib import Path
-from ..models import DicomTransfer, SystemSettings, FolderPaths
+from ..models import DicomTransfer, SystemSettings
 from .dicom_export import DicomExporter
-
-logger = logging.getLogger(__name__)
+from django.conf import settings
+logger = logging.getLogger('api_client')
 
 def compute_file_checksum(file_path):
     """
@@ -24,8 +25,12 @@ def poll_pending_transfers():
     """
     try:
         exporter = DicomExporter()
-        settings = SystemSettings.load()
-        folder_paths = FolderPaths.load()
+        system_settings = SystemSettings.load()
+        
+        # Create output folder if it doesn't exist - fix the Path handling
+        output_folder = Path(os.path.join(settings.BASE_DIR, 'folder_deidentified_rtstruct'))
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder, exist_ok=True)
         
         pending_transfers = DicomTransfer.objects.filter(
             status__in=['SENT', 'PROCESSING']
@@ -42,13 +47,13 @@ def poll_pending_transfers():
                 logger.info(f"Checking transfer ID: {transfer.id}, Server Token: {transfer.server_token}, Poll Attempts: {transfer.poll_attempts}")
                 
                 # Construct the status endpoint URL for logging
-                status_endpoint = settings.status_endpoint.format(task_id=transfer.server_token)
-                logger.info(f"Making status request to: {settings.api_base_url}/{status_endpoint}")
+                status_endpoint = system_settings.status_endpoint.format(task_id=transfer.server_token)
+                logger.info(f"Making status request to: {system_settings.api_base_url}/{status_endpoint}")
                 
                 # Check status with server using DicomExporter's authenticated request
                 response = exporter._make_request(
                     'GET',
-                    settings.status_endpoint.format(task_id=transfer.server_token)
+                    system_settings.status_endpoint.format(task_id=transfer.server_token)
                 )
                 
                 # Log the full response for debugging
@@ -65,13 +70,13 @@ def poll_pending_transfers():
                     
                     try:
                         # Log download attempt
-                        download_endpoint = settings.download_endpoint.format(task_id=transfer.server_token)
-                        download_url = f"{settings.api_base_url}/{download_endpoint}"
+                        download_endpoint = system_settings.download_endpoint.format(task_id=transfer.server_token)
+                        download_url = f"{system_settings.api_base_url}/{download_endpoint}"
                         logger.info(f"Attempting to download RTSTRUCT from: {download_url}")
                         
                         # Make a direct request to get the RTSTRUCT file with the bearer token
                         headers = {
-                            'Authorization': f'Bearer {settings.get_bearer_token()}'
+                            'Authorization': f'Bearer {system_settings.get_bearer_token()}'
                         }
                         
                         # Download RTSTRUCT file using requests to get access to headers
@@ -98,7 +103,7 @@ def poll_pending_transfers():
                             logger.warning(f"No X-File-Checksum header received for transfer {transfer.id}. Will compute checksum locally.")
                         
                         # Save RTSTRUCT file
-                        rtstruct_path = folder_paths.get_output_folder_path() / f"{transfer.series_instance_uid}_rtstruct.dcm"
+                        rtstruct_path = Path(output_folder) / f"{transfer.series_instance_uid}_rtstruct.dcm"
                         logger.info(f"Saving RTSTRUCT to: {rtstruct_path}")
                         
                         with open(rtstruct_path, 'wb') as f:

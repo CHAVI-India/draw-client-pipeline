@@ -6,7 +6,7 @@ from pathlib import Path
 from ..models import DicomTransfer, SystemSettings
 from django.conf import settings
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('api_client')
 
 class DicomExporter:
     """Handles DICOM file exports and API interactions."""

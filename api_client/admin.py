@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils import timezone
-from .models import DicomTransfer, SystemSettings, FolderPaths
+from .models import DicomTransfer, SystemSettings
 from django.contrib import messages
 from django import forms
 from django.db import models
@@ -103,18 +103,18 @@ class SystemSettingsAdmin(ModelAdmin):
         # Prevent deletion of the singleton instance
         return False
 
-@admin.register(FolderPaths)
-class FolderPathsAdmin(ModelAdmin):
-    list_display = ['watch_folder', 'temp_folder', 'archive_folder', 'output_folder', 'updated_at']
-    readonly_fields = ['updated_at']
+# @admin.register(FolderPaths)
+# class FolderPathsAdmin(ModelAdmin):
+#     list_display = ['watch_folder', 'temp_folder', 'archive_folder', 'output_folder', 'updated_at']
+#     readonly_fields = ['updated_at']
     
-    def has_add_permission(self, request):
-        # Only allow adding if no instance exists
-        return not FolderPaths.objects.exists()
+#     def has_add_permission(self, request):
+#         # Only allow adding if no instance exists
+#         return not FolderPaths.objects.exists()
     
-    def has_delete_permission(self, request, obj=None):
-        # Prevent deletion of the singleton instance
-        return False
+#     def has_delete_permission(self, request, obj=None):
+#         # Prevent deletion of the singleton instance
+#         return False
 
 @admin.register(DicomTransfer)
 class DicomTransferAdmin(ModelAdmin):
