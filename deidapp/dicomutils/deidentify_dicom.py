@@ -2,6 +2,7 @@ import pydicom
 import os
 import shutil
 from deidapp.models import Patient, DicomStudy, DicomSeries, DicomInstance
+from dicom_handler.models import DicomUnprocessed
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import random
@@ -258,6 +259,7 @@ class DicomDeidentifier:
         try:
             # Reuse or generate new Patient ID
             original_patient_id = ds.PatientID
+            
             # Try to get existing mapping from database
             existing_patient = Patient.objects.filter(patient_id=original_patient_id).first()
             
@@ -397,7 +399,11 @@ class DicomDeidentifier:
         return ds
 
     def cleanup_empty_directories(self, directory):
-        """Remove empty directories recursively from bottom up"""
+        """
+        Remove empty directories recursively from bottom up, 
+        including the series folder itself but not its parent.
+        """
+        # First, recursively clean up subdirectories
         for root, dirs, files in os.walk(directory, topdown=False):
             for dir_name in dirs:
                 dir_path = os.path.join(root, dir_name)
@@ -405,9 +411,100 @@ class DicomDeidentifier:
                     # Check if directory is empty (no files and no subdirectories)
                     if not os.listdir(dir_path):
                         os.rmdir(dir_path)
+                        logger.info(f'Removed empty subdirectory: {dir_path}')
                 except OSError as e:
                     logger.warning(f'Error removing directory {dir_path}: {str(e)}')
+        
+        # Now check if the series folder itself is empty and remove it if so
+        try:
+            # Check if directory still exists and is empty
+            if os.path.exists(directory) and not os.listdir(directory):
+                parent_dir = os.path.dirname(directory)
+                os.rmdir(directory)
+                logger.info(f'Removed empty series folder: {directory}')
+        except OSError as e:
+            logger.warning(f'Error removing series folder {directory}: {str(e)}')
 
+
+def process_pending_deidentifications(processed_dir='folder_post_deidentification'):
+    """
+    Process all DICOM series that are marked as ready for deidentification
+    
+    Args:
+        processed_dir (str): Directory where processed files will be stored.
+                            Default is 'folder_post_deidentification'
+    
+    Returns:
+        dict: Summary of processing results
+    """
+    try:
+        # Ensure the processed directory exists
+        os.makedirs(processed_dir, exist_ok=True)
+        
+        # Get series that are ready for deidentification
+        series_to_process = DicomUnprocessed.objects.filter(ready_for_deidentification=True)
+        logger.info(f"Found {series_to_process.count()} series ready for deidentification")
+        
+        # Stats to track progress
+        results = {
+            "total": series_to_process.count(),
+            "successful": 0,
+            "failed": 0,
+            "skipped": 0,
+            "details": []
+        }
+        
+        # Process each series folder
+        for series in series_to_process:
+            if not series.series_folder_location or not os.path.exists(series.series_folder_location):
+                logger.warning(f"Series folder not found: {series.series_folder_location} for series {series.seriesid}")
+                results["skipped"] += 1
+                results["details"].append({
+                    "series_id": series.seriesid,
+                    "status": "skipped",
+                    "reason": "Folder not found"
+                })
+                continue
+            
+            logger.info(f"Processing series: {series.seriesid} from {series.series_folder_location}")
+            
+            # Process this individual series
+            result = deidentify_dicom(
+                dicom_dir=series.series_folder_location,
+                processed_dir=processed_dir
+            )
+            logger.debug(f"Result: {result}")
+            # Store the result
+            results["details"].append({
+                "series_id": series.seriesid,
+                "status": result["status"],
+                "message": result.get("message", "")
+            })
+            logger.debug(f"Results: {results}")
+            # Update series status based on result
+            if result["status"] == "success":
+                # Mark as processed
+                series.ready_for_deidentification = False
+                series.save()
+                logger.info(f"Successfully processed series: {series.seriesid}")
+                results["successful"] += 1
+            else:
+                logger.error(f"Failed to process series: {series.seriesid} - {result['message']}")
+                results["failed"] += 1
+        
+        results["status"] = "success" if results["failed"] == 0 else "partial"
+        results["message"] = f"Processed {results['successful']} series successfully, {results['failed']} failed, {results['skipped']} skipped"
+        
+        logger.info(f"Deidentification batch completed: {results['message']}")
+        return results
+        
+    except Exception as e:
+        logger.error(f"Error during batch deidentification: {str(e)}", exc_info=True)
+        return {
+            "status": "error",
+            "message": f"Batch deidentification failed: {str(e)}",
+            "error": str(e)
+        }
 
 def deidentify_dicom(dicom_dir='folder_for_deidentification', processed_dir='folder_post_deidentification'):
     """
