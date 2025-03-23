@@ -159,7 +159,7 @@ def reidentify_rtstruct_files(source_dir=None, target_dir=None):
                 def sop_instance_callback(ds, elem):
                     """Replace Referenced SOP Instance UIDs"""
                     nonlocal replacement_count
-                    if elem.tag == (0x0008,0x1155):  # Referenced SOP Instance UID
+                    if elem.tag in [(0x0008,0x1155), (0x0020,0x000E)]:  # Referenced SOP Instance UID and Reference Series Instance UID replacements
                         deidentified_id = elem.value
                         matching_row = df[df['deidentified_id'] == deidentified_id]
                         if not matching_row.empty:
