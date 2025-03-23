@@ -8,6 +8,7 @@ from dicom_handler.models import *
 from dicom_handler.dicomutils.unprocesstoprocessing import move_folder_with_yaml_check
 from dicom_handler.dicomutils.dicomseriesprocessing import read_dicom_metadata, dicom_series_separation
 from dicom_handler.dicomutils.manual_dicom_zip_processing import send_to_autosegmentation
+from dicom_handler.dicomutils.move_from_unprocessed_to_processing import move_from_unprocessed_to_processing
 from django.conf import settings
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -162,56 +163,56 @@ admin.site.register(DicomImportConfig, MyModelAdmin)
 
 
 @admin.action(description="Send to processing")
-def send_to_processing(modeladmin, request, queryset):
-    # Get DicomPathConfig values when the action is executed
-    import_dir, deidentified_dir, unprocessed_dir, processing_dir = get_dicom_path_config()
-    if not all([import_dir, deidentified_dir, unprocessed_dir, processing_dir]):
-        messages.error(request, "DicomPathConfig not set properly")
-        return
+# def send_to_processing(modeladmin, request, queryset):
+#     # Get DicomPathConfig values when the action is executed
+#     import_dir, deidentified_dir, unprocessed_dir, processing_dir = get_dicom_path_config()
+#     if not all([import_dir, deidentified_dir, unprocessed_dir, processing_dir]):
+#         messages.error(request, "DicomPathConfig not set properly")
+#         return
     
-    for obj in queryset:
-        try:
+#     for obj in queryset:
+#         try:
 
-            move_folder_with_yaml_check(
-                unprocess_dir=obj.series_folder_location,
-                copy_yaml=obj.yaml_attached.yaml_path
-            )
-            logger.info(f"Successfully moved {obj.series_folder_location} to processing")
+#             move_folder_with_yaml_check(
+#                 unprocess_dir=obj.series_folder_location,
+#                 copy_yaml=obj.yaml_attached.yaml_path
+#             )
+#             logger.info(f"Successfully moved {obj.series_folder_location} to processing")
            
-            instance = DicomUnprocessed.objects.get(id=obj.id)
-            logger.info(f"Successfully updated {instance.id} to unprocessed")
-            instance.unprocessed = False
-            instance.series_folder_location = os.path.join(
-                processing_dir, os.path.basename(obj.series_folder_location)
-            )
-            instance.save()
-            logger.info(f"Successfully updated {instance.id} to unprocessed")
+#             instance = DicomUnprocessed.objects.get(id=obj.id)
+#             logger.info(f"Successfully updated {instance.id} to unprocessed")
+#             instance.unprocessed = False
+#             instance.series_folder_location = os.path.join(
+#                 processing_dir, os.path.basename(obj.series_folder_location)
+#             )
+#             instance.save()
+#             logger.info(f"Successfully updated {instance.id} to unprocessed")
 
-            read_dicom_metadata(
-                dicom_series_path = os.path.join(
-                    processing_dir,
-                    os.path.basename(obj.series_folder_location)
-                ),
-                unprocess_dicom_path = os.path.join(
-                    unprocessed_dir,
-                    os.path.basename(obj.series_folder_location)
-                ),
-                deidentified_dicom_path = os.path.join(
-                    deidentified_dir,
-                    os.path.basename(obj.series_folder_location)
-                )
-            )
+#             read_dicom_metadata(
+#                 dicom_series_path = os.path.join(
+#                     processing_dir,
+#                     os.path.basename(obj.series_folder_location)
+#                 ),
+#                 unprocess_dicom_path = os.path.join(
+#                     unprocessed_dir,
+#                     os.path.basename(obj.series_folder_location)
+#                 ),
+#                 deidentified_dicom_path = os.path.join(
+#                     deidentified_dir,
+#                     os.path.basename(obj.series_folder_location)
+#                 )
+#             )
             
-            messages.success(request, f"Successfully sent {obj.patientid} to processing")
+#             messages.success(request, f"Successfully sent {obj.patientid} to processing")
            
 
-        except Exception as e:
-            instance = DicomUnprocessed.objects.get(id=obj.id)
-            instance.unprocessed = True
-            instance.save()
-            logger.info(f"Successfully updated {instance.id} to unprocessed")
-            messages.error(request, f"Error sending {obj.patientid} to processing")
-            print(e)
+#         except Exception as e:
+#             instance = DicomUnprocessed.objects.get(id=obj.id)
+#             instance.unprocessed = True
+#             instance.save()
+#             logger.info(f"Successfully updated {instance.id} to unprocessed")
+#             messages.error(request, f"Error sending {obj.patientid} to processing")
+#             print(e)
 
 
 # dicom unprocess admin
@@ -247,7 +248,7 @@ class UnprocessedAdmin(ModelAdmin):
     list_editable = ['yaml_attached',]
     list_filter = ('unprocessed', 'ready_for_deidentification','modality','protocol','studydate')
     search_fields = ('patientid',)
-    actions = [send_to_processing]
+    actions = [move_from_unprocessed_to_processing]
     list_per_page = 10
 
     # def get_queryset(self, request):
