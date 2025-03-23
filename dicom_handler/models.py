@@ -117,6 +117,7 @@ class DicomUnprocessed(models.Model):
     dicomcount = models.PositiveSmallIntegerField(null=True)
     yaml_attached = models.ForeignKey(ModelYamlInfo, on_delete=models.CASCADE, null=True, blank=True)
     unprocessed = models.BooleanField(default=False, null=True)
+    ready_for_deidentification = models.BooleanField(default=False, null=True)
     # processingstatus = models.ForeignKey(ProcessingStatus, on_delete=models.CASCADE, db_column='status', null=True)
     processing_start = models.DateTimeField(null=True)
     processing_end = models.DateTimeField(null=True)

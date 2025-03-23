@@ -285,8 +285,9 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
             modality=getattr(ds, 'Modality', ''),
             protocol=getattr(ds, 'ProtocolName', ''),
             studyid=ds.StudyInstanceUID,
-            seriesid=ds.SeriesInstanceUID
-        )
+            seriesid=ds.SeriesInstanceUID,
+            ready_for_deidentification=False
+            )
         logger.info(f"Processing studydate: {processing.studydate}")
 
         # Check for YAML files
@@ -312,7 +313,8 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                 shutil.move(dicom_series_path, deidentified_dicom_path)
                 logger.info(f"Successfully moved directory to: {deidentified_dicom_path}")
                 DicomUnprocessed.objects.filter(id=processing.id).update(
-                    series_folder_location=f"{dest_dir}"
+                    series_folder_location=f"{dest_dir}",
+                    ready_for_deidentification=True
                 )
                 
                 ProcessingStatus.objects.create(
@@ -337,12 +339,13 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                     patient_id=DicomUnprocessed.objects.get(id=processing.id),
                     status="Invalid Template file",
                     dicom_move_folder_status="Move to Unprocessed Folder",
-                )
+                    )
 
                 DicomUnprocessed.objects.filter(id=processing.id).update(
                     series_folder_location=f"{dest_dir}",
-                    unprocessed=True
-                )
+                        unprocessed=True,
+                        ready_for_deidentification=False
+                        )
 
         elif len(yaml_files) == 0:
             logger.debug("No YAML files found, processing DICOM tags")
@@ -414,11 +417,14 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                         patient_id=DicomUnprocessed.objects.get(id=processing.id),
                         status=f"{model_yaml_name} Template file Attached",
                         yaml_attach_status="Yaml file attached",
-                        dicom_move_folder_status="Move to Deidentification Folder"
-                    )
+                        dicom_move_folder_status="Move to Deidentification Folder",
+                        )
 
                     DicomUnprocessed.objects.filter(id=processing.id).update(
-                        series_folder_location=f"{dest_dir}")
+                        series_folder_location=f"{dest_dir}",
+                        ready_for_deidentification=True
+                        )
+                    
                     
                 elif len(filter_match_rule) > 1:
                     logger.warning("Multiple rule matches found")
@@ -437,11 +443,13 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                         patient_id=DicomUnprocessed.objects.get(id=processing.id),
                         status=f"Rule Sets Matched : {multiple_rules}",
                         dicom_move_folder_status="Move to Unprocessed Folder", 
+                        
                     )
 
                     DicomUnprocessed.objects.filter(id=processing.id).update(
                         series_folder_location=f"{dest_dir}",
-                        unprocessed=True
+                        unprocessed=True,
+                        ready_for_deidentification=False
                     )
                 else:
                     logger.warning("No matching rules found")
@@ -456,11 +464,13 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                         patient_id=DicomUnprocessed.objects.get(id=processing.id),
                         status="No Rule Sets Matched",
                         dicom_move_folder_status="Move to Unprocessed Folder", 
+                        
                     )
 
                     DicomUnprocessed.objects.filter(id=processing.id).update(
                         series_folder_location=f"{dest_dir}",
-                        unprocessed=True
+                        unprocessed=True,
+                        ready_for_deidentification=False
                     )
 
             except Exception as e:
@@ -480,13 +490,15 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
             ProcessingStatus.objects.create(
                 patient_id=DicomUnprocessed.objects.get(id=processing.id),
                 status="Multiple Yaml file in folder",
-                dicom_move_folder_status="Move to Unprocessed Folder"
-            )
+                dicom_move_folder_status="Move to Unprocessed Folder",
+                ready_for_deidentification=False
+                )
 
             DicomUnprocessed.objects.filter(id=processing.id).update(
                 series_folder_location=f"{dest_dir}",
-                unprocessed=True
-            )
+                unprocessed=True,
+                ready_for_deidentification=False
+                )
 
     except Exception as e:
         logger.error(f"Error in read_dicom_metadata: {str(e)}")

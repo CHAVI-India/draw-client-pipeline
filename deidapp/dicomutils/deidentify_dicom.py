@@ -1,4 +1,3 @@
-from django.core.management.base import BaseCommand
 import pydicom
 import os
 import shutil
@@ -8,12 +7,16 @@ from dateutil.relativedelta import relativedelta
 import random
 import time
 import calendar
+import logging
 
-class Command(BaseCommand):
-    help = 'Import DICOM files from a specified directory'
+# Setup logging
+logger = logging.getLogger('deidapp_logs')
 
+# Add Celery's logger
+celery_logger = logging.getLogger('celery.task')
+
+class DicomDeidentifier:
     def __init__(self):
-        super().__init__()
         # Dictionaries to store mappings of original to deidentified IDs
         self.patient_id_map = {}
         self.study_uid_map = {}
@@ -23,11 +26,7 @@ class Command(BaseCommand):
         self.study_counters = {}  # per patient
         self.series_counters = {}  # per study
         self.instance_counters = {}  # per series
-
-    def add_arguments(self, parser):
-        parser.add_argument('dicom_dir', type=str, help='Directory containing DICOM files')
-        parser.add_argument('--processed-dir', type=str, default='folder_for_deidentification',
-                          help='Directory for processed DICOM files (default: folder_for_deidentification)')
+        self.processed_dir = None
 
     def generate_unique_id(self):
         """Generate a unique ID with the specified format"""
@@ -105,12 +104,10 @@ class Command(BaseCommand):
 
         return ds
 
-    def handle(self, *args, **options):
-        dicom_dir = options['dicom_dir']
-        self.processed_dir = options['processed_dir']
-        self.process_dicom_directory(dicom_dir)
-
-    def process_dicom_directory(self, dicom_dir):
+    def process_dicom_directory(self, dicom_dir, processed_dir):
+        """Process a directory of DICOM files for deidentification"""
+        self.processed_dir = processed_dir
+        
         # Generate a random date offset between -60 and 60 days
         date_offset = random.randint(-60, 60)
         
@@ -133,20 +130,12 @@ class Command(BaseCommand):
                         os.makedirs(yaml_dest_dir, exist_ok=True)
                         yaml_dest = os.path.join(yaml_dest_dir, file)
                         shutil.move(file_path, yaml_dest)
-                        self.stdout.write(
-                            self.style.SUCCESS(
-                                f'Moved YAML file: {file} to series folder'
-                            )
-                        )
+                        logger.info(f'Moved YAML file: {file} to series folder')
                     else:
                         # If we don't have context yet, move to processed dir root
                         yaml_dest = os.path.join(self.processed_dir, file)
                         shutil.move(file_path, yaml_dest)
-                        self.stdout.write(
-                            self.style.WARNING(
-                                f'Moved YAML file: {file} to root (no series context found)'
-                            )
-                        )
+                        logger.warning(f'Moved YAML file: {file} to root (no series context found)')
                     continue
 
                 try:
@@ -156,11 +145,7 @@ class Command(BaseCommand):
                     # Check if modality is one of CT, MRI, or PET
                     modality = getattr(ds, 'Modality', None)
                     if modality not in ['CT', 'MR', 'PT']:
-                        self.stdout.write(
-                            self.style.WARNING(
-                                f'Deleting {file}: Modality {modality} not in [CT, MR, PT]'
-                            )
-                        )
+                        logger.warning(f'Deleting {file}: Modality {modality} not in [CT, MR, PT]')
                         os.remove(file_path)
                         continue
                     
@@ -219,9 +204,7 @@ class Command(BaseCommand):
                     ds = self.apply_deidentification(ds, deidentified_values)
                     
                     # Remove all private tags. We do not need them in the structure set anyways
-
                     ds.remove_private_tags()
-
 
                     # Create directory structure first
                     new_dir = os.path.join(
@@ -241,11 +224,7 @@ class Command(BaseCommand):
                     # Delete the original file
                     os.remove(file_path)
 
-                    self.stdout.write(
-                        self.style.SUCCESS(
-                            f'Successfully processed and saved: {file} -> {filename}'
-                        )
-                    )
+                    logger.info(f'Successfully processed and saved: {file} -> {filename}')
 
                     # Update current context for YAML files
                     current_patient_id = ds.PatientID
@@ -253,28 +232,16 @@ class Command(BaseCommand):
                     current_series_uid = ds.SeriesInstanceUID
 
                 except pydicom.errors.InvalidDicomError:
-                    self.stdout.write(
-                        self.style.WARNING(
-                            f'Deleting {file}: Not a valid DICOM file'
-                        )
-                    )
+                    logger.warning(f'Deleting {file}: Not a valid DICOM file')
                     os.remove(file_path)
                     continue
                 except Exception as e:
-                    self.stdout.write(
-                        self.style.ERROR(
-                            f'Error processing {file}: {str(e)}'
-                        )
-                    )
+                    logger.error(f'Error processing {file}: {str(e)}')
                     continue
 
         # Add cleanup of empty directories after processing all files
         self.cleanup_empty_directories(dicom_dir)
-        self.stdout.write(
-            self.style.SUCCESS(
-                'Cleaned up empty directories'
-            )
-        )
+        logger.info('Cleaned up empty directories')
 
     def parse_dicom_date(self, date_string):
         if not date_string:
@@ -324,13 +291,13 @@ class Command(BaseCommand):
 
             # Handle Series UID
             original_series_uid = ds.SeriesInstanceUID
-            self.stdout.write(f"\nProcessing series: {original_series_uid}")
+            logger.info(f"\nProcessing series: {original_series_uid}")
             
             # Case 1: Series exists in database - use existing deidentified UID
             existing_series = DicomSeries.objects.filter(series_instance_uid=original_series_uid).first()
             if existing_series:
                 values['SeriesInstanceUID'] = existing_series.deidentified_series_instance_uid
-                self.stdout.write(f"Using existing series from DB: {values['SeriesInstanceUID']}")
+                logger.info(f"Using existing series from DB: {values['SeriesInstanceUID']}")
             else:
                 # Case 2: New series in existing study - find highest series number and increment
                 existing_study_series = DicomSeries.objects.filter(
@@ -351,14 +318,14 @@ class Command(BaseCommand):
                             next_series_num += 1
                             
                         values['SeriesInstanceUID'] = f"{values['StudyInstanceUID']}.{next_series_num}"
-                        self.stdout.write(f"Generated incremented series UID: {values['SeriesInstanceUID']}")
+                        logger.info(f"Generated incremented series UID: {values['SeriesInstanceUID']}")
                     except (ValueError, IndexError, AttributeError) as e:
-                        self.stdout.write(self.style.WARNING(f"Error parsing series numbers: {e}"))
+                        logger.warning(f"Error parsing series numbers: {e}")
                         values['SeriesInstanceUID'] = f"{values['StudyInstanceUID']}.1"
                 else:
                     # Case 3: First series in study
                     values['SeriesInstanceUID'] = f"{values['StudyInstanceUID']}.1"
-                    self.stdout.write(f"Generated first series UID: {values['SeriesInstanceUID']}")
+                    logger.info(f"Generated first series UID: {values['SeriesInstanceUID']}")
 
             # Generate new SOP Instance UID (always unique per instance)
             values['SOPInstanceUID'] = self.generate_unique_id()
@@ -387,7 +354,7 @@ class Command(BaseCommand):
             return values
             
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Error in generate_deidentified_values: {str(e)}"))
+            logger.error(f"Error in generate_deidentified_values: {str(e)}")
             raise
 
     def apply_deidentification(self, ds, deidentified_values):
@@ -439,8 +406,49 @@ class Command(BaseCommand):
                     if not os.listdir(dir_path):
                         os.rmdir(dir_path)
                 except OSError as e:
-                    self.stdout.write(
-                        self.style.WARNING(
-                            f'Error removing directory {dir_path}: {str(e)}'
-                        )
-                    )
+                    logger.warning(f'Error removing directory {dir_path}: {str(e)}')
+
+
+def deidentify_dicom(dicom_dir='folder_for_deidentification', processed_dir='folder_post_deidentification'):
+    """
+    Deidentify DICOM files in a directory
+    
+    Args:
+        dicom_dir (str): Directory containing DICOM files to process. Default is 'folder_for_deidentification'
+        processed_dir (str): Directory where processed files will be stored. Default is 'folder_post_deidentification'
+    
+    Returns:
+        dict: Summary of processing results
+    """
+    try:
+        logger.info(f"Starting DICOM deidentification for: {dicom_dir}")
+        
+        # Create the processed directory if it doesn't exist
+        os.makedirs(processed_dir, exist_ok=True)
+        
+        # Initialize the deidentifier class
+        deidentifier = DicomDeidentifier()
+        
+        # Process the directory
+        deidentifier.process_dicom_directory(dicom_dir, processed_dir)
+        
+        # Clean up empty directories
+        deidentifier.cleanup_empty_directories(dicom_dir)
+        
+        logger.info(f"Completed DICOM deidentification for: {dicom_dir}")
+        
+        return {
+            "status": "success",
+            "dicom_dir": dicom_dir,
+            "processed_dir": processed_dir,
+            "message": "DICOM deidentification completed successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error during DICOM deidentification: {str(e)}", exc_info=True)
+        return {
+            "status": "error",
+            "dicom_dir": dicom_dir,
+            "message": f"DICOM deidentification failed: {str(e)}",
+            "error": str(e)
+        }

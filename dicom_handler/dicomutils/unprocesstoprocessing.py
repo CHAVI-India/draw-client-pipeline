@@ -65,22 +65,24 @@ def move_folder_with_yaml_check(unprocess_dir, copy_yaml):
         
         # Copy new YAML file
         try:
+            # Check if the directory to which the files will be moved already exists
+            dest_dir = os.path.join(processing_dir, os.path.basename(unprocess_dir))
+            if os.path.exists(dest_dir):
+                shutil.rmtree(dest_dir)
+                logger.info(f"Successfully removed existing directory: {dest_dir}")
+
+            # Copy new YAML file into the unprocessed directory before moving it to the processing folder
             logger.debug(f"Copying YAML file from {copy_yaml} to {unprocess_dir}")
             shutil.copy2(copy_yaml, unprocess_dir)
             logger.info("Successfully copied new YAML file")
-        except Exception as e:
-            logger.error(f"Error copying YAML file: {str(e)}")
-            raise
-        
-        # Move directory
-        try:
+
+            # Move directory to processing folder
             logger.debug(f"Moving directory from {unprocess_dir} to {processing_dir}")
             shutil.move(unprocess_dir, processing_dir)
             logger.info("Successfully moved directory to processing folder")
         except Exception as e:
-            logger.error(f"Error moving directory: {str(e)}")
+            logger.error(f"Error copying YAML file: {str(e)}")
             raise
-        
         logger.info("Folder move operation with YAML check completed successfully")
     
     except Exception as e:

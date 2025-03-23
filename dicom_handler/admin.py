@@ -169,8 +169,6 @@ def send_to_processing(modeladmin, request, queryset):
         messages.error(request, "DicomPathConfig not set properly")
         return
     
-
-
     for obj in queryset:
         try:
 
@@ -223,6 +221,7 @@ class UnprocessedAdmin(ModelAdmin):
         'patientname',
         'gender',
         'yaml_attached',
+        'ready_for_deidentification',
         'studydate',
         'modality',
         'protocol',
@@ -241,16 +240,18 @@ class UnprocessedAdmin(ModelAdmin):
         'processing_start',
         'processing_end',
         'dicomcount',
+        'ready_for_deidentification',
+        'unprocessed',
         'series_folder_location']
     
     list_editable = ['yaml_attached',]
-    list_filter = ('studydate',)
+    list_filter = ('unprocessed', 'ready_for_deidentification','modality','protocol','studydate')
     search_fields = ('patientid',)
     actions = [send_to_processing]
     list_per_page = 10
 
-    def get_queryset(self, request):
-        return super().get_queryset(request).filter(unprocessed=True)
+    # def get_queryset(self, request):
+    #     return super().get_queryset(request).filter(unprocessed=True)
 
 admin.site.register(DicomUnprocessed, UnprocessedAdmin)
 
