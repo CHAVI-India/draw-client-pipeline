@@ -41,21 +41,25 @@ def copy_dicom():
     try:
         # Get the path configuration
         path_config = DicomPathConfig.get_instance()
+        destination_path = os.path.join(settings.BASE_DIR, 'folder_for_dicom_import')
+        if not os.path.exists(destination_path):
+            os.makedirs(destination_path)
+        logger.info(f"Destination path created: {destination_path}")
         
         # Log the fact that the task has started
         celery_logger.info("copy_dicom task started")
-        logger.info(f"Starting copydicom task with source={path_config.datastorepath}, destination={path_config.import_dicom}")
+        logger.info(f"Starting copydicom task with source={path_config.datastorepath}, destination={destination_path}")
         
         # Call the copydicom function
         copydicom(
             sourcedir=path_config.datastorepath,
-            destinationdir=path_config.import_dicom
+            destinationdir=destination_path
             )
         
         logger.info("Copy DICOM task completed successfully")
         
         # Trigger the next tasks with the import_dicom path
-        logger.info(f"Triggering dicom_series_separation_task with import_dicom path: {path_config.import_dicom}")
+        logger.info(f"Triggering dicom_series_separation_task with import_dicom path: {destination_path}")
         dicom_series_separation_task.delay()
         
         return True
@@ -83,7 +87,7 @@ def dicom_series_separation_task(import_dicom_path=None):
     '''
     try:
         # Processing folder path is a relative path to the Base Directory
-        processing_folder_path = os.path.join(settings.BASE_DIR, 'dicom_processing_folder')
+        processing_folder_path = os.path.join(settings.BASE_DIR, 'folder_dicom_processing')
 
         # Create the processing folder if it doesn't exist
         if not os.path.exists(processing_folder_path):
@@ -185,8 +189,8 @@ def read_dicom_metadata_task(dicom_series_path=None):
         logger.info(f"Task {task_id}: Found {len(dicom_files)} DICOM files to process")
 
         # Prepare destination directories
-        unprocessed_folder_path = os.path.join(settings.BASE_DIR, 'unprocessed_dicom_folder')
-        deidentified_folder_path = os.path.join(settings.BASE_DIR, 'deidentified_dicom_folder')
+        unprocessed_folder_path = os.path.join(settings.BASE_DIR, 'folder_unprocessed_dicom')
+        deidentified_folder_path = os.path.join(settings.BASE_DIR, 'folder_for_deidentification')
 
         # Create the unprocessed folder if it doesn't exist
         if not os.path.exists(unprocessed_folder_path):

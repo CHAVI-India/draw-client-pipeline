@@ -98,20 +98,20 @@ class DicomSeriesProcessingAdmin(ModelAdmin):
 
 @admin.register(DicomPathConfig)
 class DicomPathConfigAdmin(ModelAdmin):
-    list_display = ('datastorepath', 'import_dicom')
-    search_fields = ('datastorepath', 'import_dicom')
-    list_filter = ('datastorepath', 'import_dicom')
+    list_display = ('datastorepath', )
+    search_fields = ('datastorepath', )
+    list_filter = ('datastorepath', )
 
 # Function to get DicomPathConfig values when needed, not at module import time
 def get_dicom_path_config():
     try:
-        import_dir = DicomPathConfig.objects.values("dicomimportfolderpath").first()["dicomimportfolderpath"]
-        # Define the deidentified, unprocessed and processing folder paths
-        deidentified_dir = os.path.join(settings.BASE_DIR, 'deidentified_dicom_folder')
-        unprocessed_dir = os.path.join(settings.BASE_DIR, 'unprocessed_dicom_folder')
-        processing_dir = os.path.join(settings.BASE_DIR, 'dicom_processing_folder')
+        import_dir = os.path.join(settings.BASE_DIR, 'folder_for_dicom_import')
+        deidentified_dir = os.path.join(settings.BASE_DIR, 'folder_for_deidentification')
+        unprocessed_dir = os.path.join(settings.BASE_DIR, 'folder_unprocessed_dicom')
+        processing_dir = os.path.join(settings.BASE_DIR, 'folder_dicom_processing')
 
         # Create the deidentified, unprocessed and processing folder if they don't exist
+        os.makedirs(import_dir, exist_ok=True)
         os.makedirs(deidentified_dir, exist_ok=True)
         os.makedirs(unprocessed_dir, exist_ok=True)
         os.makedirs(processing_dir, exist_ok=True)
@@ -120,23 +120,24 @@ def get_dicom_path_config():
     except Exception as e:
         logger.error(f"DicomPathConfig error: {str(e)}")
         # Create default directories even if DicomPathConfig is not set
-        deidentified_dir = os.path.join(settings.BASE_DIR, 'deidentified_dicom_folder')
-        unprocessed_dir = os.path.join(settings.BASE_DIR, 'unprocessed_dicom_folder')
-        processing_dir = os.path.join(settings.BASE_DIR, 'dicom_processing_folder')
+        import_dir = os.path.join(settings.BASE_DIR, 'folder_for_dicom_import')
+        deidentified_dir = os.path.join(settings.BASE_DIR, 'folder_for_deidentification')
+        unprocessed_dir = os.path.join(settings.BASE_DIR, 'folder_unprocessed_dicom')
+        processing_dir = os.path.join(settings.BASE_DIR, 'folder_dicom_processing')
         
         # Create the directories if they don't exist
+        os.makedirs(import_dir, exist_ok=True)
         os.makedirs(deidentified_dir, exist_ok=True)
         os.makedirs(unprocessed_dir, exist_ok=True)
         os.makedirs(processing_dir, exist_ok=True)
         
         # Use a default import directory
-        import_dir = os.path.join(settings.BASE_DIR, 'import_dicom_folder')
+        import_dir = os.path.join(settings.BASE_DIR, 'folder_for_dicom_import')
         os.makedirs(import_dir, exist_ok=True)
         
         logger.warning(f"Using default DicomPathConfig paths: {import_dir}")
         return import_dir, deidentified_dir, unprocessed_dir, processing_dir
    
-# admin.site.register(DicomPathConfig, SingletonModelAdmin)
 
 
 

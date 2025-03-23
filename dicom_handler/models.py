@@ -7,8 +7,7 @@ from urllib.parse import urlparse
 
 class DicomPathConfig(models.Model):
     id = models.AutoField(primary_key=True)
-    datastorepath = models.TextField(null=True, help_text="Enter the full path to the datastore which is the remote folder from the DICOM data will be imported.")
-    import_dicom = models.TextField(null=True, help_text="Enter the full path to the import_dicom folder which is the local folder where the DICOM data will be imported.")
+    datastorepath = models.TextField(null=True, help_text="Enter the full path to the datastore which is the remote folder from the DICOM data will be imported. This can be a remote folder in which case the full path is required. We would suggest that in such a situation the remote folder is mapped as a shared drive on the machine where this client runs.")
 
     class Meta:
         db_table = "dicom_path_config"
@@ -219,7 +218,7 @@ class Rule(models.Model):
 
 class uploadDicom(models.Model):
     id = models.AutoField(primary_key=True)
-    dicom_file = models.FileField(upload_to='uploaddicom/')
+    dicom_file = models.FileField(upload_to='folder_for_dicom_upload/')
     send_to_autosegmentation = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     modified_at = models.DateTimeField(auto_now=True, null=True)

@@ -2,7 +2,6 @@ import shutil
 import os
 import glob
 import logging
-from dicom_handler.models import DicomPathConfig
 from django.conf import settings
 
 # Get logger
@@ -53,8 +52,8 @@ def move_folder_with_yaml_check(unprocess_dir, copy_yaml):
     logger.info("Starting folder move operation with YAML check")
     
     try:
-        # Get the path to the dicom_processing_folder
-        processing_dir = os.path.join(settings.BASE_DIR, 'dicom_processing_folder')
+        # Get the path to the folder_dicom_processing
+        processing_dir = os.path.join(settings.BASE_DIR, 'folder_dicom_processing')
         if not os.path.exists(processing_dir):
             os.makedirs(processing_dir)
             

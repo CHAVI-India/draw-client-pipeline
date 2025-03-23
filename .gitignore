@@ -12,11 +12,11 @@ db.sqlite3
 media
 
 # Project specific folders
-unprocessed_dicom_folder/
-deidentified_dicom_folder/
-processed_dicom_folder/
-dicom_processing_folder/
-uploaddicom/
+folder_unprocessed_dicom/
+folder_for_deidentification/
+folder_dicom_processing/
+folder_for_dicom_upload/
+folder_for_dicom_import/
 
 # Backup files # 
 *.bak 

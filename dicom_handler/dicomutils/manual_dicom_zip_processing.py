@@ -4,7 +4,7 @@ import zipfile
 import datetime
 from django.utils import timezone
 import logging
-
+from django.conf import settings
 # Get logger
 logger = logging.getLogger('dicom_handler_logs')
 
@@ -28,7 +28,7 @@ def send_to_autosegmentation(modeladmin, request, queryset):
             path_config = DicomPathConfig.get_instance()
             
             # Create the import directory if it doesn't exist
-            import_dir = path_config.import_dicom
+            import_dir = os.path.join(settings.BASE_DIR, 'folder_for_dicom_import')
             if not os.path.exists(import_dir):
                 os.makedirs(import_dir)
             
