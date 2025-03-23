@@ -77,7 +77,7 @@ class SystemSettingsForm(forms.ModelForm):
 @admin.register(SystemSettings)
 class SystemSettingsAdmin(ModelAdmin):
     form = SystemSettingsForm
-    list_display = ['api_base_url', 'max_retries', 'updated_at']
+    list_display = ['api_base_url', 'max_retries', 'client_id','upload_endpoint', 'status_endpoint', 'download_endpoint', 'notify_endpoint', 'updated_at']
     readonly_fields = ['updated_at']
     
     fieldsets = (

@@ -53,25 +53,25 @@ class SystemSettings(models.Model):
         verbose_name="Upload Endpoint",
         max_length=200,
         default='api/upload/',
-        help_text="Endpoint for uploading DICOM files"
+        help_text="Endpoint for uploading DICOM files. IMPORTANT: The trailing slash is required."
     )
     status_endpoint = models.CharField(
         verbose_name="Status Endpoint",
         max_length=200,
         default='api/upload/{task_id}/status/',
-        help_text="Endpoint for checking segmentation status. Use {task_id} as placeholder for the transaction ID provided by the server.."
+        help_text="Endpoint for checking segmentation status. Use {task_id} as placeholder for the transaction ID provided by the server. IMPORTANT: The trailing slash is required."
     )
     download_endpoint = models.CharField(
         verbose_name="Download Endpoint",
         max_length=200,
-        default='api/rtstruct/{task_id}',
-        help_text="Endpoint for downloading RTSTRUCT files. Use {task_id} as placeholder for the transaction ID provided by the server.."
+        default='api/rtstruct/{task_id}/',
+        help_text="Endpoint for downloading RTSTRUCT files. Use {task_id} as placeholder for the transaction ID provided by the server. IMPORTANT: The trailing slash is required."
     )
     notify_endpoint = models.CharField(
         verbose_name="Notify Endpoint",
         max_length=200,
-        default='api/rtstruct/{task_id}/confirm',
-        help_text="Endpoint for notifying about RTSTRUCT receipt. Use {task_id} as placeholder for the transaction ID provided by the server."
+        default='api/rtstruct/{task_id}/confirm/',
+        help_text="Endpoint for notifying about RTSTRUCT receipt. Use {task_id} as placeholder for the transaction ID provided by the server. IMPORTANT: The trailing slash is required."
     )
     updated_at = models.DateTimeField(auto_now=True)
     

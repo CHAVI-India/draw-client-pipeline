@@ -28,7 +28,7 @@ def notify_completed_transfers():
                         'POST',
                         system_settings.notify_endpoint.format(task_id=transfer.server_token),
                     )
-                    
+                    logger.info(f"Response: {response}")
                     # Verify response format
                     if response.get('message') == "Transfer confirmation received, files cleaned up":
                         transfer.server_notified = True
