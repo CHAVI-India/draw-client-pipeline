@@ -93,13 +93,15 @@ def copydicom(sourcedir, destinationdir):
                     today = datetime.today().date()
                     days_difference = (today - modified_date.date()).days
 
+                    logger.debug(f"Days difference: {days_difference}")
+
                     if days_difference <= 7 and days_difference >= 0:
                         destination_dir = os.path.join(destinationdir, dir)
                         existing_dir = CopyDicom.objects.filter(
                             sourcedirname=dicom_dir,
                             dirmodifieddate=modified_date
                         )
-
+                        logger.debug(f"days difference: {days_difference}")
                         if not existing_dir:
                             # Check if destination directory already exists physically
                             if os.path.exists(destination_dir):
