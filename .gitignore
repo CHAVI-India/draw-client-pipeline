@@ -17,6 +17,12 @@ folder_for_deidentification/
 folder_dicom_processing/
 folder_for_dicom_upload/
 folder_for_dicom_import/
+folder_deidentified_rtstruct/
+folder_identified_rtstruct/
+folder_post_deidentification/
+folder_unprocessed_dicom/
+folder_temp/
+folder_archive/
 
 # Backup files # 
 *.bak 
