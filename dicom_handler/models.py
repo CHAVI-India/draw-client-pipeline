@@ -12,6 +12,7 @@ class DicomPathConfig(models.Model):
     class Meta:
         db_table = "dicom_path_config"
         verbose_name = "Dicom Path Configuration"
+        verbose_name_plural = "Dicom Path Configuration"
 
     def save(self, *args, **kwargs):
         if DicomPathConfig.objects.exists() and not self.pk:
@@ -24,11 +25,6 @@ class DicomPathConfig(models.Model):
         instance, created = cls.objects.get_or_create(pk=1)
         return instance
 
-
-# import config
-class DicomImportConfig(models.Model):
-    id = models.AutoField(primary_key=True)
-    pullinterval = models.PositiveIntegerField()
 
 class ProcessingStatusChoices(models.TextChoices):
     COPIED = 'COPIED', 'COPIED'
@@ -58,15 +54,16 @@ class CopyDicom(models.Model):
 class DicomSeriesProcessing(models.Model):
     id = models.AutoField(primary_key=True)
     patientid = models.CharField(max_length=10)
-    patientname = models.CharField(max_length=255)
-    gender = models.CharField(max_length=10)
+    patientname = models.CharField(max_length=512, null=True, blank=True)
+    gender = models.CharField(max_length=10, null=True, blank=True)
     studyid = models.CharField(max_length=255)
     seriesid = models.CharField(max_length=255)
-    seriesfilepath = models.TextField()
-    studydate = models.DateField()
-    modality = models.CharField(max_length=10)
-    protocol = models.CharField(max_length=255, null=True)
-    description = models.CharField(max_length=255)
+    origin_folder_path = models.CharField(max_length=512, null=True, blank=True)
+    seriesfilepath = models.CharField(max_length=512, null=True, blank=True)
+    studydate = models.DateField(null=True, blank=True)
+    modality = models.CharField(max_length=10, null=True, blank=True)
+    protocol = models.CharField(max_length=255, null=True, blank=True)
+    description = models.CharField(max_length=255, null=True, blank=True)
     dicomcount = models.PositiveSmallIntegerField(null=True)
     series_split_done = models.BooleanField(default=False)
     processing_start = models.DateTimeField(null=True)
@@ -86,7 +83,7 @@ class DicomSeriesProcessing(models.Model):
 class ModelYamlInfo(models.Model):
     id = models.AutoField(primary_key=True)
     yaml_name = models.CharField(max_length=255, unique=True)
-    yaml_path = models.TextField()
+    yaml_path = models.CharField(max_length=512, null=True, blank=True)
     protocol = models.CharField(max_length=255)
     file_hash = models.CharField(max_length=128, null=True)
     yaml_description = models.TextField()

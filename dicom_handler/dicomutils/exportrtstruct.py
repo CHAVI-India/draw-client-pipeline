@@ -17,8 +17,8 @@ def export_rtstruct():
     2. For each file it will first if the file is RTStructure File.
     3. It will extract the Referenced Series Instance UID from the file into a variable called referencedseriesuid. Note that this is the referenced series uid not the series instance uid of the RTStructure file. This is available as the tag (0x0020, 0x000E) in the DICOM file and is a nested tag.
     4. It will then check the model called DicomSeriesProcessing and match the value of the seriesid field with the value of the referencedseriesuid variable. 
-    5. If it finds a match then it gets the path in the seriesfilepath field.
-    6. It will then to the table called CopyDicom and match the value of the destinationdirname field with the path in the seriesfilepath field.
+    5. If it finds a match then it gets the path in the origin_folder_path field.
+    6. It will then to the table called CopyDicom and match the value of the destinationdirname field with the path in the origin_folder_path field.
     7. If the value matches then it will copy the file to the destination folder  
     8. As the folder modification date time will be changed it will also update the table called CopyDicom with the new modification date time in the field called dirmodifieddate.
     9. It will also match the value of the seriesid field in the DicomUnprocessed table with the value of the referencedseriesuid variable it will update the value of the status field of the referenced ProcessingStatus table to 'Structure Set Created'.
@@ -92,7 +92,7 @@ def export_rtstruct():
                         logger.warning(f"No matching series found for UID: {referencedseriesuid}")
                         continue
                     
-                    series_path = series.seriesfilepath
+                    series_path = series.origin_folder_path
                     logger.info(f"Found matching series with path: {series_path}")
                     
                     # Find matching entry in CopyDicom
@@ -101,7 +101,7 @@ def export_rtstruct():
                         logger.warning(f"No matching CopyDicom entry found for path: {series_path}")
                         continue
                     
-                    destination_dir = copy_dicom.destinationdirname
+                    destination_dir = copy_dicom.sourcedirname
                     logger.info(f"Found matching CopyDicom with destination: {destination_dir}")
                     
                     # Copy file to destination

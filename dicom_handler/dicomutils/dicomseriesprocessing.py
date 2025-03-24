@@ -213,6 +213,7 @@ def dicom_series_separation(sourcedir, processeddir):
                             studyid=getattr(dcm, 'StudyInstanceUID', ''),
                             seriesid=getattr(dcm, 'SeriesInstanceUID', ''),
                             seriesfilepath=separated_series_dir,
+                            origin_folder_path=sourcedir,
                             studydate=getattr(dcm, 'StudyDate', ''),
                             modality=getattr(dcm, 'Modality', ''),
                             protocol=getattr(dcm, 'ProtocolName', ''),

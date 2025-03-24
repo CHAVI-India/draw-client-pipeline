@@ -97,6 +97,12 @@ class DicomSeriesProcessingAdmin(ModelAdmin):
     search_fields = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
     list_filter = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
 
+    def get_readonly_fields(self, request, obj=None):
+        # Make all fields readonly
+        if obj:  # Only apply when editing an existing object
+            return [f.name for f in self.model._meta.fields]
+        return []
+
 @admin.register(DicomPathConfig)
 class DicomPathConfigAdmin(ModelAdmin):
     list_display = ('datastorepath', )
@@ -142,27 +148,27 @@ def get_dicom_path_config():
 
 
 
-class MyModelAdmin(ModelAdmin):
-    # Override get_queryset to ensure only one record exists
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if qs.count() > 1:
-            # Optionally, you can add a validation or a message here
-            raise Exception("Only one record is allowed in the database.")
-        return qs
+# class MyModelAdmin(ModelAdmin):
+#     # Override get_queryset to ensure only one record exists
+#     def get_queryset(self, request):
+#         qs = super().get_queryset(request)
+#         if qs.count() > 1:
+#             # Optionally, you can add a validation or a message here
+#             raise Exception("Only one record is allowed in the database.")
+#         return qs
 
-    # Restrict adding new records (only allow if there's no record yet)
-    def has_add_permission(self, request):
-        if DicomImportConfig.objects.count() >= 1:
-            return False  # Prevent adding more than one record
-        return True
+#     # Restrict adding new records (only allow if there's no record yet)
+#     def has_add_permission(self, request):
+#         if DicomImportConfig.objects.count() >= 1:
+#             return False  # Prevent adding more than one record
+#         return True
 
-admin.site.register(DicomImportConfig, MyModelAdmin)
-
-
+# admin.site.register(DicomImportConfig, MyModelAdmin)
 
 
-@admin.action(description="Send to processing")
+
+
+# @admin.action(description="Send to processing")
 # def send_to_processing(modeladmin, request, queryset):
 #     # Get DicomPathConfig values when the action is executed
 #     import_dir, deidentified_dir, unprocessed_dir, processing_dir = get_dicom_path_config()
@@ -271,14 +277,6 @@ class ProcessingStatusAdmin(ModelAdmin):
         'dicom_move_folder_status',
         'created_at',
     )
-    readonly_fields =[
-        'patient_id',
-        'status',
-        'dicom_move_folder_status',
-        'yaml_attach_status',
-        'created_at',
-        'modified_at',
-    ]
     list_filter = (
         'dicom_move_folder_status',
         'yaml_attach_status', 
@@ -295,6 +293,11 @@ class ProcessingStatusAdmin(ModelAdmin):
     list_select_related = ('patient_id',)
     list_per_page = 10
     search_help_text = "Search by patient ID, patient name, protocol, or description"
+    def get_readonly_fields(self, request, obj=None):
+        # Make all fields readonly
+        if obj:  # Only apply when editing an existing object
+            return [f.name for f in self.model._meta.fields]
+        return []
 
     @admin.display(description='Patient Name')
     def patient_name(self, obj):
@@ -326,15 +329,15 @@ class ModelYamlInfoAdmin(ModelAdmin):
         'yaml_description',
         'created_at',
     )
-    # readonly_fields = [
-    #     'yaml_name',
-    #     'yaml_path',
-    #     'protocol',
-    #     'file_hash',
-    #     'yaml_description',
-    #     'created_at',
-    #     'modified_at',
-    # ]
+    readonly_fields = [
+        'yaml_name',
+        'yaml_path',
+        'protocol',
+        'file_hash',
+        'yaml_description',
+        'created_at',
+        'modified_at',
+    ]
     search_fields = ('yaml_name','protocol','yaml_description')
     search_help_text = "Search by YAML name, protocol, or description"
     list_filter = ('yaml_name', 'protocol','created_at',)
@@ -378,7 +381,11 @@ class CopyDicomAdmin(ModelAdmin):
                    'dircreateddate',
                    'processing_status',
                    )
-
+    def get_readonly_fields(self, request, obj=None):
+        # Make all fields readonly
+        if obj:  # Only apply when editing an existing object
+            return [f.name for f in self.model._meta.fields]
+        return []
 
 admin.site.register(CopyDicom, CopyDicomAdmin)
 
