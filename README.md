@@ -1,0 +1,1 @@
+celery -A draw_client worker --loglevel=INFOcelery -A draw_client beat --loglevel=INFO

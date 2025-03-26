@@ -1,0 +1,571 @@
+{% extends 'index.html' %}
+
+{% block content %}
+<!-- Dashboard Header -->
+<div class="welcome-section mb-4">
+    <h4 class="text-primary mb-1">Welcome back, {{ user.username }}</h4>
+    <p class="text-muted">Here's your system overview</p>
+</div>
+
+<!-- Stats Cards Row -->
+<div class="stats-section mb-4">
+    <div class="row g-3">
+        <!-- Total Templates -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="stat-card card h-100 border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-primary bg-opacity-10 rounded-circle p-3">
+                            <i class="ri-file-list-3-line text-primary"></i>
+                        </div>
+                        <div class="ms-3">
+                            <span class="d-block text-muted small">Total Templates</span>
+                            <h3 class="mb-0">{{ total_templates|default:"0" }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today DRAW -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="stat-card card h-100 border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-success bg-opacity-10 rounded-circle p-3">
+                            <i class="ri-scan-2-line text-success"></i>
+                        </div>
+                        <div class="ms-3">
+                            <span class="d-block text-muted small">Today's Series Segmented</span>
+                            <h3 class="mb-0">{{ todays_series_segmented|default:"0" }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today Unprocess -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="stat-card card h-100 border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-warning bg-opacity-10 rounded-circle p-3">
+                            <i class="ri-error-warning-line text-warning"></i>
+                        </div>
+                        <div class="ms-3">
+                            <span class="d-block text-muted small">Today's Unprocessed Series</span>
+                            <h3 class="mb-0">{{ today_unprocess|default:"0" }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Roundtrip Failed -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="stat-card card h-100 border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-danger bg-opacity-10 rounded-circle p-3">
+                            <i class="ri-error-warning-fill text-danger"></i>
+                        </div>
+                        <div class="ms-3">
+                            <span class="d-block text-muted small">Series with Error</span>
+                            <h3 class="mb-0">{{ roundtrip_failed|default:"0" }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total DRAW -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="stat-card card h-100 border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-info bg-opacity-10 rounded-circle p-3">
+                            <i class="ri-bubble-chart-line text-info"></i>
+                        </div>
+                        <div class="ms-3">
+                            <span class="d-block text-muted small">Total Series Segmented</span>
+                            <h3 class="mb-0">{{ total_draw|default:"0" }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Unprocess -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="stat-card card h-100 border-0 shadow-sm">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-danger bg-opacity-10 rounded-circle p-3">
+                            <i class="ri-folder-warning-line text-danger"></i>
+                        </div>
+                        <div class="ms-3">
+                            <span class="d-block text-muted small">Total Series Unprocessed</span>
+                            <h3 class="mb-0">{{ total_unprocess|default:"0" }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Area -->
+<div class="row">
+    <!-- Left Column - Activity Table -->
+    <div class="col-12 col-xl-8 mb-4">
+        <!-- Recent Activity Table -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Recent Activity</h5>
+                <div class="btn-group">
+                    <button class="btn btn-light btn-sm" id="refreshTable">
+                        <i class="ri-refresh-line me-1"></i>Refresh
+                    </button>
+                    <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#filterModal">
+                        <i class="ri-filter-3-line me-1"></i>Filter
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Template Name</th>
+                                <th>Status</th>
+                                <th>User</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in recent_activities %}
+                            <tr>
+                                <td>{{ activity.template_name }}</td>
+                                <td>
+                                    <span class="badge bg-{{ activity.status_color }}">
+                                        {{ activity.status }}
+                                    </span>
+                                </td>
+                                <td>{{ activity.user }}</td>
+                                <td>{{ activity.date }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-light">
+                                            <i class="ri-eye-line"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-light">
+                                            <i class="ri-edit-line"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <i class="ri-inbox-line d-block text-muted mb-2" style="font-size: 2rem;"></i>
+                                    No recent activities found
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column - Quick Actions & Status -->
+    <div class="col-12 col-xl-4">
+        <!-- Quick Actions Card -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-3 quick-actions-container">
+                    <button class="btn btn-outline-primary" onclick="showConfirmation('create')">
+                        <i class="ri-add-line me-2"></i>Create New Template
+                    </button>
+                    <button class="btn btn-outline-info" onclick="showConfirmation('view')">
+                        <i class="ri-file-list-line me-2"></i>View All Templates
+                    </button>
+                    <button class="btn btn-outline-success" onclick="showConfirmation('upload')">
+                        <i class="ri-upload-cloud-line me-2"></i>Manual Upload
+                    </button>
+                    <button class="btn btn-outline-secondary">
+                        <i class="ri-download-line me-2"></i>Download Reports
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status Card -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0">
+                <h5 class="card-title mb-0">System Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="status-item d-flex align-items-center mb-3">
+                    <div class="status-icon bg-success bg-opacity-10 rounded-circle p-2">
+                        <i class="ri-server-line text-success"></i>
+                    </div>
+                    <div class="ms-3 flex-grow-1">
+                        <h6 class="mb-0">Server Status</h6>
+                        <small class="text-muted">All systems operational</small>
+                    </div>
+                    <span class="badge bg-success">Online</span>
+                </div>
+                <div class="status-item d-flex align-items-center">
+                    <div class="status-icon bg-success bg-opacity-10 rounded-circle p-2">
+                        <i class="ri-database-2-line text-success"></i>
+                    </div>
+                    <div class="ms-3 flex-grow-1">
+                        <h6 class="mb-0">Database Status</h6>
+                        <small class="text-muted">Connected and running</small>
+                    </div>
+                    <span class="badge bg-success">Active</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications Card -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Recent Notifications</h5>
+                <button class="btn btn-light btn-sm">
+                    <i class="ri-notification-3-line"></i>
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="notification-list">
+                    {% for notification in notifications %}
+                    <div class="notification-item d-flex align-items-center mb-3">
+                        <div class="notification-icon bg-{{ notification.type }} bg-opacity-10 rounded-circle p-2">
+                            <i class="ri-{{ notification.icon }} text-{{ notification.type }}"></i>
+                        </div>
+                        <div class="ms-3">
+                            <p class="mb-1">{{ notification.message }}</p>
+                            <small class="text-muted">{{ notification.time }}</small>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <i class="ri-notification-off-line d-block text-muted mb-2" style="font-size: 2rem;"></i>
+                        <p class="text-muted mb-0">No new notifications</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modals -->
+<div class="modal fade" id="createConfirmModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Create Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="ri-add-line confirm-icon text-primary mb-3"></i>
+                <p>Create a new template?</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'check-template' %}" class="btn btn-primary">Continue</a>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="viewConfirmModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">View Templates</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="ri-file-list-line confirm-icon text-primary mb-3"></i>
+                <p>View all templates?</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'admin:dicom_handler_modelyamlinfo_changelist' %}"
+                        class="btn btn-primary">Continue</a>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="uploadConfirmModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Manual Upload</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="ri-upload-cloud-line confirm-icon text-primary mb-3"></i>
+                <p>Proceed to manual upload?</p>
+                <div class="d-grid gap-2">
+                    <a href="{% url 'admin:dicom_handler_uploaddicom_add' %}" class="btn btn-primary">Continue</a>
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Custom Styles -->
+<style>
+    /* Card Styles */
+    .card {
+        border-radius: 12px;
+        border: none;
+    }
+
+    /* Stat Card Styles */
+    .stat-card {
+        transition: all 0.3s ease;
+        height: 100%;
+        min-height: 90px;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-card .card-body {
+        padding: 1rem !important;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px !important;
+        border-radius: 50%;
+    }
+
+    .stat-icon i {
+        font-size: 1.25rem;
+    }
+
+    .stat-card .text-muted {
+        font-size: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.2;
+    }
+
+    /* Quick Actions Styles */
+    .quick-actions-container {
+        max-width: 280px;
+        margin: 0 auto;
+    }
+
+    .quick-actions-container .btn {
+        padding: 0.625rem 1rem;
+        font-size: 0.95rem;
+    }
+
+    /* Modal Styles */
+    .modal-content {
+        border-radius: 12px;
+        border: none;
+    }
+
+    .modal-sm {
+        max-width: 300px;
+    }
+
+    .modal-dialog-centered {
+        display: flex;
+        align-items: center;
+        min-height: calc(100% - 1rem);
+    }
+
+    .modal-body p {
+        font-size: 1rem;
+        color: var(--bs-gray-700);
+        margin-bottom: 1.5rem;
+    }
+
+    .confirm-icon {
+        font-size: 3rem;
+        display: block;
+        margin-bottom: 1rem;
+    }
+
+    /* Table Styles */
+    .table th {
+        font-weight: 600;
+        background-color: var(--bs-light);
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+    }
+
+    /* Notification & Status Styles */
+    .notification-item,
+    .status-item {
+        transition: background-color 0.2s ease;
+        border-radius: 8px;
+        padding: 10px;
+    }
+
+    .notification-item:hover,
+    .status-item:hover {
+        background-color: var(--bs-light);
+    }
+
+    /* Stat Card Styles */
+    .stat-card {
+        transition: all 0.3s ease;
+        height: 100%;
+        min-height: 90px;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-card .card-body {
+        padding: 1rem !important;
+    }
+
+    .stat-icon {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        /* Add this to prevent icon shrinking */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 8px !important;
+        border-radius: 50%;
+    }
+
+    .stat-icon i {
+        font-size: 1.25rem;
+    }
+
+    .stat-card .text-muted {
+        font-size: 0.9rem;
+        white-space: normal;
+        /* Changed from nowrap to normal */
+        line-height: 1.2;
+        display: -webkit-box;
+        /* -webkit-line-clamp: 2; */
+        /* Limit to 2 lines */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        height: 2.4em;
+        /* 2 lines × 1.2 line-height */
+        margin-bottom: 0.25rem;
+        font-weight: 800;
+        /* Added bold text */
+        color: #495057 !important;
+        /* Even darker shade for more emphasis */
+        letter-spacing: -0.01em;
+        /* Slightly tighter letter spacing */
+        /* text-transform: uppercase; */
+        /* Optional: makes text uppercase */
+        /* font-size: 0.75rem; */
+        /* Slightly smaller to accommodate uppercase */
+    }
+
+    .stat-card h3 {
+        font-size: 1.25rem;
+        margin: 0;
+        line-height: 1;
+    }
+
+    /* Additional helper class for flex layout */
+    .stat-card .d-flex {
+        min-height: 60px;
+    }
+
+    .stat-card .ms-3 {
+        min-width: 0;
+        /* Allow text container to shrink */
+    }
+</style>
+
+<!-- Initialize DataTables -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Initialize DataTables -->
+<script>
+    // Define showConfirmation globally
+    function showConfirmation(action) {
+        let modalId;
+        switch (action) {
+            case 'create':
+                modalId = 'createConfirmModal';
+                break;
+            case 'view':
+                modalId = 'viewConfirmModal';
+                break;
+            case 'upload':
+                modalId = 'uploadConfirmModal';
+                break;
+            default:
+                return;
+        }
+
+        const modal = new bootstrap.Modal(document.getElementById(modalId));
+        modal.show();
+    }
+
+    $(document).ready(function () {
+        // Initialize DataTable
+        const table = $('.table').DataTable({
+            responsive: true,
+            pageLength: 5,
+            order: [[3, 'desc']],
+            dom: '<"row"<"col-md-6"l><"col-md-6"f>>rtip',
+            language: {
+                search: "",
+                searchPlaceholder: "Search...",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                infoEmpty: "Showing 0 to 0 of 0 entries",
+                infoFiltered: "(filtered from _MAX_ total entries)"
+            }
+        });
+
+        // Refresh button handler
+        $('#refreshTable').click(function () {
+            table.ajax.reload();
+        });
+
+        // Handle modal transitions
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            modal.addEventListener('hidden.bs.modal', function () {
+                document.body.classList.add('modal-open');
+            });
+        });
+    });
+</script>
+{% endblock %}
