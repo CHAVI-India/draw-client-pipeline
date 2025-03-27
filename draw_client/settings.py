@@ -37,7 +37,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-u69m@5_kjct)7fr9n@w%5wpby_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
-
+CSRF_TRUSTED_ORIGINS = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
 APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
 
 
