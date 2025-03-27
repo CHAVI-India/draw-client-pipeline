@@ -54,7 +54,7 @@
                         </div>
                         <div class="ms-3">
                             <span class="d-block text-muted small">Today's Unprocessed Series</span>
-                            <h3 class="mb-0">{{ today_unprocess|default:"0" }}</h3>
+                            <h3 class="mb-0">{{ todays_unprocessed_series|default:"0" }}</h3>
                         </div>
                     </div>
                 </div>
@@ -71,7 +71,7 @@
                         </div>
                         <div class="ms-3">
                             <span class="d-block text-muted small">Series with Error</span>
-                            <h3 class="mb-0">{{ roundtrip_failed|default:"0" }}</h3>
+                            <h3 class="mb-0">{{ series_with_error|default:"0" }}</h3>
                         </div>
                     </div>
                 </div>
@@ -88,7 +88,7 @@
                         </div>
                         <div class="ms-3">
                             <span class="d-block text-muted small">Total Series Segmented</span>
-                            <h3 class="mb-0">{{ total_draw|default:"0" }}</h3>
+                            <h3 class="mb-0">{{ total_series_segmented|default:"0" }}</h3>
                         </div>
                     </div>
                 </div>
@@ -105,7 +105,7 @@
                         </div>
                         <div class="ms-3">
                             <span class="d-block text-muted small">Total Series Unprocessed</span>
-                            <h3 class="mb-0">{{ total_unprocess|default:"0" }}</h3>
+                            <h3 class="mb-0">{{ total_series_unprocessed|default:"0" }}</h3>
                         </div>
                     </div>
                 </div>

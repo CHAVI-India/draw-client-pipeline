@@ -14,6 +14,7 @@ from dicom_handler.models import *
 from .dicomutils.dicomseriesprocessing import *
 from django.views.decorators.csrf import csrf_protect
 from collections import defaultdict
+from api_client.models import *
 
 
 # yaml saving path
@@ -25,44 +26,33 @@ def index(request):
     context = {
         # Total Templates
         'total_templates': ModelYamlInfo.objects.count(),
+
+        # Today's Segmented
         'todays_series_segmented': ProcessingStatus.objects.filter(
             created_at__date=timezone.now().date(),
-            dicom_move_folder_status='Move to Deidentification Folder'
+            dicom_move_folder_status='Moved to DataStore'
         ).count(),
 
         # Today's Unprocessed
         'todays_unprocessed_series': ProcessingStatus.objects.filter(
-           created_at__date=timezone.now().date(),
+            created_at__date=timezone.now().date(),
             dicom_move_folder_status='Move to Unprocessed Folder'
         ).count(),
         
+        # series_with_error
+        'series_with_error': DicomTransfer.objects.filter(
+            server_status='ERROR'
+        ).count(),
+
+        # total_series_segmented
+        'total_series_segmented': ProcessingStatus.objects.filter(
+            dicom_move_folder_status='Moved to DataStore'
+        ).count(),
         
-        # # Today's DRAW (assuming you have a date field and status)
-        # 'today_draw': ModelYamlInfo.objects.filter(
-        #     created_date__date=today,
-        #     status='completed'
-        # ).count(),
-        
-        # # Today's Unprocessed
-        # 'today_unprocess': ModelYamlInfo.objects.filter(
-        #     created_date__date=today,
-        #     status='pending'
-        # ).count(),
-        
-        # # Roundtrip Failed
-        # 'roundtrip_failed': ModelYamlInfo.objects.filter(
-        #     status='failed'
-        # ).count(),
-        
-        # # Total DRAW (all time completed)
-        # 'total_draw': ModelYamlInfo.objects.filter(
-        #     status='completed'
-        # ).count(),
-        
-        # # Total Unprocessed
-        # 'total_unprocess': ModelYamlInfo.objects.filter(
-        #     status='pending'
-        # ).count(),
+        # total_series_unprocessed
+        'total_series_unprocessed': ProcessingStatus.objects.filter(
+            dicom_move_folder_status='Move to Unprocessed Folder'
+        ).count(),
         
         # # Recent Activities
         # 'recent_activities': ActivityLog.objects.select_related('user').order_by('-date')[:10],
