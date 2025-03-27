@@ -65,7 +65,7 @@ def poll_pending_transfers():
                 # Update the server_status field with the status from the server
                 transfer.update_server_status(status)
                 
-                if status == 'SEGMENTATION COMPLETED':
+                if status in ['SEGMENTATION RETRIEVED', 'SEGMENTATION COMPLETE']:
                     logger.info(f"Transfer {transfer.id} completed. Proceeding to download RTSTRUCT file.")
                     
                     try:
