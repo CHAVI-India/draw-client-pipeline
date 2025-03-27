@@ -116,6 +116,8 @@ class DicomDeidentifier:
         current_patient_id = None
         current_study_uid = None
         current_series_uid = None
+        # Track the series folder for return
+        deidentified_series_dir = None
 
         for root, _, files in os.walk(dicom_dir):
             for file in files:
@@ -214,6 +216,9 @@ class DicomDeidentifier:
                     )
                     os.makedirs(new_dir, exist_ok=True)
                     
+                    # Store the series directory for return - THIS IS THE KEY CHANGE
+                    deidentified_series_dir = new_dir
+                    
                     # Generate a unique filename using original and deidentified UIDs
                     original_sop_uid = instance.sop_instance_uid  # Get the original UID from our database
                     deidentified_sop_uid = ds.SOPInstanceUID
@@ -239,6 +244,18 @@ class DicomDeidentifier:
                 except Exception as e:
                     logger.error(f'Error processing {file}: {str(e)}')
                     continue
+        
+        # Change return to return the series directory instead of a specific file
+        if deidentified_series_dir:
+            return {
+                "status": "success",
+                "deidentified_path": deidentified_series_dir
+            }
+        else:
+            return {
+                "status": "error",
+                "message": "No files were successfully processed"
+            }
 
         # Add cleanup of empty directories after processing all files
         self.cleanup_empty_directories(dicom_dir)
@@ -474,17 +491,26 @@ def process_pending_deidentifications(processed_dir='folder_post_deidentificatio
                 processed_dir=processed_dir
             )
             logger.debug(f"Result: {result}")
-            # Store the result
-            results["details"].append({
+            
+            # Store the result - using correct key name
+            detail = {
                 "series_id": series.seriesid,
                 "status": result["status"],
                 "message": result.get("message", "")
-            })
+            }
+            
+            # Only add deidentified_path if it exists in the result
+            if "deidentified_path" in result:
+                detail["deidentified_path"] = result["deidentified_path"]
+                
+            results["details"].append(detail)
             logger.debug(f"Results: {results}")
+            
             # Update series status based on result
             if result["status"] == "success":
                 # Mark as processed
                 series.ready_for_deidentification = False
+                series.series_folder_location = result["deidentified_path"]
                 series.save()
                 logger.info(f"Successfully processed series: {series.seriesid}")
                 results["successful"] += 1
@@ -494,7 +520,7 @@ def process_pending_deidentifications(processed_dir='folder_post_deidentificatio
         
         results["status"] = "success" if results["failed"] == 0 else "partial"
         results["message"] = f"Processed {results['successful']} series successfully, {results['failed']} failed, {results['skipped']} skipped"
-        
+
         logger.info(f"Deidentification batch completed: {results['message']}")
         return results
         
@@ -515,7 +541,7 @@ def deidentify_dicom(dicom_dir='folder_for_deidentification', processed_dir='fol
         processed_dir (str): Directory where processed files will be stored. Default is 'folder_post_deidentification'
     
     Returns:
-        dict: Summary of processing results
+        dict: Summary of processing results including deidentified_path (the directory where deidentified files are stored)
     """
     try:
         logger.info(f"Starting DICOM deidentification for: {dicom_dir}")
@@ -527,19 +553,31 @@ def deidentify_dicom(dicom_dir='folder_for_deidentification', processed_dir='fol
         deidentifier = DicomDeidentifier()
         
         # Process the directory
-        deidentifier.process_dicom_directory(dicom_dir, processed_dir)
+        result = deidentifier.process_dicom_directory(dicom_dir, processed_dir)
         
         # Clean up empty directories
         deidentifier.cleanup_empty_directories(dicom_dir)
         
         logger.info(f"Completed DICOM deidentification for: {dicom_dir}")
         
-        return {
-            "status": "success",
-            "dicom_dir": dicom_dir,
-            "processed_dir": processed_dir,
-            "message": "DICOM deidentification completed successfully"
-        }
+        if result.get("status") == "success" and result.get("deidentified_path"):
+            logger.info(f"Deidentified files stored in: {result['deidentified_path']}")
+            return {
+                "status": "success",
+                "dicom_dir": dicom_dir, 
+                "processed_dir": processed_dir,
+                "deidentified_path": result["deidentified_path"],
+                "message": "DICOM deidentification completed successfully"
+            }
+        else:
+            error_msg = result.get("message", "Unknown error during deidentification")
+            logger.error(f"Deidentification failed: {error_msg}")
+            return {
+                "status": "error",
+                "dicom_dir": dicom_dir,
+                "message": error_msg,
+                "error": error_msg
+            }
         
     except Exception as e:
         logger.error(f"Error during DICOM deidentification: {str(e)}", exc_info=True)

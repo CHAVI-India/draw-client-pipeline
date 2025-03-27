@@ -8,7 +8,7 @@ from api_client.models import *
 logger = getLogger('api_client')
 
 @shared_task
-def scan_dicom_folder_task():
+def scan_dicom_folder_task(delta_time=10):
     """
     This task will scan the dicom folder and send the dicom files in a zip file to the server.
     """

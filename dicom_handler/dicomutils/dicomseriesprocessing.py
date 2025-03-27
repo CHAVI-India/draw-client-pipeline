@@ -323,7 +323,14 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                     status=f"{yaml_file_name} Template file matched",
                     dicom_move_folder_status="Move to Deidentification Folder",
                 )
+
+                # Set success flags for further processing of the task.
+                ready_for_deidentification = True
+                series_folder_location = dest_dir
+
                 logger.info("Successfully processed and moved to deidentification folder")
+                logger.info(f"Series folder location: {series_folder_location}")
+                logger.info(f"Ready for deidentification: {ready_for_deidentification}")
 
             else:
                 logger.warning("Protocol key does not exist, moving to unprocessed folder")
@@ -347,6 +354,12 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                         unprocessed=True,
                         ready_for_deidentification=False
                         )
+                # Set success flags for further processing of the task.
+                ready_for_deidentification = False
+                series_folder_location = dest_dir
+                logger.info("Successfully processed and moved to unprocessed folder")
+                logger.info(f"Series folder location: {series_folder_location}")
+                logger.info(f"Ready for deidentification: {ready_for_deidentification}")
 
         elif len(yaml_files) == 0:
             logger.debug("No YAML files found, processing DICOM tags")
@@ -425,6 +438,14 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                         series_folder_location=f"{dest_dir}",
                         ready_for_deidentification=True
                         )
+                    # Set success flags for furthe processing of the task.
+
+                    ready_for_deidentification = True
+                    series_folder_location = dest_dir
+
+                    logger.info("Successfully processed and moved to deidentification folder")
+                    logger.info(f"Series folder location: {series_folder_location}")
+                    logger.info(f"Ready for deidentification: {ready_for_deidentification}")
                     
                     
                 elif len(filter_match_rule) > 1:
@@ -452,6 +473,12 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                         unprocessed=True,
                         ready_for_deidentification=False
                     )
+                    # Set success flags for further processing of the task.
+                    ready_for_deidentification = False
+                    series_folder_location = dest_dir
+                    logger.info("Successfully processed and moved to unprocessed folder")
+                    logger.info(f"Series folder location: {series_folder_location}")
+                    logger.info(f"Ready for deidentification: {ready_for_deidentification}")
                 else:
                     logger.warning("No matching rules found")
                     dest_dir = os.path.join(unprocess_dicom_path, os.path.basename(dicom_series_path))
@@ -464,7 +491,7 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                     ProcessingStatus.objects.create(
                         patient_id=DicomUnprocessed.objects.get(id=processing.id),
                         status="No Rule Sets Matched",
-                        dicom_move_folder_status="Move to Unprocessed Folder", 
+                        dicom_move_folder_status="Move to Unprocessed Folder",          
                         
                     )
 
@@ -473,6 +500,12 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                         unprocessed=True,
                         ready_for_deidentification=False
                     )
+                    # Set success flags for further processing of the task.
+                    ready_for_deidentification = False
+                    series_folder_location = dest_dir
+                    logger.info("Successfully processed and moved to unprocessed folder")
+                    logger.info(f"Series folder location: {series_folder_location}")
+                    logger.info(f"Ready for deidentification: {ready_for_deidentification}")
 
             except Exception as e:
                 logger.error(f"Error processing DICOM tags: {str(e)}")
@@ -500,9 +533,19 @@ def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_di
                 unprocessed=True,
                 ready_for_deidentification=False
                 )
+            # Set success flags for further processing of the task.
+            ready_for_deidentification = False
+            series_folder_location = dest_dir
+            logger.info("Successfully processed and moved to unprocessed folder")
+            logger.info(f"Series folder location: {series_folder_location}")
+            logger.info(f"Ready for deidentification: {ready_for_deidentification}")
 
     except Exception as e:
         logger.error(f"Error in read_dicom_metadata: {str(e)}")
         raise
 
     logger.info("Completed DICOM metadata processing")
+    return {
+        "success": ready_for_deidentification,
+        "deidentification_path": series_folder_location
+    }

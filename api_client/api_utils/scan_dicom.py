@@ -23,7 +23,7 @@ def compute_file_checksum(file_path):
             sha256_hash.update(byte_block)
     return sha256_hash.hexdigest()
 
-def scan_dicom_folder():
+def scan_dicom_folder(delta_time=10):
     """
     Scan the designated DICOM folder for series folders.
     If all files in a folder are older than 10 minutes, zip the folder contents.
@@ -43,10 +43,10 @@ def scan_dicom_folder():
         if not all(os.path.exists(folder) for folder in [dicom_folder, temp_folder, archive_folder]):
             logger.error("One or more required folders do not exist")
             return
-
+        
         # Get current time for comparison
         current_time = timezone.now()
-        cutoff_time = current_time - timedelta(minutes=10)
+        cutoff_time = current_time - timedelta(minutes=delta_time)
 
         # Scan only immediate subdirectories (series folders)
         for series_folder in dicom_folder.iterdir():
