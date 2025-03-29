@@ -57,7 +57,11 @@ mkdir draw-client
 cd draw-client
 ```
 
-2. Create a docker-compose.yml file with the following content:
+> **IMPORTANT**: The datastore folder is the location where your DICOM files are stored and where the DRAW client will look for new files to process. This folder must exist and be accessible to Docker. The DRAW client will monitor this folder for new DICOM files and will also save the processed RTStruct files back to this location. Note that this can be a network storage folder where the DICOM data are saved before importing to the TPS. A periodic task will fetch new images from the directory and process them for autosegmentation.
+
+
+2. Ensure that you have the correct folder path for the **datastore folder**. See the commented section in the docker-compose.yml file below. Ensure that the folder exists. Additionally if in Windows then change all \ to a / in the folder path. 
+Then create a docker-compose.yml file with the following content:
 ```yaml
 services:
   db:
@@ -69,10 +73,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     env_file:
       - .env.docker
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=draw-client
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   rabbitmq:
     image: rabbitmq:3.12-management
     container_name: rabbitmq-docker
@@ -84,10 +89,11 @@ services:
       - RABBITMQ_DEFAULT_PASS=guest
 
   django-web:
-    image: ghcr.io/chavi-india/draw-client-pipeline:release
+    image: chaviapp/drawclient:release
     container_name: django-docker
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     env_file:
       - .env.docker      
     volumes:
@@ -97,7 +103,7 @@ services:
     command: ["./entrypoint.docker.sh"]
 
   celery:
-    image: ghcr.io/chavi-india/draw-client-pipeline:release
+    image: chaviapp/drawclient:release
     container_name: celery-docker
     command: ["./entrypoint.docker.sh", "celery"]
     volumes:
@@ -106,11 +112,15 @@ services:
     env_file:
       - .env.docker
     depends_on:
-      - django-web
-      - rabbitmq
+      db:
+        condition: service_healthy
+      django-web:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
 
   celery-beat:
-    image: ghcr.io/chavi-india/draw-client-pipeline:release
+    image: chaviapp/drawclient:release
     container_name: celery-beat-docker
     command: ["./entrypoint.docker.sh", "celery-beat"]
     volumes:
@@ -119,8 +129,12 @@ services:
     env_file:
       - .env.docker
     depends_on:
-      - django-web
-      - rabbitmq
+      db:
+        condition: service_healthy
+      django-web:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
 
   frontend-proxy:
     image: nginx:latest
@@ -131,12 +145,13 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./static:/static:ro
     depends_on:
-      - django-web
+      django-web:
+        condition: service_started
 volumes:
   postgres_data:
 ```
 
-3. Create a .env.docker file in the same directory:
+3. Create a .env.docker file in the same directory. Please make sure that the file name is correct and note the presence of the . before the name which indicates that this is a hidden file.:
 ```
 # Django Security
 SECRET_KEY=your_secret_key_here
@@ -170,12 +185,8 @@ DJANGO_SUPERUSER_PASSWORD=admin
 DJANGO_SUPERUSER_EMAIL=admin@example.com
 ```
 
-4. Create the logs and static directories:
-```
-mkdir logs static
-```
 
-5. Create a basic nginx.conf file (required for the nginx container):
+4. Create a nginx.conf file (required for the nginx container):
 ```
 # Sets the max number of simultaneous connections that can be opened by a worker process
 events {
@@ -216,14 +227,14 @@ http {
 }
 ```
 
-6. Start the services:
+5. Start the services:
 ```
 docker-compose up -d
 ```
 
-7. Access the DRAW client interface at http://localhost:8001
+6. Access the DRAW client interface at http://localhost:8001
 
-8. To stop the services:
+7. To stop the services:
 ```
 docker-compose down
 ```
@@ -286,40 +297,27 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Configure environment
-1. Create a .env file in the project root. You can copy the sample_env.txt file to get started:
+## Create a new environment variable file:
+
+1. Create a .env file in the project root. You can copy the sample_env.txt file to get started.:
 ```
-# Django Security
-SECRET_KEY=your_secret_key_here
-DJANGO_DEBUG=False
+SECRET_KEY = &^&7stc^ijtq1e0a280=0w8g-luul^au^^13=p6ko1c8jwahn
+DJANGO_DEBUG = True
 DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost
-DJANGO_CSRF_TRUSTED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000
+DJANGO_CSRF_TRUSTED_ORIGINS=http://localhost
 
-# Django DB
-DJANGO_DB_ENGINE=django.db.backends.postgresql
-DJANGO_DB_NAME=draw-client
-DJANGO_DB_USER=postgres
-DJANGO_DB_PASSWORD=postgres
-DJANGO_DB_HOST=localhost
-DJANGO_DB_PORT=5432
+DJANGO_DB_ENGINE=django.db.backends.postgresql # Add engine of the database
+DJANGO_DB_NAME=draw-client # Add name of the database
+DJANGO_DB_USER=postgres # Add username of the database
+DJANGO_DB_PASSWORD= # Add password of the database
+DJANGO_DB_HOST=localhost # Add host of the database
+DJANGO_DB_PORT=5432 # Add port of the database
 
-# API URLs
-API_URL=https://draw.chavi.ai/api/models/
-MODEL_API_URL=https://draw.chavi.ai/models
 
-# Celery
-CELERY_BROKER_URL=pyamqp://guest:guest@localhost:5672
+API_URL = http://draw.recode-with-r.com/api/models/
+MODEL_API_URL = http://draw.recode-with-r.com/models
+CELERY_BROKER_URL = pyamqp://guest:gues@localhost:5672
 
-# Django Superuser
-DJANGO_SUPERUSER_USERNAME=admin
-DJANGO_SUPERUSER_PASSWORD=admin
-DJANGO_SUPERUSER_EMAIL=admin@example.com
-```
-
-## Create logs directory
-1. Create a logs directory for application logging:
-```
-mkdir logs
 ```
 
 ## Migrate the database
