@@ -98,7 +98,7 @@ services:
       - .env.docker      
     volumes:
       - ./logs:/app/logs
-      - ./static:/app/staticfiles
+      - ./static:/app/static
       - /path/to/your/datastore:/app/datastore  # Modify this to match your datastore path
     command: ["./entrypoint.docker.sh"]
 
@@ -107,7 +107,7 @@ services:
     container_name: celery-docker
     command: ["./entrypoint.docker.sh", "celery"]
     volumes:
-      - ./static:/app/staticfiles
+      - ./static:/app/static
       - ./logs:/app/logs
     env_file:
       - .env.docker
@@ -124,7 +124,7 @@ services:
     container_name: celery-beat-docker
     command: ["./entrypoint.docker.sh", "celery-beat"]
     volumes:
-      - ./static:/app/staticfiles
+      - ./static:/app/static
       - ./logs:/app/logs
     env_file:
       - .env.docker

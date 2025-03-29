@@ -23,7 +23,7 @@ folder_post_deidentification/
 folder_unprocessed_dicom/
 folder_temp/
 folder_archive/
-
+static/
 # Backup files # 
 *.bak 
 
