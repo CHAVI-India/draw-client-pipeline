@@ -147,10 +147,6 @@ DATABASES = {
         'PASSWORD': os.getenv('DJANGO_DB_PASSWORD', ''),
         'HOST': os.getenv('DJANGO_DB_HOST', ''),
         'PORT': os.getenv('DJANGO_DB_PORT', ''),
-        'ATOMIC_REQUESTS': False,  # Consider setting this to False if you have locking issues
-        'OPTIONS': {
-            'timeout': 30,  # Add timeout value
-        }
     }
 }
 

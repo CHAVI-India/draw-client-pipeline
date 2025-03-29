@@ -36,6 +36,7 @@ packaging==24.2
 pandas==2.2.3
 prompt_toolkit==3.0.50
 psycopg==3.2.3
+psycopg2-binary==2.9.10
 pyaml==25.1.0
 pycparser==2.22
 pydicom==3.0.1

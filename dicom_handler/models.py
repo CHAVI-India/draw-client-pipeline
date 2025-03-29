@@ -2,12 +2,16 @@ from django.db import models
 import os
 from django.core.exceptions import ValidationError
 from urllib.parse import urlparse
+from pathlib import Path
 
 
 
 class DicomPathConfig(models.Model):
     id = models.AutoField(primary_key=True)
-    datastorepath = models.TextField(null=True, help_text="Enter the full path to the datastore which is the remote folder from the DICOM data will be imported. This can be a remote folder in which case the full path is required. We would suggest that in such a situation the remote folder is mapped as a shared drive on the machine where this client runs.")
+    datastorepath = models.TextField(null=True,
+                                     default= "/app/datastore", 
+                                     help_text="Enter the full path to the datastore which is the remote folder from the DICOM data will be imported. This can be a remote folder in which case the full path is required. We would suggest that in such a situation the remote folder is mapped as a shared drive on the machine where this client runs."
+                                     )
 
     class Meta:
         db_table = "dicom_path_config"
@@ -24,6 +28,31 @@ class DicomPathConfig(models.Model):
     def get_instance(cls):
         instance, created = cls.objects.get_or_create(pk=1)
         return instance
+
+    def get_safe_path(self):
+        """
+        Returns a safe path object using pathlib.Path.
+        This handles both local and remote paths correctly across different operating systems.
+        
+        Returns:
+            Path: A pathlib.Path object representing the datastore path
+        """
+        if not self.datastorepath:
+            return None
+            
+        # Convert the path to a Path object
+        path = Path(self.datastorepath)
+        
+        # If it's a UNC path (Windows network share), ensure it starts with \\
+        if str(path).startswith('\\\\'):
+            return path
+            
+        # For local paths, resolve any relative components
+        try:
+            return path.resolve()
+        except (ValueError, RuntimeError):
+            # If resolution fails (e.g., for remote paths), return the path as-is
+            return path
 
 
 class ProcessingStatusChoices(models.TextChoices):

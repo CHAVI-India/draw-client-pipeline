@@ -44,7 +44,7 @@ USER appuser
 EXPOSE 8000 
 
 # Make entry file executable
-RUN chmod +x  /app/entrypoint.docker.sh
+RUN chmod +x /app/entrypoint.docker.sh
  
-# Start the application using Gunicorn
+# Start the application using the entrypoint script
 CMD ["/app/entrypoint.docker.sh"]

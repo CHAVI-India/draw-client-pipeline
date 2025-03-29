@@ -1,5 +1,6 @@
 import os
 import shutil
+from pathlib import Path
 from celery import shared_task, chain
 from django.conf import settings
 from dicom_handler.dicomutils.copydicom import *
@@ -48,6 +49,11 @@ def copy_dicom():
     try:
         # Get the path configuration
         path_config = DicomPathConfig.get_instance()
+        source_path = path_config.get_safe_path()
+        
+        if not source_path:
+            raise ValueError("No datastore path configured")
+            
         destination_path = os.path.join(settings.BASE_DIR, 'folder_for_dicom_import')
         if not os.path.exists(destination_path):
             os.makedirs(destination_path)
@@ -55,11 +61,11 @@ def copy_dicom():
         
         # Log the fact that the task has started
         celery_logger.info("copy_dicom task started")
-        logger.info(f"Starting copydicom task with source={path_config.datastorepath}, destination={destination_path}")
+        logger.info(f"Starting copydicom task with source={source_path}, destination={destination_path}")
         
         # Call the copydicom function
         copydicom(
-            sourcedir=path_config.datastorepath,
+            sourcedir=str(source_path),
             destinationdir=destination_path
             )
         
