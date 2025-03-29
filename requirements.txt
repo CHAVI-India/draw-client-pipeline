@@ -21,6 +21,7 @@ django-allauth-ui==1.6.1
 django-apscheduler==0.7.0
 django-celery-beat==2.7.0
 django-celery-results==2.5.1
+django-docs==0.3.3
 django-extensions==3.2.3
 django-log-lens==0.1.12
 django-log-viewer==1.1.7
@@ -58,6 +59,7 @@ six==1.17.0
 slippers==0.6.2
 snowballstemmer==2.2.0
 Sphinx==8.2.3
+sphinx-pdj-theme==0.5.0
 sphinxcontrib-applehelp==2.0.0
 sphinxcontrib-devhelp==2.0.0
 sphinxcontrib-htmlhelp==2.1.0
