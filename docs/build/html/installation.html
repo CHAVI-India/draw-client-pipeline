@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Installation the DRAW Client &#8212; DRAW Client 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Deep learning based Radiotherapy Autosegmentation Workflow (DRAW) - Client Documentation documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="installation-the-draw-client">
+<h1>Installation the DRAW Client<a class="headerlink" href="#installation-the-draw-client" title="Link to this heading">¶</a></h1>
+<p>This document describes the steps to install the DRAW client on the local computer using Docker.</p>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">¶</a></h2>
+<p>You need to have a Docker desktop installed on your computer.
+To install Docker desktop, please refer to the <a class="reference external" href="https://www.docker.com/products/docker-desktop/">Docker Desktop</a> website.</p>
+<p>Please review the official documentation for Docker Desktop installation here: <a class="reference external" href="https://docs.docker.com/desktop/install/windows-install/">https://docs.docker.com/desktop/install/windows-install/</a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You should choose the version of the windows which matches your CPU architecture. For example if you have a Intel or AMD CPU, you need to install the x86_64 version. If you have a M1 or M2 CPU, you need to install the arm64 version.</p>
+</div>
+<p>The following the minimum system requirements for Docker Desktop:</p>
+<ul class="simple">
+<li><p>A 64 bit processor with Second Level Address Translation (SLAT)</p></li>
+<li><p>4GB of RAM</p></li>
+<li><p>Enable Hardware virtualization in the BIOS</p></li>
+</ul>
+<p>It is important to follow the instructions for Docker Desktop installation if you are not uising the computer as an administrator in Windows. Specially you need to ensure that the user that is you should be added to the docker-users group.</p>
+<p>After installation, you need to restart your computer. Additionally do no forget to share the directory where the application will be installed and the datastore folder within Docker Desktop.
+To do so please open the Docker Desktop application and click on the gear icon in the top right corner of the application. On the left side menu you will see a section called Resources. Click on it to open the submenu item called File sharing. There please ensure that the directory where the application will be installed and the datastore folder are shared.</p>
+<a class="reference internal image-reference" href="_images/docker_desktop_resource_sharing.png"><img alt="Docker Desktop File Sharing" class="align-center" src="_images/docker_desktop_resource_sharing.png" style="width: 500px;" />
+</a>
+</section>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
+<p>The latest instructions for installation of the DRAW client can be found in the <a class="reference external" href="https://github.com/CHAVI-India/draw-client-pipeline">DRAW Client GitHub repository</a>.
+While the repository hosts the complete source code, for the docker based installation you should pay attention to the section called Installation using the Recommended Way in the <a class="reference external" href="https://github.com/CHAVI-India/draw-client-pipeline/blob/main/README.md#recommended-way">README.md</a> file.</p>
+<p>Please refer to the instructions the page for the latest instructions (in the even there is a conflict with the instructions here and the README file the instructions in the README file will prevail).</p>
+<p>Briefly the steps are:</p>
+<ol class="arabic simple">
+<li><p>Create a new directory for the project in a folder of your choice. In a windows machine we recommend that you use the D: for the same.</p></li>
+<li><p>Create three files inside the directory:</p></li>
+</ol>
+<blockquote>
+<div><ol class="upperalpha simple">
+<li><p>docker-compose.yml</p></li>
+<li><p>.env.docker</p></li>
+<li><p>nginx.conf</p></li>
+</ol>
+</div></blockquote>
+<p>Please play close attention to the name of the file called .env.docker. The dot in the beginning of the file name is important. It may be hidden in the file explorer.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The Datastore folder path is a key element that needs to be understood properly. For Radiotherapy autosegmentation, we have designed the system to automatically download DICOM files from a chose directory (either local or remote) and then process the files. For most centers this will be shared network drive where the DICOM files are send after the images are acquired before they are imported into the Treatment Planning System (TPS). However in some situations, this folder may be on the local machines, and the user may be sending the images to the local machine, after the scan is acquired. In such cases, we need to configure a system that will allow the local machine to act as a DICOM server able to accept DICOM files for the DRAW client to process.</p>
+</div>
+<p>This folder path needs to be configured properly in the docker-compose.yml file. (please see the commented line under the volumes section of the service called ‘django-web’). If it is a remote folder it is important that this folder is shared as a network drive to the local machine.</p>
+<p>Additionaly, we recommend that you choose a strong password for the postgres database.</p>
+<p>For reference here are the text for the three files</p>
+</section>
+<section id="the-docker-compose-yml-file">
+<h2>The docker-compose.yml file<a class="headerlink" href="#the-docker-compose-yml-file" title="Link to this heading">¶</a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">services</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">db</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres:17</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres-docker</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;5433:5432&quot;</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres_data:/var/lib/postgresql/data</span>
+<span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env.docker</span>
+<span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD-SHELL&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;pg_isready</span><span class="nv"> </span><span class="s">-U</span><span class="nv"> </span><span class="s">$${POSTGRES_USER}</span><span class="nv"> </span><span class="s">-d</span><span class="nv"> </span><span class="s">$${POSTGRES_DB}&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
+<span class="w">      </span><span class="nt">timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
+<span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">  </span><span class="nt">rabbitmq</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rabbitmq:3.12-management</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rabbitmq-docker</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;5675:5672&quot;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;15675:15672&quot;</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RABBITMQ_DEFAULT_USER=guest</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RABBITMQ_DEFAULT_PASS=guest</span>
+
+<span class="w">  </span><span class="nt">django-web</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">build</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">django-docker</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">db</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_healthy</span>
+<span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env.docker</span><span class="w">      </span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/app/logs</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/app/static</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/mnt/share/dicom_processing_test/datastore:/app/datastore</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;./entrypoint.docker.sh&quot;</span><span class="p p-Indicator">]</span>
+
+<span class="w">  </span><span class="nt">celery</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">build</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">celery-docker</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;./entrypoint.docker.sh&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;celery&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/app/static</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/app/logs</span>
+<span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env.docker</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">db</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_healthy</span>
+<span class="w">      </span><span class="nt">django-web</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_started</span>
+<span class="w">      </span><span class="nt">rabbitmq</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_started</span>
+
+<span class="w">  </span><span class="nt">celery-beat</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">build</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">celery-beat-docker</span>
+<span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;./entrypoint.docker.sh&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;celery-beat&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/app/static</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/app/logs</span>
+<span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env.docker</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">db</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_healthy</span>
+<span class="w">      </span><span class="nt">django-web</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_started</span>
+<span class="w">      </span><span class="nt">rabbitmq</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_started</span>
+
+<span class="w">  </span><span class="nt">frontend-proxy</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx:latest</span>
+<span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx-docker</span>
+<span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;8001:80&quot;</span>
+<span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./nginx.conf:/etc/nginx/nginx.conf:ro</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/static:ro</span>
+<span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">django-web</span>
+<span class="nt">volumes</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">postgres_data</span><span class="p">:</span>
+</pre></div>
+</div>
+</section>
+<section id="the-env-docker-file">
+<h2>The .env.docker file<a class="headerlink" href="#the-env-docker-file" title="Link to this heading">¶</a></h2>
+<p>You can generate a new secret key for the django application using the following website: <a class="reference external" href="https://djecrety.ir/">https://djecrety.ir/</a></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">SECRET_KEY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">&amp;</span>^<span class="p">&amp;</span>7stc^ijtq1e0a280<span class="o">=</span>0w8g-luul^au^^13<span class="o">=</span>p6ko1c8jwahn
+<span class="nv">DJANGO_DEBUG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>True
+<span class="nv">DJANGO_ALLOWED_HOSTS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">127</span>.0.0.1,localhost
+<span class="nv">DJANGO_CSRF_TRUSTED_ORIGINS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>http://localhost:8001,http://127.0.0.1:8001
+
+<span class="c1"># Django DB</span>
+<span class="nv">DJANGO_DB_ENGINE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>django.db.backends.postgresql<span class="w"> </span><span class="c1"># Add engine of the database</span>
+<span class="nv">DJANGO_DB_NAME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>draw-client<span class="w"> </span><span class="c1"># Add name of the database</span>
+<span class="nv">DJANGO_DB_USER</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>postgres<span class="w"> </span><span class="c1"># Add username of the database</span>
+<span class="nv">DJANGO_DB_PASSWORD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>postgres<span class="w"> </span><span class="c1"># Add password of the database</span>
+<span class="nv">DJANGO_DB_HOST</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>db<span class="w"> </span><span class="c1"># Add host of the database</span>
+<span class="nv">DJANGO_DB_PORT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">5432</span><span class="w"> </span><span class="c1"># Add port of the database</span>
+
+<span class="c1"># Postgres</span>
+<span class="nv">POSTGRES_USER</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>postgres
+<span class="nv">POSTGRES_PASSWORD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>postgres
+<span class="nv">POSTGRES_DB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>draw-client
+
+<span class="c1"># API URLs</span>
+<span class="nv">API_URL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>https://draw.recode-with-r.com/api/models/
+<span class="nv">MODEL_API_URL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>https://draw.recode-with-r.com/models
+
+<span class="c1"># Celery</span>
+<span class="nv">CELERY_BROKER_URL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>pyamqp://guest:guest@rabbitmq:5672
+
+<span class="c1"># Django Superuser</span>
+<span class="nv">DJANGO_SUPERUSER_USERNAME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>admin
+<span class="nv">DJANGO_SUPERUSER_PASSWORD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>admin
+<span class="nv">DJANGO_SUPERUSER_EMAIL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>admin@example.com
+</pre></div>
+</div>
+</section>
+<section id="the-nginx-conf-file">
+<h2>The nginx.conf file<a class="headerlink" href="#the-nginx-conf-file" title="Link to this heading">¶</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Sets the max number of simultaneous connections that can be opened by a worker process</span>
+events<span class="w"> </span><span class="o">{</span>
+<span class="w">   </span>worker_connections<span class="w"> </span><span class="m">1024</span><span class="p">;</span>
+<span class="o">}</span>
+
+http<span class="w"> </span><span class="o">{</span>
+<span class="w">   </span>server<span class="w"> </span><span class="o">{</span>
+<span class="w">       </span>include<span class="w"> </span>mime.types<span class="p">;</span>
+<span class="w">       </span>default_type<span class="w"> </span>application/octet-stream<span class="p">;</span>
+<span class="w">       </span>sendfile<span class="w"> </span>on<span class="p">;</span>
+<span class="w">       </span>keepalive_timeout<span class="w"> </span><span class="m">65</span><span class="p">;</span>
+<span class="w">       </span>listen<span class="w"> </span><span class="m">80</span><span class="p">;</span>
+
+<span class="w">       </span><span class="c1"># Requests to /static/ are served directly from the /static/ directory</span>
+<span class="w">       </span>location<span class="w"> </span>/static/<span class="w"> </span><span class="o">{</span>
+<span class="w">           </span><span class="nb">alias</span><span class="w"> </span>/static/<span class="p">;</span>
+<span class="w">           </span>expires<span class="w"> </span>7d<span class="p">;</span>
+<span class="w">       </span><span class="o">}</span>
+
+<span class="w">       </span><span class="c1"># Configuration for serving media files</span>
+<span class="w">       </span><span class="c1"># location /media/ {</span>
+<span class="w">       </span><span class="c1">#     alias /home/app/web/mediafiles/;</span>
+<span class="w">       </span><span class="c1"># }</span>
+
+<span class="w">       </span><span class="c1"># Handles all other requests</span>
+<span class="w">       </span>location<span class="w"> </span>/<span class="w"> </span><span class="o">{</span>
+<span class="w">           </span><span class="c1"># Forward requests to Django application</span>
+<span class="w">           </span>proxy_pass<span class="w"> </span>http://django-web:8000<span class="p">;</span>
+
+<span class="w">           </span><span class="c1"># Pass important headers to Django for proper request handling</span>
+<span class="w">           </span>proxy_set_header<span class="w"> </span>Host<span class="w"> </span><span class="nv">$host</span><span class="p">;</span><span class="w">                          </span><span class="c1"># Original host header</span>
+<span class="w">           </span>proxy_set_header<span class="w"> </span>X-Real-IP<span class="w"> </span><span class="nv">$remote_addr</span><span class="p">;</span><span class="w">             </span><span class="c1"># Client&#39;s real IP</span>
+<span class="w">           </span>proxy_set_header<span class="w"> </span>X-Forwarded-For<span class="w"> </span><span class="nv">$proxy_add_x_forwarded_for</span><span class="p">;</span><span class="w">  </span><span class="c1"># Chain of IP addresses</span>
+<span class="w">           </span>proxy_set_header<span class="w"> </span>X-Forwarded-Proto<span class="w"> </span><span class="nv">$scheme</span><span class="p">;</span><span class="w">          </span><span class="c1"># Original protocol (http/https)</span>
+<span class="w">       </span><span class="o">}</span>
+<span class="w">   </span><span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+<p>We recommend that you copy paste the text first in the files instead of typing them.</p>
+</section>
+<section id="running-the-draw-client">
+<h2>Running the DRAW Client<a class="headerlink" href="#running-the-draw-client" title="Link to this heading">¶</a></h2>
+<p>You will need to open a terminal. The terminal is a special application that allows you to give commands to the computer in text. In Windows you can open the terminal by pressing the Windows key + R, then typing cmd and pressing Enter. You will need to navigate to the directory where you created the three files. Alternatively you can right click on the file explorer and click on ‘Open in terminal’.</p>
+<p>First ensure that Docker Desktop is running. Once you are in the directory where you created the three files, you can run the following command to start the DRAW Client:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker-compose<span class="w"> </span>up<span class="w"> </span>-d
+</pre></div>
+</div>
+<p>This will start the DRAW Client and the other services that are required to run the DRAW Client. You can check the status of the services by running the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker-compose<span class="w"> </span>ps
+</pre></div>
+</div>
+<p>Alternatively in the Docker Desktop application you can see a new container called ‘draw-client-pipeline’ running in the main page.</p>
+</section>
+<section id="accessing-the-draw-client">
+<h2>Accessing the DRAW Client<a class="headerlink" href="#accessing-the-draw-client" title="Link to this heading">¶</a></h2>
+<p>You can access the DRAW Client by opening a web browser and navigating to the following URL: <a class="reference external" href="http://localhost:8001">http://localhost:8001</a></p>
+<p>If you are accessing this for the first time, please click on the login link at the top right corner of the page. You will need to login as a superuser.</p>
+<p>The username and password are specified in the .env.docker file. You can use those credentials to login.</p>
+<p>You should change the password after logging in.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">DRAW Client</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation the DRAW Client</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-docker-compose-yml-file">The docker-compose.yml file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-env-docker-file">The .env.docker file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-nginx-conf-file">The nginx.conf file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-the-draw-client">Running the DRAW Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#accessing-the-draw-client">Accessing the DRAW Client</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Deep learning based Radiotherapy Autosegmentation Workflow (DRAW) - Client Documentation documentation</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Tata Medical Center, Kolkata.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/installation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

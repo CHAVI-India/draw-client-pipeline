@@ -39,7 +39,8 @@ DEBUG = os.environ.get('DJANGO_DEBUG', '') != 'False'
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
 CSRF_TRUSTED_ORIGINS = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
 APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
-
+DOCS_ROOT = os.path.join(BASE_DIR, 'docs/build/html')
+DOCS_ACCESS = 'public'
 
 # Application definition
 
@@ -71,6 +72,7 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'slippers',
     'dicom_handler',
+    'docs',
     # 'log_viewer',
     'django_log_lens',
     'api_client',
