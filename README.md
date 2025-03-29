@@ -69,10 +69,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     env_file:
       - .env.docker
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=draw-client
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   rabbitmq:
     image: rabbitmq:3.12-management
     container_name: rabbitmq-docker
@@ -84,10 +85,11 @@ services:
       - RABBITMQ_DEFAULT_PASS=guest
 
   django-web:
-    image: ghcr.io/chavi-india/draw-client-pipeline:release
+    image: chaviapp/drawclient:release
     container_name: django-docker
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     env_file:
       - .env.docker      
     volumes:
@@ -97,7 +99,7 @@ services:
     command: ["./entrypoint.docker.sh"]
 
   celery:
-    image: ghcr.io/chavi-india/draw-client-pipeline:release
+    image: chaviapp/drawclient:release
     container_name: celery-docker
     command: ["./entrypoint.docker.sh", "celery"]
     volumes:
@@ -106,11 +108,15 @@ services:
     env_file:
       - .env.docker
     depends_on:
-      - django-web
-      - rabbitmq
+      db:
+        condition: service_healthy
+      django-web:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
 
   celery-beat:
-    image: ghcr.io/chavi-india/draw-client-pipeline:release
+    image: chaviapp/drawclient:release
     container_name: celery-beat-docker
     command: ["./entrypoint.docker.sh", "celery-beat"]
     volumes:
@@ -119,8 +125,12 @@ services:
     env_file:
       - .env.docker
     depends_on:
-      - django-web
-      - rabbitmq
+      db:
+        condition: service_healthy
+      django-web:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
 
   frontend-proxy:
     image: nginx:latest
@@ -131,7 +141,8 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./static:/static:ro
     depends_on:
-      - django-web
+      django-web:
+        condition: service_started
 volumes:
   postgres_data:
 ```
