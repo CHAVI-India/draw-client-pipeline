@@ -12,7 +12,7 @@ click-plugins==1.1.1
 click-repl==0.3.0
 cron-descriptor==1.4.5
 cryptography==44.0.2
-Django>=5.1.7
+Django==5.1.7
 django-admin-tools==0.9.3
 django-allauth==65.5.0
 django-allauth-ui==1.6.1
