@@ -32,10 +32,10 @@ html_theme = 'insipid'
 
 # # docs/source/conf.py (see https://www.bomberbot.com/python/documenting-your-django-project-with-sphinx-a-comprehensive-guide/)
 
-# import os
-# import sys
-# import django
+import os
+import sys
+import django
 
-# sys.path.insert(0, os.path.abspath('../..'))  # Assuming conf.py is in docs/source/
-# os.environ['DJANGO_SETTINGS_MODULE'] = 'draw_client.settings'
-# django.setup()
+sys.path.insert(0, os.path.abspath('../..'))  # Assuming conf.py is in docs/source/
+os.environ['DJANGO_SETTINGS_MODULE'] = 'draw_client.settings'
+django.setup()
