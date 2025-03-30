@@ -49,8 +49,9 @@ def copy_dicom():
     try:
         # Get the path configuration
         path_config = DicomPathConfig.get_instance()
+        logger.info(f"Path configuration: {path_config}")
         source_path = path_config.get_safe_path()
-        
+        logger.info(f"Source path: {source_path}")
         if not source_path:
             raise ValueError("No datastore path configured")
             

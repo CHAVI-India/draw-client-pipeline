@@ -18,6 +18,25 @@ class DicomPathConfig(models.Model):
         verbose_name = "Dicom Path Configuration"
         verbose_name_plural = "Dicom Path Configuration"
 
+    def clean(self):
+        """Validate that the datastore path exists."""
+        if self.datastorepath:
+            path = self.get_safe_path()
+            
+            # Check if the path exists
+            if not path.exists():
+                raise ValidationError(f"The directory '{self.datastorepath}' does not exist. Please provide a valid directory path.")
+            
+            # Check if it's actually a directory
+            if not path.is_dir():
+                raise ValidationError(f"The path '{self.datastorepath}' exists but is not a directory.")
+            
+            # Check if it's readable
+            if not os.access(path, os.R_OK):
+                raise ValidationError(f"The directory '{self.datastorepath}' exists but is not readable.")
+        
+        super().clean()
+
     def save(self, *args, **kwargs):
         if DicomPathConfig.objects.exists() and not self.pk:
             # If you're trying to create a second instance, don't save
