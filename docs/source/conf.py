@@ -18,6 +18,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
     'sphinx.ext.autosectionlabel',
+    'sphinx_rtd_theme',
 ]
 
 templates_path = ['_templates']
@@ -28,7 +29,7 @@ exclude_patterns = []
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'insipid'
+html_theme = 'sphinx_rtd_theme'
 
 # # docs/source/conf.py (see https://www.bomberbot.com/python/documenting-your-django-project-with-sphinx-a-comprehensive-guide/)
 
