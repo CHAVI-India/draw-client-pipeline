@@ -81,7 +81,7 @@ class ProcessingStatusChoices(models.TextChoices):
 
 # Dicom copy
 class CopyDicom(models.Model):
-    id = models.PositiveIntegerField(primary_key=True)
+    id = models.AutoField(primary_key=True)
     sourcedirname = models.TextField()
     destinationdirname = models.TextField()
     dircreateddate = models.DateTimeField(null=True)
@@ -233,7 +233,7 @@ class RuleSet(models.Model):
         verbose_name_plural = "Rule Sets For Matching Template"
 
 class TagName(models.Model):
-    id = models.AutoField(primary_key=True)
+    id = models.PositiveBigIntegerField(primary_key=True)
     tag_id = models.CharField(max_length=255, help_text="Enter the DICOM tag id. Please ensure that it matches the DICOM tag id properly")
     tag_name = models.CharField(max_length=255, help_text="Enter the DICOM tag name. Please ensure that it matches the DICOM tag name properly")
     tag_description = models.TextField(help_text="Enter the DICOM tag description. Please ensure that it matches the DICOM tag description properly")
