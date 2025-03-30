@@ -18,11 +18,13 @@ def load_dicom_dictionary(apps, schema_editor):
         
         # Create a TagName object for each row in the CSV
         for row in reader:
-            TagName.objects.create(
+            TagName.objects.update_or_create(
                 tag_id=row['tag_id'],
-                tag_name=row['tag_name'],
-                tag_description=row['tag_description'],
-                value_representation=row['value_representation']
+                defaults={
+                    'tag_name': row['tag_name'],
+                    'tag_description': row['tag_description'],
+                    'value_representation': row['value_representation']
+                }
             )
 
 def reverse_func(apps, schema_editor):
