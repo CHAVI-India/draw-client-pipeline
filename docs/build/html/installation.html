@@ -132,7 +132,7 @@ While the repository hosts the complete source code, for the docker based instal
 <p class="admonition-title">Note</p>
 <p>The Datastore folder path is a key element that needs to be understood properly. For Radiotherapy autosegmentation, we have designed the system to automatically download DICOM files from a chose directory (either local or remote) and then process the files. For most centers this will be shared network drive where the DICOM files are send after the images are acquired before they are imported into the Treatment Planning System (TPS). However in some situations, this folder may be on the local machines, and the user may be sending the images to the local machine, after the scan is acquired. In such cases, we need to configure a system that will allow the local machine to act as a DICOM server able to accept DICOM files for the DRAW client to process.</p>
 </div>
-<p>This folder path needs to be configured properly in the docker-compose.yml file. (please see the commented line under the volumes section of the service called ‘django-web’). If it is a remote folder it is important that this folder is shared as a network drive to the local machine.</p>
+<p>This folder path needs to be configured properly in the docker-compose.yml file. (please see the commented lines under the volumes section of the service called ‘django-web’). If it is a remote folder it is important that this folder is shared as a network drive to the local machine.</p>
 <p>Additionaly, we recommend that you choose a strong password for the postgres database.</p>
 <p>For reference here are the text for the three files</p>
 </section>
@@ -172,6 +172,7 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env.docker</span><span class="w">      </span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app_data:/app</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/app/logs</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/app/static</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/mnt/share/dicom_processing_test/datastore:/app/datastore</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
@@ -182,6 +183,7 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">celery-docker</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;./entrypoint.docker.sh&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;celery&quot;</span><span class="p p-Indicator">]</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app_data:/app</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/app/static</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/app/logs</span>
 <span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
@@ -199,8 +201,10 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">celery-beat-docker</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;./entrypoint.docker.sh&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;celery-beat&quot;</span><span class="p p-Indicator">]</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app_data:/app</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/app/static</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/app/logs</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/mnt/share/dicom_processing_test/datastore:/app/datastore</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
 <span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env.docker</span>
 <span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
@@ -223,7 +227,12 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">django-web</span>
 <span class="nt">volumes</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">postgres_data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">app_data</span><span class="p">:</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>There are 3 places in the docker-compose.yml file where the datastore path needs to be configured. Please make sure that you update all of them.</p>
 </div>
 </section>
 <section id="the-env-docker-file">
