@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('dicom_handler', '0018_auto_20250330_1154'),
+        ('dicom_handler', '0017_tagname_tag_description_tagname_tag_id_and_more'),
     ]
 
     operations = [

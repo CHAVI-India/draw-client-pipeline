@@ -81,7 +81,7 @@ class ProcessingStatusChoices(models.TextChoices):
 
 # Dicom copy
 class CopyDicom(models.Model):
-    id = models.AutoField(primary_key=True)
+    id = models.PositiveIntegerField(primary_key=True)
     sourcedirname = models.TextField()
     destinationdirname = models.TextField()
     dircreateddate = models.DateTimeField(null=True)
