@@ -22,9 +22,9 @@ Please review the official documentation for Docker Desktop installation here: h
 
 The following the minimum system requirements for Docker Desktop:
 
-- A 64 bit processor with Second Level Address Translation (SLAT)
-- 4GB of RAM
-- Enable Hardware virtualization in the BIOS
+#. A 64 bit processor with Second Level Address Translation (SLAT)
+#. 4GB of RAM
+#. Enable Hardware virtualization in the BIOS
 
 It is important to follow the instructions for Docker Desktop installation if you are not uising the computer as an administrator in Windows. Specially you need to ensure that the user that is you should be added to the docker-users group. 
 
@@ -48,12 +48,12 @@ Please refer to the instructions the page for the latest instructions (in the ev
 
 Briefly the steps are:  
 
-1. Create a new directory for the project in a folder of your choice. In a windows machine we recommend that you use the D: for the same.   
-2. Create three files inside the directory:    
+#. Create a new directory for the project in a folder of your choice. In a windows machine we recommend that you use the D: for the same.   
+#. Create three files inside the directory:    
 
-  A. docker-compose.yml    
-  B. .env.docker    
-  C. nginx.conf  
+   #. docker-compose.yml    
+   #. .env.docker    
+   #. nginx.conf  
 
 Please play close attention to the name of the file called .env.docker. The dot in the beginning of the file name is important. It may be hidden in the file explorer.
 
@@ -115,7 +115,23 @@ This will start the DRAW Client and the other services that are required to run 
   docker-compose ps
 
 
-Alternatively in the Docker Desktop application you can see a new container called 'draw-client-pipeline' running in the main page. 
+Docker Desktop Interface
+------------------------
+
+Alternatively in the Docker Desktop application you can see a new container name after the folder name running in the main page. 
+
+.. image:: images/docker_desktop_container_activity.png
+   :alt: Docker Desktop Container Showing Activity Indicator
+   :width: 500
+   :align: center
+
+Clicking the name of the container will open a new tab in the Docker Desktop application showing the logs of the container as well as the status of each of the running containers.
+
+.. image:: images/docker_desktop_detail_interface.png
+   :alt: Docker Desktop Container Showing Detail Interface
+   :width: 500
+   :align: center
+
 
 
 Accessing the DRAW Client

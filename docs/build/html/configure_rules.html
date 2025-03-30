@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Configure Rules &#8212; DRAW Client 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="_static/insipid.css?v=b2d00be7" />
+
+    <script src="_static/documentation_options.js?v=d6b6a36a"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script defer src="_static/insipid.js"></script>
+    <script defer src="_static/insipid-sidebar.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Get API tokens from the DRAW Server" href="get_api_tokens.html" />
+    <link rel="prev" title="Creating Autosegmentation Templates" href="creating_autosegmentation_templates.html" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+  </head><body>
+    <script type="text/javascript">
+        document.body.classList.add('js');
+    </script>
+    <input type="checkbox" id="sidebar-checkbox" style="display: none;">
+    <label id="overlay" for="sidebar-checkbox"></label>
+    <div class="sidebar-resize-handle"></div>
+    <script type="text/javascript">
+        try {
+            let sidebar = localStorage.getItem('sphinx-sidebar');
+            const sidebar_width = localStorage.getItem('sphinx-sidebar-width');
+            if (sidebar_width) {
+                document.documentElement.style.setProperty('--sidebar-width', sidebar_width);
+            }
+            // show sidebar on wide screen
+            if (!sidebar && window.matchMedia('(min-width: 100rem)').matches) {
+                sidebar = 'visible';
+                // NB: We don't store the value in localStorage!
+            }
+            if (sidebar === 'visible') {
+                document.getElementById('sidebar-checkbox').checked = true;
+            }
+        } catch(e) {
+            console.info(e);
+        }
+    </script>
+    <header id="topbar-placeholder">
+      <div id="topbar">
+        <div id="titlebar">
+          <div class="buttons">
+            <label for="sidebar-checkbox" id="sidebar-button" role="button" tabindex="0" aria-controls="sphinxsidebar" accesskey="M">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M16 132h416c8.837 0 16-7.163 16-16V76c0-8.837-7.163-16-16-16H16C7.163 60 0 67.163 0 76v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16zm0 160h416c8.837 0 16-7.163 16-16v-40c0-8.837-7.163-16-16-16H16c-8.837 0-16 7.163-16 16v40c0 8.837 7.163 16 16 16z"/></svg>
+            </label>
+            <button id="search-button" type="button" title="Search" aria-label="Search" aria-expanded="false" aria-controls="search-form" accesskey="S">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z"/></svg>
+            </button>
+          </div>
+          <div class="title">
+            <a class="parent" href="index.html" accesskey="U">DRAW Client 1.0 documentation</a>
+            <a class="top" href="#">Configure Rules</a>
+          </div>
+          <div class="buttons">
+            <button id="fullscreen-button" type="button" aria-hidden="true">
+              <span class="enable">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M212.686 315.314L120 408l32.922 31.029c15.12 15.12 4.412 40.971-16.97 40.971h-112C10.697 480 0 469.255 0 456V344c0-21.382 25.803-32.09 40.922-16.971L72 360l92.686-92.686c6.248-6.248 16.379-6.248 22.627 0l25.373 25.373c6.249 6.248 6.249 16.378 0 22.627zm22.628-118.628L328 104l-32.922-31.029C279.958 57.851 290.666 32 312.048 32h112C437.303 32 448 42.745 448 56v112c0 21.382-25.803 32.09-40.922 16.971L376 152l-92.686 92.686c-6.248 6.248-16.379 6.248-22.627 0l-25.373-25.373c-6.249-6.248-6.249-16.378 0-22.627z"/></svg>
+              </span>
+              <span class="disable">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M4.686 427.314L104 328l-32.922-31.029C55.958 281.851 66.666 256 88.048 256h112C213.303 256 224 266.745 224 280v112c0 21.382-25.803 32.09-40.922 16.971L152 376l-99.314 99.314c-6.248 6.248-16.379 6.248-22.627 0L4.686 449.941c-6.248-6.248-6.248-16.379 0-22.627zM443.314 84.686L344 184l32.922 31.029c15.12 15.12 4.412 40.971-16.97 40.971h-112C234.697 256 224 245.255 224 232V120c0-21.382 25.803-32.09 40.922-16.971L296 136l99.314-99.314c6.248-6.248 16.379-6.248 22.627 0l25.373 25.373c6.248 6.248 6.248 16.379 0 22.627z"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+        <div id="searchbox" role="search">
+          <form id="search-form" class="search" style="display: none" action="search.html" method="get">
+            <input type="search" name="q" placeholder="Search ..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <button>Go</button>
+          </form>
+        </div>
+      </div>
+    </header>
+    <nav>
+      <a href="creating_autosegmentation_templates.html" class="nav-icon previous" title="previous:&#13;Creating Autosegmentation Templates" aria-label="Previous topic" accesskey="P" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M31.7 239l136-136c9.4-9.4 24.6-9.4 33.9 0l22.6 22.6c9.4 9.4 9.4 24.6 0 33.9L127.9 256l96.4 96.4c9.4 9.4 9.4 24.6 0 33.9L201.7 409c-9.4 9.4-24.6 9.4-33.9 0l-136-136c-9.5-9.4-9.5-24.6-.1-34z"/></svg>
+      </a>
+      <a href="get_api_tokens.html" class="nav-icon next" title="next:&#13;Get API tokens from the DRAW Server" aria-label="Next topic" accesskey="N" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M224.3 273l-136 136c-9.4 9.4-24.6 9.4-33.9 0l-22.6-22.6c-9.4-9.4-9.4-24.6 0-33.9l96.4-96.4-96.4-96.4c-9.4-9.4-9.4-24.6 0-33.9L54.3 103c9.4-9.4 24.6-9.4 33.9 0l136 136c9.5 9.4 9.5 24.6.1 34z"/></svg>
+      </a>
+    </nav>
+
+    <nav class="relbar">
+      <a class="previous" href="creating_autosegmentation_templates.html" aria-label="Previous topic" >
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
+        </div>
+        <div class="title">
+          <span class="text">
+            <span class="direction">previous</span>
+            Creating Autosegmentation Templates
+          </span>
+        </div>
+      </a>
+      <a class="next" href="get_api_tokens.html" aria-label="Next topic" >
+        <div class="title">
+          <span class="text">
+            <span class="direction">next</span>
+            Get API tokens from the DRAW Server
+          </span>
+        </div>
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z"/></svg>
+        </div>
+      </a>
+    </nav>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+<section id="configure-rules">
+<h1>Configure Rules<a class="headerlink" href="#configure-rules" title="Link to this heading">¶</a></h1>
+<p>After you have created the autosegmentation templates (see <a class="reference internal" href="creating_autosegmentation_templates.html"><span class="doc">Creating Autosegmentation Templates</span></a>), you need to configure the rules for determining which autosegmentation template to use. This is a required so that the DICOM images are automatically taggeed with the correct autosegmentation template.</p>
+<section id="setup-rulesets">
+<h2>Setup Rulesets<a class="headerlink" href="#setup-rulesets" title="Link to this heading">¶</a></h2>
+<p>Rulesets refer to a collection of rules which are used to determine the type of autosegmentation template to use.
+Each rule is a combination of the DICOM tag which will be evaluated and the value of the said tag which will be used to determine the autosegmentation template to use.
+For example, if you have a rule which looks for the DICOM tag “Modality” and the value of the tag is “CT”, then the system will evaluate if the DICOM file modality is a CT scan. If so it will use the autosegmentation template which is associated with the CT modality.
+You can create multiple rules for a single ruleset. All of these must be met for the autosegmentation template to be tagged. For example, if you have a ruleset which looks for the DICOM tag “Modality” and the value of the tag is “CT” and another rule which looks for the DICOM tag “PatientPosition” and the value of the tag is “Supine”, then the autosegmentation template will only be tagged if both of these conditions are met.
+A autosegmentation template can be associated with a single ruleset only. If you try to associate an autosegmentation template with multiple rulesets, the system will show an error.</p>
+<p>To create a ruleset click on the left side bar menu item called “Template Rulesets” and navigate to the page under the submenu “Rule Sets”.</p>
+<a class="reference internal image-reference" href="_images/rulesets.png"><img alt="Rulesets" class="align-center" src="_images/rulesets.png" style="width: 800px;" />
+</a>
+<p>Clicking on the circular button with a plus sign will open a page where a new ruleset can be created. Add the name of the ruleset, and chose a description which tells you later on what this ruleset is for. Then select the autosegmentation template that you want to associate with this ruleset. After that you can add rules below, by selecting the DICOM tag and entering the tag value. If you do not see the desired DICOM tag, search for it using the search bar provided in the dropdown menu. If the tag is not present, you can add it to the DICOM tags section (see <a class="reference internal" href="#define-dicom-tags"><span class="std std-ref">Define DICOM tags</span></a>).</p>
+<a class="reference internal image-reference" href="_images/ruleset_create.png"><img alt="Ruleset Create" class="align-center" src="_images/ruleset_create.png" style="width: 800px;" />
+</a>
+<p>If you wish to remove a rule from a ruleset, simply check the box at the right and then click on the save button at the bottom of the page.</p>
+<a class="reference internal image-reference" href="_images/ruleset_remove.png"><img alt="Ruleset Remove" class="align-center" src="_images/ruleset_remove.png" style="width: 800px;" />
+</a>
+<p>Please remember to associate <strong>one ruleset with one autosegmentation template</strong>. The system will not allow you to associate more than one ruleset with an autosegmentation template. However an autosegmentation template that is not associated with any ruleset will not be used for any autosegmentation.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The DRAW client will copy the template that you have selected into the folder of the DICOM dataset before it is sent to the DRAW server for autosegmentation. The template file is available as a YAML file. To improve the security of the system, the code checks the checksum of the YAML file before it is associated with the DICOM dataset. If the checksum does not match, the system will not associate the template with the DICOM dataset. This checksum is calculated when the templates are created using the DRAW client. Thus a YAML file that has been created manually will not be associated with the DICOM dataset. Additionally, if a template is modified after being created using the DRAW client, the checksum will change and the template will not be associated with the DICOM dataset.</p>
+</div>
+</section>
+<section id="define-dicom-tags">
+<h2>Define DICOM tags<a class="headerlink" href="#define-dicom-tags" title="Link to this heading">¶</a></h2>
+<p>A list of DICOM tags which are available in the DICOM specification are already pre-populated in the system. However if you need to input addtional DICOM tags you can also add them such that theyu will be evaluated from the DICOM files. The system will automatically evaluate these tags.</p>
+<p>In order to add a DICOM tag which will be evaluated, click on the side bar menu called, Template Rulesets and navigate to the page under the submenu “DICOM Tags”.</p>
+<a class="reference internal image-reference" href="_images/dicom_tags.png"><img alt="DICOM Tags" class="align-center" src="_images/dicom_tags.png" style="width: 800px;" />
+</a>
+<p>To determine which DICOM tags are available, you can refer to the DICOM standards - <a class="reference external" href="https://dicom.nema.org/dicom/2013/output/chtml/part06/chapter_6.html">https://dicom.nema.org/dicom/2013/output/chtml/part06/chapter_6.html</a></p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>DICOM tag names are case sensitive and do not allow any spaces or special characters. Please ensure that the tag name is correct. If the tag name is incorrect, the system will not be able to evaluate the tag and the autosegmentation template will not be tagged correctly.</p>
+</div>
+</section>
+</section>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+
+          <div class="sidebar-resize-handle"></div>
+
+<h3><a href="index.html">Table of Contents</a></h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation the DRAW Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datastore_configuration.html">Configuration of the Datastore path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating_autosegmentation_templates.html">Creating Autosegmentation Templates</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configure Rules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setup-rulesets">Setup Rulesets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#define-dicom-tags">Define DICOM tags</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="get_api_tokens.html">Get API tokens from the DRAW Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_periodic_tasks.html">Setup Periodic Tasks</a></li>
+</ul>
+
+<div><hr class="docutils"></div>
+<ul>
+  <li class="toctree-l1"><a class="reference internal" href="genindex.html" accesskey="I">General Index</a></li>
+</ul>
+<div id="ethical-ad-placement"></div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+
+    <nav class="relbar">
+      <a class="previous" href="creating_autosegmentation_templates.html" aria-label="Previous topic" >
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"/></svg>
+        </div>
+        <div class="title">
+          <span class="text">
+            <span class="direction">previous</span>
+            Creating Autosegmentation Templates
+          </span>
+        </div>
+      </a>
+      <a class="next" href="get_api_tokens.html" aria-label="Next topic" >
+        <div class="title">
+          <span class="text">
+            <span class="direction">next</span>
+            Get API tokens from the DRAW Server
+          </span>
+        </div>
+        <div class="icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!-- Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) --><path d="M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z"/></svg>
+        </div>
+      </a>
+    </nav>
+
+    <footer role="contentinfo">
+      &#169; Copyright 2025, Tata Medical Center, Kolkata.
+      Created using <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+      <a class="reference external" href="https://insipid-sphinx-theme.readthedocs.io/">Insipid Theme</a>.
+<a class="reference internal" href="_sources/configure_rules.rst.txt" rel="nofollow">Show Source</a>.
+    </footer>
+  </body>
+</html>

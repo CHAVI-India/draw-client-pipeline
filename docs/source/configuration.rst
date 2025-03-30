@@ -1,26 +1,14 @@
-Configuration
-=============
+Configuration Steps
+====================
 
-Please follow the following steps to configure the DRAW Client to ensure that the DRAW Client works as expected.
+Please follow the following steps to configure the DRAW Client to ensure that the DRAW Client works as expected.  
 
-Configuration of the Datastore path
-------------------------------------------------
+#. Configure the datastore path (See the page :doc:`datastore_configuration`)  
+#. Create Autosegmentation Templates (See the page :doc:`creating_autosegmentation_templates`)   
+#. Configure the rules for determining the Autosegmentation Template to use (See the page :doc:`configure_rules`)   
+#. Get API tokens from the DRAW Server (See the page :doc:`get_api_tokens`)  
+#. Setup Periodic Tasks (See the page :doc:`setup_periodic_tasks`)   
 
-
-Configuration of the Autosemegmentation Templates
------------------------------------------------------------------
-
-
-Configuration of Rules for determining the Autosegmentation Template to use
-----------------------------------------------------------------------------
-
-
-Get API tokens from the DRAW Server
------------------------------------
-
-
-Setup Periodic Tasks
----------------------
 
 
 

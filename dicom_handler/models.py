@@ -212,10 +212,13 @@ class RuleSet(models.Model):
         db_table = "rule_set"
         verbose_name = "Rule Set For Matching Template"
         verbose_name_plural = "Rule Sets For Matching Template"
-    
+
 class TagName(models.Model):
     id = models.AutoField(primary_key=True)
+    tag_id = models.CharField(max_length=255, help_text="Enter the DICOM tag id. Please ensure that it matches the DICOM tag id properly")
     tag_name = models.CharField(max_length=255, help_text="Enter the DICOM tag name. Please ensure that it matches the DICOM tag name properly")
+    tag_description = models.TextField(help_text="Enter the DICOM tag description. Please ensure that it matches the DICOM tag description properly")
+    value_representation = models.CharField(max_length=255, help_text="Enter the DICOM tag value representation. Please ensure that it matches the DICOM tag value representation properly")
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     modified_at = models.DateTimeField(auto_now=True, null=True)
     

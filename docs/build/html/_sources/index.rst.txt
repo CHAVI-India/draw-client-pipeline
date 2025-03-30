@@ -15,6 +15,10 @@ Welcome to the Deep learning based Radiotherapy Autosegmentation Workflow (DRAW)
    
    installation
    configuration
-
+   datastore_configuration
+   creating_autosegmentation_templates
+   configure_rules
+   get_api_tokens
+   setup_periodic_tasks
 
 

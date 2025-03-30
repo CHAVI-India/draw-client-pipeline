@@ -234,11 +234,18 @@ UNFOLD = {
             'target': '_blank',
         },
         {
-            'icon': 'public',
-            'title': _("DRAW Website"),
-            'link': "http://144.126.254.23/",
+            'icon': 'home',
+            'title': _("View Site"),
+            'link': "/",
             'target': '_blank',
         },
+        {
+            'icon': 'public',
+            'title': _("DRAW Website"),
+            'link': "http://draw.chavi.ai/",
+            'target': '_blank',
+        },
+        
         {
             'icon': 'public',
             'title': _("CHAVI Website"),

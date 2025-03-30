@@ -409,6 +409,7 @@ admin.site.register(Rule, RuleAdmin)
 class RuleInline(TabularInline):
     model = Rule
     extra = 1
+    autocomplete_fields = ['tag_name']
     
 class RuleSetAdmin(ModelAdmin):
     inlines = [RuleInline]
@@ -419,6 +420,7 @@ class RuleSetAdmin(ModelAdmin):
         "created_at",
         "modified_at",
     )
+    ordering = ('rule_set_name',)
     list_per_page = 14
     search_fields = ('rule_set_name', "description", "model_yaml", "created_at")
     list_filter = ('rule_set_name', "model_yaml", "created_at")
@@ -428,6 +430,9 @@ admin.site.register(RuleSet, RuleSetAdmin)
 
 # Tagname admin
 class TagnameAdmin(ModelAdmin):
-    pass
+    search_fields = ('tag_id', 'tag_name', 'tag_description', 'value_representation')
+    list_display = ('tag_id', 'tag_name', 'tag_description', 'value_representation')
+    ordering = ('tag_name',)
+    list_per_page = 14
 
 admin.site.register(TagName, TagnameAdmin)
