@@ -35,6 +35,7 @@ graphviz==0.20.3
 gunicorn==23.0.0
 idna==3.10
 imagesize==1.4.1
+insipid-sphinx-theme==0.4.2
 Jinja2==3.1.6
 kombu==5.5.0
 MarkupSafe==3.0.2
@@ -60,9 +61,12 @@ slippers==0.6.2
 snowballstemmer==2.2.0
 Sphinx==8.2.3
 sphinx-pdj-theme==0.5.0
+sphinx-rtd-theme==3.0.2
+sphinx-typo3-theme==4.9.0
 sphinxcontrib-applehelp==2.0.0
 sphinxcontrib-devhelp==2.0.0
 sphinxcontrib-htmlhelp==2.1.0
+sphinxcontrib-jquery==4.1
 sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==2.0.0
 sphinxcontrib-serializinghtml==2.0.0
