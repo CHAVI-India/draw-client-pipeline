@@ -2,26 +2,42 @@ from dicom_handler.models import DicomPathConfig, CopyDicom, ProcessingStatusCho
 import os
 import zipfile
 import datetime
+import random
+import string
 from django.utils import timezone
 import logging
 from django.conf import settings
+from dicom_handler.tasks import dicom_series_separation_task
 # Get logger
 logger = logging.getLogger('dicom_handler_logs')
 
 def send_to_autosegmentation(modeladmin, request, queryset):
     '''
-    This admin action will take an uploaded zip folder and send it to the import DICOM directory for further processsing. 
-    The action will extract the contents of the zip file into a directory inside the import_dicom folder path. 
-    If there are subfolder inside the zip file it should put each of these subfolders into a seperate directory inside the import_dicom folder. 
-    For example if the zip file has the strcuture Folder A/Folder B/Folder C/DICOM file1.dcm then the DICOM file1.dcm will be extracted into a directory called Folder C inside the import_dicom folder.
-    The action will also create a new entry in the CopyDicom model with the status as COPIED.
+    This admin action processes uploaded DICOM zip files and prepares them for autosegmentation.
+    
+    The function:
+    1. Extracts contents of zip files to the import DICOM directory as follows:
+       - For zip files with subfolders: Files are extracted into directories named after the deepest subfolder 
+         with a random 5-character suffix to ensure uniqueness (e.g., "Series1_a2b3c")
+       - For zip files without subfolders: All files are extracted into a single directory named after the zip file
+    
+    2. Creates a new entry in the CopyDicom model with status COPIED for each target directory.
+    
+    3. Triggers the dicom_series_separation_task separately for each created directory to process the DICOM files
+       and initiate subsequent processing tasks.
+    
+    Example:
+    If a zip file has the structure "Folder A/Folder B/Folder C/file1.dcm", the file will be extracted into
+    a directory called "Folder C_xxxxx" (where xxxxx is a random string) inside the import_dicom folder.
     '''
     # Check if any files are selected
     if not queryset.exists():
         return "No files selected for processing."
     
     results = []
-    
+    # Keep track of all target directories that were created
+    all_target_directories = set()
+
     for obj in queryset:
         try:
             # Get the path configuration
@@ -35,6 +51,19 @@ def send_to_autosegmentation(modeladmin, request, queryset):
             # Track processing details for admin message
             processed_folders = set()
             total_files = 0
+
+            # Get the zip filename without extension to use as directory name for Scenario 1
+            zip_filename = os.path.splitext(os.path.basename(obj.dicom_file.path))[0]
+            
+            # Check if this is a "no subfolder" zip file
+            has_subfolders = False
+            with zipfile.ZipFile(obj.dicom_file.path, 'r') as check_zip:
+                for path in check_zip.namelist():
+                    if '/' in path and not path.endswith('/'):
+                        has_subfolders = True
+                        break
+            # Generate a random string to ensure unique folder names
+            random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
             
             # Extract the contents of the zip file
             with zipfile.ZipFile(obj.dicom_file.path, 'r') as zip_ref:
@@ -47,15 +76,19 @@ def send_to_autosegmentation(modeladmin, request, queryset):
                     if file_path.endswith('/'):
                         continue
                     
-                    # Get the deepest subfolder name
+                    # Determine target directory based on whether there are subfolders
                     path_parts = file_path.split('/')
-                    if len(path_parts) > 1:
+                    if has_subfolders and len(path_parts) > 1:
+                        # Original behavior for files in subfolders
                         deepest_folder = path_parts[-2]
-                        target_dir = os.path.join(import_dir, deepest_folder)
+                        target_dir = os.path.join(import_dir, f"{deepest_folder}_{random_suffix}")
                     else:
-                        # If no subfolder, use the filename as directory
-                        target_dir = os.path.join(import_dir, os.path.splitext(path_parts[0])[0])
+                        # New behavior for Scenario 1: All files go to a single directory named after the zip file
+                        target_dir = os.path.join(import_dir, zip_filename)
                     
+                    # Add this target directory to our set of all directories
+                    all_target_directories.add(target_dir)
+
                     # Create the target directory if it doesn't exist
                     if not os.path.exists(target_dir):
                         os.makedirs(target_dir)
@@ -124,10 +157,17 @@ def send_to_autosegmentation(modeladmin, request, queryset):
     final_message = "\n\n".join(results)
     final_message += f"\n\nAll files were extracted to: {import_dir}"
     
+    # Trigger the dicom series separation task for each target directory
+    triggered_tasks = 0
+    for target_dir in all_target_directories:
+        logger.info(f"Triggering dicom_series_separation_task for directory: {target_dir}")
+        dicom_series_separation_task.delay(target_dir)
+        triggered_tasks += 1
+    
+    final_message += f"\n\nTriggered DICOM series separation task for {triggered_tasks} directories."
+    
     # Display the message in Django admin
     modeladmin.message_user(request, final_message)
 
 # Make the admin action have a nice display name
 send_to_autosegmentation.short_description = "Send selected DICOM zip files to autosegmentation"
-
-

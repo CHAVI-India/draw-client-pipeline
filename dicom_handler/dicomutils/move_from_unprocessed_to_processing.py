@@ -5,14 +5,14 @@ from django.conf import settings
 from dicom_handler.models import DicomUnprocessed, ModelYamlInfo, ProcessingStatus
 from django.contrib import admin
 from django.contrib import messages
-from dicom_handler.dicomutils.dicomseriesprocessing import read_dicom_metadata
+from dicom_handler.tasks import read_dicom_metadata_task
 
 logger = logging.getLogger(__name__)
 
 def move_from_unprocessed_to_processing(modeladmin, request, queryset):
     '''
     This function will move the dicom series in the unprocessed folder to the processing folder.
-    It will also trigger the read_dicom_metadata to extract the metadata and send it to the deidentification process.
+    It will also trigger the read_dicom_metadata_task to extract the metadata and send it to the deidentification process.
 
     The way it will work is this.
     1. First it will check if a YAML file exists inside the series folder. (field series_folder_location inside the DicomUnprocessed model)
@@ -22,10 +22,11 @@ def move_from_unprocessed_to_processing(modeladmin, request, queryset):
     5. The name of the field in the DicomUnprocessed model is yaml_attached. The path to the YAML file is stored in the ModelYamlInfo model in the field called yaml_path.
     6. The function will then move the series folder to the processing folder. (located at folder_for_dicom_processing)
     7. It will update the DicomUnprocessed model to set the unprocessed field to False. Additionally it will set the series_folder_location field to the path of the folder in the processing folder.
-    7. The function will then trigger the read_dicom_metadata to extract the metadata and send it to the deidentification process. The read_dicom_metadata function will be called with the following parameters:
+    7. The function will then trigger the read_dicom_metadata_task to extract the metadata and send it to the deidentification process. The read_dicom_metadata_task will be called with the following parameters:
         - series_folder_location - this is new location of the series folder in the processing folder.
-        - unprocess_dicom_path - this is the path to the unprocessed folder called folder_unprocessed_dicom
-        - deidentified_dicom_path - this is the path to the deidentified folder called folder_for_deidentification.
+
+
+        
 
 
     This custom admin action will be triggered on the admin page for the DicomUnprocessed model.
@@ -109,12 +110,9 @@ def move_from_unprocessed_to_processing(modeladmin, request, queryset):
                 yaml_attach_status="YAML file attached"
             )
             
-            # 8. Trigger the read_dicom_metadata function
-            read_dicom_metadata(
-                dicom_series_path=new_series_folder,
-                unprocess_dicom_path=unprocessed_folder,
-                deidentified_dicom_path=deidentified_folder
-            )
+            # 8. Trigger the read_dicom_metadata_task instead of directly calling the function
+            task = read_dicom_metadata_task.delay(new_series_folder)
+            logger.info(f"Triggered read_dicom_metadata_task with task ID: {task.id} for folder: {new_series_folder}")
             
             processed_count += 1
             processed_patients.append(f"{record.patientid}")

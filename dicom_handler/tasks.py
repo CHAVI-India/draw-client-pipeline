@@ -82,8 +82,6 @@ def copy_dicom():
         celery_logger.error(f"copy_dicom task failed with error: {str(e)}")
         return False
 
-
-
 @shared_task
 def dicom_series_separation_task(import_dicom_path=None):
     '''
@@ -149,7 +147,6 @@ def dicom_series_separation_task(import_dicom_path=None):
         logger.error(f"Error in dicom_series_separation task: {str(e)}")
         return False
     
-
 @shared_task
 def read_dicom_metadata_task(dicom_series_path=None):
     '''
@@ -247,30 +244,6 @@ def read_dicom_metadata_task(dicom_series_path=None):
         return {"success": False, "deidentification_path": None}
 
 @shared_task
-def export_rtstruct_task():
-    """
-    This task will export RTSTRUCT files from the processing folder to the datastore folder.
-    It will be triggered after the reidentify_rtstruct task completes.
-    """
-    try:
-        task_id = export_rtstruct_task.request.id
-        logger.info(f"[Task ID: {task_id}] Starting RTSTRUCT export task")
-        result = export_rtstruct()
-        if result:
-            logger.info(f"[Task ID: {task_id}] RTSTRUCT export completed successfully")
-        else:
-            logger.warning(f"[Task ID: {task_id}] RTSTRUCT export completed with issues")
-        
-        return result
-    
-    except Exception as e:
-        task_id = getattr(export_rtstruct_task, 'request', None)
-        task_id = task_id.id if task_id else 'unknown'
-        logger.error(f"[Task ID: {task_id}] Error during RTSTRUCT export task: {str(e)}")
-        raise e
-    
-
-@shared_task
 def deidentify_series_task(result):
     """
     This task processes a single series for deidentification.
@@ -346,6 +319,7 @@ def deidentify_series_task(result):
 
 @shared_task
 def transfer_deidentified_series_task(deidentification_result):
+
     """
     Transfer deidentified series to the remote server.
     
@@ -487,3 +461,26 @@ def transfer_deidentified_series_task(deidentification_result):
             "message": str(e),
             "original_deidentification": deidentification_result
         }
+    
+@shared_task
+def export_rtstruct_task():
+    """
+    This task will export RTSTRUCT files from the processing folder to the datastore folder.
+    It will be triggered after the reidentify_rtstruct task completes.
+    """
+    try:
+        task_id = export_rtstruct_task.request.id
+        logger.info(f"[Task ID: {task_id}] Starting RTSTRUCT export task")
+        result = export_rtstruct()
+        if result:
+            logger.info(f"[Task ID: {task_id}] RTSTRUCT export completed successfully")
+        else:
+            logger.warning(f"[Task ID: {task_id}] RTSTRUCT export completed with issues")
+        
+        return result
+    
+    except Exception as e:
+        task_id = getattr(export_rtstruct_task, 'request', None)
+        task_id = task_id.id if task_id else 'unknown'
+        logger.error(f"[Task ID: {task_id}] Error during RTSTRUCT export task: {str(e)}")
+        raise e
