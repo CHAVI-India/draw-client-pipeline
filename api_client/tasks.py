@@ -7,7 +7,7 @@ from api_client.models import *
 
 logger = getLogger('api_client')
 
-@shared_task
+@shared_task(name="api_client.tasks.scan_dicom_folder_task")
 def scan_dicom_folder_task(delta_time=10):
     """
     This task will scan the dicom folder and send the dicom files in a zip file to the server.
@@ -24,7 +24,7 @@ def scan_dicom_folder_task(delta_time=10):
         logger.error(f"[Task ID: {task_id}] Error during DICOM folder scan task: {str(e)}")
         raise e
 
-@shared_task
+@shared_task(name="api_client.tasks.poll_pending_transfers_task")
 
 def poll_pending_transfers_task():
     """
@@ -42,7 +42,7 @@ def poll_pending_transfers_task():
         logger.error(f"[Task ID: {task_id}] Error during pending transfers poll task: {str(e)}")
         raise e
 
-@shared_task
+@shared_task(name="api_client.tasks.notify_completed_transfers_task")
 def notify_completed_transfers_task():
     """
     This task will notify the server that the transfers are completed.
@@ -60,7 +60,7 @@ def notify_completed_transfers_task():
         raise e
     
 
-@shared_task
+@shared_task(name="api_client.tasks.cleanup_old_transfers_task")
 def cleanup_old_transfers_task():
     """
     This task will cleanup the old transfers.

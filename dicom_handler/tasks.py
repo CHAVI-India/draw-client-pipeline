@@ -23,7 +23,7 @@ logger = logging.getLogger('dicom_handler_logs')
 # Add Celery's logger
 celery_logger = logging.getLogger('celery.task')
 
-@shared_task
+@shared_task(name="dicom_handler.tasks.test_celery_logging_task")
 def test_celery_logging_task():
     """
     This is a simple task to test that Celery is working and logging properly.
@@ -38,7 +38,7 @@ def test_celery_logging_task():
         logger.error(f"Error in test_celery_logging_task: {str(e)}")
         return False
 
-@shared_task
+@shared_task(name="dicom_handler.tasks.copy_dicom_task")
 def copy_dicom():
     '''
     Automatically copy DICOM files from the datastore path defined in DicomPathConfig
@@ -82,7 +82,7 @@ def copy_dicom():
         celery_logger.error(f"copy_dicom task failed with error: {str(e)}")
         return False
 
-@shared_task
+@shared_task(name="dicom_handler.tasks.dicom_series_separation_task")
 def dicom_series_separation_task(import_dicom_path=None):
     '''
     Automatically separate DICOM files from the import_dicom path into separate series folders.
@@ -147,7 +147,7 @@ def dicom_series_separation_task(import_dicom_path=None):
         logger.error(f"Error in dicom_series_separation task: {str(e)}")
         return False
     
-@shared_task
+@shared_task(name="dicom_handler.tasks.read_dicom_metadata_task")
 def read_dicom_metadata_task(dicom_series_path=None):
     '''
     Read DICOM metadata from a specific series folder and process it according to rules.
@@ -243,7 +243,7 @@ def read_dicom_metadata_task(dicom_series_path=None):
         logger.error(f"Task {task_id}: Error in read_dicom_metadata task after {processing_time.total_seconds():.2f} seconds for {dicom_series_path}: {str(e)}")
         return {"success": False, "deidentification_path": None}
 
-@shared_task
+@shared_task(name="dicom_handler.tasks.deidentify_series_task")
 def deidentify_series_task(result):
     """
     This task processes a single series for deidentification.
@@ -317,7 +317,7 @@ def deidentify_series_task(result):
         }
     
 
-@shared_task
+@shared_task(name="dicom_handler.tasks.transfer_deidentified_series_task")
 def transfer_deidentified_series_task(deidentification_result):
 
     """
@@ -462,7 +462,7 @@ def transfer_deidentified_series_task(deidentification_result):
             "original_deidentification": deidentification_result
         }
     
-@shared_task
+@shared_task(name="dicom_handler.tasks.export_rtstruct_task")
 def export_rtstruct_task():
     """
     This task will export RTSTRUCT files from the processing folder to the datastore folder.

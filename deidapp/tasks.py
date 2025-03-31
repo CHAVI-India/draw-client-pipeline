@@ -12,7 +12,7 @@ logger = logging.getLogger('deidapp')
 celery_logger = logging.getLogger('celery.task')
 
 
-@shared_task
+@shared_task(name="deidapp.tasks.deidentify_dicom_task")
 def deidentify_dicom():
     """
     This task will process all series marked as ready for deidentification in the 
@@ -45,7 +45,7 @@ def deidentify_dicom():
         logger.error(f"[Task ID: {task_id}] Error during DICOM deidentification task: {str(e)}")
         raise e
 
-@shared_task
+@shared_task(name="deidapp.tasks.reidentify_rtstruct_task")
 def reidentify_rtstruct():
     """
     This task will process all series marked as ready for reidentification in the 

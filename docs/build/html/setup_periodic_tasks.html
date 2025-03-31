@@ -119,6 +119,16 @@
 <td><p>api_client.tasks.reidentify_rtstruct</p></td>
 <td><p>10 minutes</p></td>
 </tr>
+<tr class="row-even"><td><p>Export DICOM</p></td>
+<td><p>Export the DICOM files to the datastore.</p></td>
+<td><p>dicom_handler.tasks.export_dicom</p></td>
+<td><p>10 minutes</p></td>
+</tr>
+<tr class="row-odd"><td><p>Clean up files and folders</p></td>
+<td><p>Clean up the files and folders in the datastore.</p></td>
+<td><p>api_client.tasks.clean_up_files_and_folders</p></td>
+<td><p>1 day</p></td>
+</tr>
 </tbody>
 </table>
 <p>Note that these recommended intervals are based on the case load at Tata Medical Center. If you are using the DRAW client at a different institution, you may need to adjust the intervals based on the case load at your institution. As a general rule of thumb, these intervals are ok if you have 20 - 25 patients undergoing CT scans per day. If you have a lower case load, then you can increase the intervals for the Notify Server and Poll Server tasks.</p>

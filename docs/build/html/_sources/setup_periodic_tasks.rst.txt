@@ -34,6 +34,18 @@ The following periodic tasks need to be setup:
      - api_client.tasks.reidentify_rtstruct
      - 10 minutes
 
+   * - Export DICOM
+     - Export the DICOM files to the datastore.
+     - dicom_handler.tasks.export_dicom
+     - 10 minutes
+
+   * - Clean up files and folders
+     - Clean up the files and folders in the datastore.
+     - api_client.tasks.clean_up_files_and_folders
+     - 1 day
+
+
+
 Note that these recommended intervals are based on the case load at Tata Medical Center. If you are using the DRAW client at a different institution, you may need to adjust the intervals based on the case load at your institution. As a general rule of thumb, these intervals are ok if you have 20 - 25 patients undergoing CT scans per day. If you have a lower case load, then you can increase the intervals for the Notify Server and Poll Server tasks.
 
 How to setup the periodic tasks
