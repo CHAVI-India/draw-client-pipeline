@@ -89,7 +89,7 @@ services:
       - RABBITMQ_DEFAULT_PASS=guest
 
   django-web:
-    build: .
+    image: chaviapp/drawclient:release
     container_name: django-docker
     depends_on:
       db:
@@ -115,7 +115,7 @@ services:
     command: ["./entrypoint.docker.sh"]
 
   celery:
-    build: .
+    image: chaviapp/drawclient:release
     container_name: celery-docker
     command: ["./entrypoint.docker.sh", "celery"]
     volumes:
@@ -140,7 +140,7 @@ services:
         condition: service_started
 
   celery-beat:
-    build: .
+    image: chaviapp/drawclient:release
     container_name: celery-beat-docker
     command: ["./entrypoint.docker.sh", "celery-beat"]
     volumes:
@@ -185,6 +185,7 @@ volumes:
 ```
 
 3. Create a .env.docker file in the same directory. Please make sure that the file name is correct and note the presence of the . before the name which indicates that this is a hidden file.:
+
 ```
 # Django Security
 SECRET_KEY=your_secret_key_here
