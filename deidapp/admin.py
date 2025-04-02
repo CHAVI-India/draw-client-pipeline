@@ -21,7 +21,7 @@ class DicomStudyAdmin(ModelAdmin):
 @admin.register(DicomSeries)
 class DicomSeriesAdmin(ModelAdmin):
     list_filter = ('study__patient_id','series_date','created_at','updated_at')
-    list_display = ('series_instance_uid','study__patient_id','deidentified_series_instance_uid','series_date','deidentified_series_date','frame_of_reference_uid','deidentified_frame_of_reference_uid')
+    list_display = ('series_instance_uid','study__patient_id','deidentified_series_instance_uid','task_id','dicom_series_processing_id','series_date','deidentified_series_date','frame_of_reference_uid','deidentified_frame_of_reference_uid')
     readonly_fields = [field.name for field in DicomSeries._meta.fields]
 
 @admin.register(DicomInstance)

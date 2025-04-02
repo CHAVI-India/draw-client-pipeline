@@ -22,13 +22,24 @@ def compute_file_checksum(file_path):
 def poll_pending_transfers():
     """
     Poll the server for all pending RTSTRUCT transfers.
+    Returns a dictionary containing:
+        - status: overall status of the polling operation
+        - message: descriptive message about the operation
+        - rtstruct_paths: list of successfully downloaded RTSTRUCT file paths
     """
+    # Initialize results dictionary
+    results = {
+        'status': 'success',
+        'message': '',
+        'rtstruct_paths': []
+    }
+    
     try:
         exporter = DicomExporter()
         system_settings = SystemSettings.load()
         
         # Create output folder if it doesn't exist - fix the Path handling
-        output_folder = Path(os.path.join(settings.BASE_DIR, 'folder_deidentified_rtstruct'))
+        output_folder = Path(os.path.join(settings.BASE_DIR,'folders' ,'folder_deidentified_rtstruct'))
         if not os.path.exists(output_folder):
             os.makedirs(output_folder, exist_ok=True)
         
@@ -132,15 +143,18 @@ def poll_pending_transfers():
                         transfer.rtstruct_checksum_verified = True
                         transfer.mark_as_completed(str(rtstruct_path))
                         logger.info(f"Transfer {transfer.id} marked as completed with RTSTRUCT at {rtstruct_path}")
+                        
+                        # Convert Path object to string before appending
+                        results['rtstruct_paths'].append(str(rtstruct_path))
 
-                        # Clean up zip file after successful RTSTRUCT receipt
-                        zip_path = transfer.get_zip_file_path()
-                        if zip_path and zip_path.exists():
-                            try:
-                                zip_path.unlink()
-                                logger.info(f"Cleaned up zip file for transfer {transfer.id}: {zip_path}")
-                            except Exception as e:
-                                logger.warning(f"Failed to clean up zip file for transfer {transfer.id}: {str(e)}")
+                        # # Clean up zip file after successful RTSTRUCT receipt
+                        # zip_path = transfer.get_zip_file_path()
+                        # if zip_path and zip_path.exists():
+                        #     try:
+                        #         zip_path.unlink()
+                        #         logger.info(f"Cleaned up zip file for transfer {transfer.id}: {zip_path}")
+                        #     except Exception as e:
+                        #         logger.warning(f"Failed to clean up zip file for transfer {transfer.id}: {str(e)}")
 
                         logger.info(f"Successfully verified and saved RTSTRUCT for transfer {transfer.id}")
                         
@@ -162,8 +176,13 @@ def poll_pending_transfers():
                     logger.info(f"Transfer {transfer.id} has server status: {status}, client status remains: {transfer.status}")
                 
             except Exception as e:
-                logger.error(f"Error checking transfer {transfer.id}: {str(e)}")
+                logger.warning(f"Error checking transfer {transfer.id}: {str(e)}")
                 # Don't mark as failed here as it might be a temporary network issue
                 
     except Exception as e:
         logger.error(f"Error in poll_pending_transfers: {str(e)}")
+        results['status'] = 'error'
+        results['message'] = str(e)
+    
+    logger.info(f"Finished polling for pending transfers. Results: {results}")
+    return results

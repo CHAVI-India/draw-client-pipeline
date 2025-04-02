@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     'django_log_lens',
     'api_client',
     'deidapp',
+    'dicomapp',
 ]
 
 
@@ -274,7 +275,7 @@ UNFOLD = {
             {
                 "title": _("DICOMPath Configuration"),
                 "separator": False,  # Top border
-                "collapsible": True,  # Collapsible group of links
+                "collapsible": True,  # Collapsible group of links#
                 "items": [
                     {
                         "title": _("DICOM Path"),
@@ -532,6 +533,12 @@ LOGGING = {
             "class": "logging.FileHandler", 
             "filename": str(LOG_FOLDER / "api_client.log"),
             "formatter": "default",
+        },
+        "dicomapp_file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler", 
+            "filename": str(LOG_FOLDER / "dicomapp.log"),
+            "formatter": "default",
         }
     },
     "loggers": {
@@ -567,6 +574,11 @@ LOGGING = {
         },
         "api_client": {
             "handlers": ["api_client_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file"],
+            "level": "DEBUG",
+            "propagate": True
+        },
+        "dicomapp": {
+            "handlers": ["dicomapp_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file"],
             "level": "DEBUG",
             "propagate": True
         }

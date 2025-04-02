@@ -43,32 +43,23 @@ def copydicom(sourcedir, destinationdir):
     
     Returns:
     --------
-    bool
-        True if the copy operation completed successfully, False otherwise.
-        Note that individual directory failures are logged but don't cause the
-        entire function to return False unless they cause an unhandled exception.
-    
-    Raises:
-    -------
-    No exceptions are explicitly raised, all are caught and logged.
-    
-    Database Impact:
-    ---------------
-    Creates or updates records in the CopyDicom table with the following information:
-    - Source and destination directory paths
-    - Directory creation and modification dates
-    - Directory size
-    - Processing status (COPIED)
-    
-    Notes:
-    ------
-    - Only processes directories with modification dates matching the current date
-    - Uses shutil.copytree for directory copying
-    - Uses Django's timezone-aware datetime objects for all timestamps
-    - Comprehensive logging at debug, info, and error levels
+    dict
+        A dictionary containing:
+        - status: 'success' or 'failure'
+        - message: A descriptive message about the operation
+        - copied_directories: List of successfully copied directory paths
+        - failed_directories: List of directories that failed to copy
     '''
     try:
         logger.debug(f"Starting DICOM copy process from {sourcedir} to {destinationdir}")
+        
+        # Convert input paths to strings if they aren't already
+        sourcedir = str(sourcedir)
+        destinationdir = str(destinationdir)
+        
+        # Track results
+        copied_directories = []
+        failed_directories = []
         
         for dir in os.listdir(sourcedir):
             dicom_dir = os.path.join(sourcedir, dir)
@@ -96,7 +87,8 @@ def copydicom(sourcedir, destinationdir):
                     logger.debug(f"Days difference: {days_difference}")
 
                     if days_difference <= 7 and days_difference >= 0:
-                        destination_dir = os.path.join(destinationdir, dir)
+                        # Ensure destination_dir is a string
+                        destination_dir = str(os.path.join(destinationdir, dir))
                         existing_dir = CopyDicom.objects.filter(
                             sourcedirname=dicom_dir,
                             dirmodifieddate=modified_date
@@ -139,8 +131,10 @@ def copydicom(sourcedir, destinationdir):
                                             copy_dicom_obj.save()
                                             
                                             logger.info(f"Updated directory {dir} with new files and updated database record")
+                                            copied_directories.append(destination_dir)
                                         except Exception as e:
                                             logger.error(f"Failed to update directory {dir}: {str(e)}")
+                                            failed_directories.append(destination_dir)
                                     else:
                                         logger.info(f"Tracking record already exists for {dir} and no newer modifications found")
                             else:
@@ -158,16 +152,31 @@ def copydicom(sourcedir, destinationdir):
                                         processing_status=ProcessingStatusChoices.COPIED.value
                                     ).save()
                                     logger.info(f"Successfully copied and created new CopyDicom object for {dir}")
+                                    copied_directories.append(destination_dir)
                                 except Exception as e:
                                     logger.error(f"Error copying directory {dir}: {str(e)}")
+                                    failed_directories.append(destination_dir)
                         else:
                             logger.info(f"Matching object already exists for {dir}")
                 except Exception as e:
                     logger.error(f"Error processing directory {dir}: {str(e)}")
+                    failed_directories.append(dicom_dir)
                     
         logger.info("DICOM copy process completed successfully")
-        return True
+        
+        # Return detailed results
+        return {
+            "status": "success" if not failed_directories else "partial_failure",
+            "message": f"Successfully copied {len(copied_directories)} directories, {len(failed_directories)} failed" if failed_directories else "Successfully copied all directories",
+            "copied_directories": copied_directories,
+            "failed_directories": failed_directories
+        }
 
     except Exception as e:
         logger.error(f"Unexpected error in copydicom function: {str(e)}")
-        return False
+        return {
+            "status": "failure",
+            "message": f"Unexpected error: {str(e)}",
+            "copied_directories": [],
+            "failed_directories": []
+        }
