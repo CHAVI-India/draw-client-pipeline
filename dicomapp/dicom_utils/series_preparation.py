@@ -9,6 +9,25 @@ import pydicom
 
 logger = getLogger(__name__)
 
+
+
+def parse_dicom_date(date_str):
+    """
+    Parse a DICOM date string (YYYYMMDD format) into a Python date object.
+    Returns None if the date string is empty or invalid.
+    """
+    if not date_str:
+        return None
+    try:
+        # Parse the DICOM date format (YYYYMMDD)
+        date_obj = datetime.strptime(date_str, "%Y%m%d").date()
+        # Return the date in YYYY-MM-DD format as a string
+        return date_obj.strftime("%Y-%m-%d")
+    except (ValueError, TypeError):
+        return None
+
+    
+
 def series_preparation(input_data: dict) -> dict:
     """
     This function will read the DICOM metadata of the valid DICOM files in the source directory. 
@@ -131,7 +150,7 @@ def series_preparation(input_data: dict) -> dict:
                                 'patient_id': getattr(dcm, 'PatientID', ''),
                                 'patient_name': getattr(dcm, 'PatientName', ''),
                                 'gender': getattr(dcm, 'PatientSex', ''),
-                                'scan_date': getattr(dcm, 'StudyDate', ''),
+                                'scan_date': parse_dicom_date(getattr(dcm, 'StudyDate', '')),
                                 'modality': getattr(dcm, 'Modality', ''),
                                 'study_instance_uid': getattr(dcm, 'StudyInstanceUID', ''),
                                 'series_instance_uid': series_uid,

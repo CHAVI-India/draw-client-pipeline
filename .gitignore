@@ -162,3 +162,4 @@ GitHub.sublime-settings
 uploaddicom/
 yaml-templates/*
 !/yaml-templates/
+db.sqlite3-journal
