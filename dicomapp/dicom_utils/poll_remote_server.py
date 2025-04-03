@@ -22,6 +22,8 @@ def compute_file_checksum(file_path):
 def poll_pending_transfers():
     """
     Poll the server for all pending RTSTRUCT transfers.
+    If the RTSTRUCT is successfully downloaded and verified, the server is notified.
+    If the server is notified, the transfer is marked as completed.
     Returns a dictionary containing:
         - status: overall status of the polling operation
         - message: descriptive message about the operation
@@ -147,14 +149,26 @@ def poll_pending_transfers():
                         # Convert Path object to string before appending
                         results['rtstruct_paths'].append(str(rtstruct_path))
 
-                        # # Clean up zip file after successful RTSTRUCT receipt
-                        # zip_path = transfer.get_zip_file_path()
-                        # if zip_path and zip_path.exists():
-                        #     try:
-                        #         zip_path.unlink()
-                        #         logger.info(f"Cleaned up zip file for transfer {transfer.id}: {zip_path}")
-                        #     except Exception as e:
-                        #         logger.warning(f"Failed to clean up zip file for transfer {transfer.id}: {str(e)}")
+                        # Notify the server that the transfer has been completed.
+                        try:
+
+                            response = exporter._make_request(
+                                'POST',
+                                system_settings.notify_endpoint.format(task_id = transfer.server_token)
+                            )
+                            logger.info(f"Response: {response}")
+                            # Verify response format
+                            if response.get('message') == "Transfer confirmation received, files cleaned up":
+                                transfer.server_notified = True
+                                transfer.status = 'COMPLETED_NOTIFIED'
+                                transfer.save()
+                                logger.info(f"Successfully notified completion of transfer {transfer.id}")
+
+                            else:
+                                logger.info(f"Failed to notify server about completed transfer for {transfer.id}")  
+                        except Exception as e:
+                            warning_msg = f"Warning Failed to notify server: {str(e)}"
+                            logger.warning(warning_msg)        
 
                         logger.info(f"Successfully verified and saved RTSTRUCT for transfer {transfer.id}")
                         

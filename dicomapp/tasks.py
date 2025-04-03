@@ -9,15 +9,15 @@ from dicomapp.dicom_utils.match_autosegmentation_template import match_autosegme
 from dicomapp.dicom_utils.deidentifiy_dicom_series import deidentify_dicom_series
 from dicomapp.dicom_utils.send_dicom_to_remote_server import send_dicom_to_remote_server
 from dicomapp.dicom_utils.poll_remote_server import poll_pending_transfers
-from dicomapp.dicom_utils.reidentify_rtstruct_file import reidentify_rtstruct_file
+from dicomapp.dicom_utils.reidentify_and_export_rtstruct_file import reidentify_rtstruct_file_and_export_to_datastore
 from dicomapp.dicom_utils.export_rtstruct import export_rtstruct
 from dicomapp.dicom_utils.notify_remote_server import notify_completed_transfers
 
 logger = getLogger(__name__)
 
-# Define the copy dicom task
+## DICOM Export Tasks
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+@shared_task(bind=True, max_retries=3, default_retry_delay=60, name = "DICOM Export - Copy DICOM files to datastore")
 def copy_dicom_task(self, datastore_path, target_path=None, task_id=None):
     """
     This task will copy the DICOM files from the datastore path to the target path.
@@ -51,7 +51,7 @@ def copy_dicom_task(self, datastore_path, target_path=None, task_id=None):
         )
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+@shared_task(bind=True, max_retries=3, default_retry_delay=60, name = "DICOM Export - Series Preparation")
 def series_preparation_task(self, copy_dicom_task_results):
     """
     This task will prepare the series for deidentification.
@@ -77,7 +77,7 @@ def series_preparation_task(self, copy_dicom_task_results):
 
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+@shared_task(bind=True, max_retries=3, default_retry_delay=60, name = "DICOM Export - Match Autosegmentation Template")
 def match_autosegmentation_template_task(self, series_preparation_task_results):
     """
     This task will match the autosegmentation template to the series.
@@ -104,7 +104,7 @@ def match_autosegmentation_template_task(self, series_preparation_task_results):
         )
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+@shared_task(bind=True, max_retries=3, default_retry_delay=60, name = "DICOM Export - Deidentify DICOM Series")
 def deidentify_dicom_series_task(self, match_autosegmentation_template_task_results):
     """
     This task will deidentify the DICOM files in the series.
@@ -129,7 +129,7 @@ def deidentify_dicom_series_task(self, match_autosegmentation_template_task_resu
         )
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+@shared_task(bind=True, max_retries=3, default_retry_delay=60, name = "DICOM Export - Send DICOM to Remote Server")
 def send_dicom_to_remote_server_task(self, deidentify_dicom_series_task_results):
     """
     This task will send the DICOM series to the remote server.
@@ -148,7 +148,7 @@ def send_dicom_to_remote_server_task(self, deidentify_dicom_series_task_results)
             max_retries=3  # override max retries for this specific retry
         )
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+@shared_task(bind=True, max_retries=3, default_retry_delay=60, name = "DICOM Export - Pipeline to export DICOM to Remote Server")
 def send_dicom_to_remote_server_pipeline(self, target_path=None):
     """
     This task chains together all the DICOM processing tasks in sequence:
@@ -191,9 +191,9 @@ def send_dicom_to_remote_server_pipeline(self, target_path=None):
         )
     
 
+## DICOM Import Tasks
 
-
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+@shared_task(bind=True, max_retries=3, default_retry_delay=60, name = "DICOM Import - Poll Pending Transfers")
 def poll_pending_transfers_task(self):
     """
     This task will poll the remote server for the status of the DICOM series.
@@ -210,15 +210,14 @@ def poll_pending_transfers_task(self):
             max_retries=3  # override max retries for this specific retry
         )
     
-
-  
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
+ 
+@shared_task(bind=True, max_retries=3, default_retry_delay=60, name = "DICOM Import - Reidentify RTSTRUCT File")
 def reidentify_rtstruct_file_task(self, poll_pending_transfers_results):
     """
-    This task will reidentify the RTSTRUCT files.
+    This task will reidentify the RTSTRUCT files and export them to the datastore folder path if found.
     """
     try:
-        reidentify_rtstruct_file_results = reidentify_rtstruct_file(poll_pending_transfers_results)
+        reidentify_rtstruct_file_results = reidentify_rtstruct_file_and_export_to_datastore(poll_pending_transfers_results)
         logger.info(f"Reidentify rtstruct file task results: {reidentify_rtstruct_file_results}")
         return reidentify_rtstruct_file_results
     except Exception as e:
@@ -231,25 +230,25 @@ def reidentify_rtstruct_file_task(self, poll_pending_transfers_results):
 
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)
-def export_rtstruct_task(self, reidentify_rtstruct_file_results):
-    """
-    This task will export the RTSTRUCT files to the datastore.
-    """
-    try:
-        export_rtstruct_results = export_rtstruct(reidentify_rtstruct_file_results)
-        logger.info(f"Export rtstruct file task results: {export_rtstruct_results}")
-        return export_rtstruct_results
-    except Exception as e:
-        logger.error(f"Error in export_rtstruct_task: {e}")
-        raise self.retry(
-            exc=e,
-            countdown=60,  # retry after 60 seconds
-            max_retries=3  # override max retries for this specific retry
-        )
+# @shared_task(bind=True, max_retries=3, default_retry_delay=60)
+# def export_rtstruct_task(self, reidentify_rtstruct_file_results):
+#     """
+#     This task will export the RTSTRUCT files to the datastore.
+#     """
+#     try:
+#         export_rtstruct_results = export_rtstruct(reidentify_rtstruct_file_results)
+#         logger.info(f"Export rtstruct file task results: {export_rtstruct_results}")
+#         return export_rtstruct_results
+#     except Exception as e:
+#         logger.error(f"Error in export_rtstruct_task: {e}")
+#         raise self.retry(
+#             exc=e,
+#             countdown=60,  # retry after 60 seconds
+#             max_retries=3  # override max retries for this specific retry
+#         )
 
 
-@shared_task(bind=True, max_retries=3, default_retry_delay=60)  
+@shared_task(bind=True, max_retries=3, default_retry_delay=60, name = "DICOM Import - Pipeline to import RTSTRUCT from remote server")  
 def import_rtstruct_from_remote_server_pipeline(self, target_path=None):
     """
     This task chains together all the DICOM processing tasks in sequence:
@@ -261,7 +260,7 @@ def import_rtstruct_from_remote_server_pipeline(self, target_path=None):
         task_chain = chain(
             poll_pending_transfers_task.s(),
             reidentify_rtstruct_file_task.s(),
-            export_rtstruct_task.s()
+            # export_rtstruct_task.s()
         )
 
         result = task_chain.apply_async()
@@ -276,9 +275,7 @@ def import_rtstruct_from_remote_server_pipeline(self, target_path=None):
         )
 
 
-
-
-@shared_task(bind=True, max_retries=3, default_retry_delay=60, name="notify_remote_server_pipeline")
+@shared_task(bind=True, max_retries=3, default_retry_delay=60, name="DICOM Import - Notify Remote Server about completed Transfers")
 def notify_remote_server_task(self):
     """
     This task will notify the remote server that the DICOM RTStructureSet has been received.
