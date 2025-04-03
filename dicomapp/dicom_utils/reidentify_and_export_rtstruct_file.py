@@ -280,7 +280,7 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
 
                 # Create a new DicomSeriesProcessingLogModel object with the same dicom_series_processing_id and processing_status 'RTSTRUCT_REIDENTIFIED'
                 DicomSeriesProcessingLogModel.objects.create(
-                    dicom_series_processing_id=dicom_series_processing_id,
+                    dicom_series_processing_id=dicom_series_processing_model,
                     processing_status='RTSTRUCT_REIDENTIFIED',
                     processing_status_message=f"RTSTRUCT file reidentified successfully"
                 )
@@ -318,7 +318,7 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
 
                         # Create a new DicomSeriesProcessingLogModel object with the same dicom_series_processing_id and processing_status 'RTSTRUCT_EXPORTED'
                         DicomSeriesProcessingLogModel.objects.create(
-                            dicom_series_processing_id=dicom_series_processing_id,
+                            dicom_series_processing_id=dicom_series_processing_model,
                             processing_status='RTSTRUCT_EXPORTED',
                             processing_status_message=f"RTSTRUCT file exported successfully"
                         )
@@ -342,7 +342,7 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
 
                         # Create a new DicomSeriesProcessingLogModel object with the same dicom_series_processing_id and processing_status 'RTSTRUCT_EXPORT_FAILED' and processing_status_message 'RTSTRUCT file export failed'
                         DicomSeriesProcessingLogModel.objects.create(
-                            dicom_series_processing_id=dicom_series_processing_id,
+                            dicom_series_processing_id=dicom_series_processing_model,
                             processing_status='RTSTRUCT_EXPORT_FAILED',
                             processing_status_message=f"RTSTRUCT file export failed because of error: {str(e)}"
                         )
@@ -364,7 +364,7 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
 
                     # Create a new DicomSeriesProcessingLogModel object with the same dicom_series_processing_id and processing_status 'RTSTRUCT_EXPORTED'
                     DicomSeriesProcessingLogModel.objects.create(
-                        dicom_series_processing_id=dicom_series_processing_id,
+                        dicom_series_processing_id=dicom_series_processing_model,
                         processing_status='RTSTRUCT_EXPORTED',
                         processing_status_message=f"RTSTRUCT file exported successfully"
                     )
@@ -387,7 +387,7 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
 
                 # Create a new DicomSeriesProcessingLogModel object with the same dicom_series_processing_id and processing_status 'RTSTRUCT_EXPORT_FAILED' and processing_status_message 'RTSTRUCT file export failed'
                 DicomSeriesProcessingLogModel.objects.create(
-                    dicom_series_processing_id=dicom_series_processing_id,
+                    dicom_series_processing_id=dicom_series_processing_model,
                     processing_status='RTSTRUCT_EXPORT_FAILED',
                     processing_status_message=f"RTSTRUCT file export failed because of error: {str(e)}"
                 )

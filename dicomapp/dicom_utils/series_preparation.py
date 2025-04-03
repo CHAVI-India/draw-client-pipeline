@@ -157,7 +157,8 @@ def series_preparation(input_data: dict) -> dict:
                                 'series_description': getattr(dcm, 'SeriesDescription', ''),
                                 'series_import_directory': source_path,
                                 'series_current_directory': os.path.join(series_directory_path, series_uid),
-                                'final_directory': None  # Will be set after successful move
+                                'final_directory': None,  # Will be set after successful move
+                                'copy_dicom_task_id': None  # Will be set after finding the matching task
                             }
                             
                             # Store series data and file path
@@ -187,15 +188,25 @@ def series_preparation(input_data: dict) -> dict:
                 # Create series directory if it doesn't exist
                 os.makedirs(series_data['series_current_directory'], exist_ok=True)
                 
-                # Create the main series processing entry
-                # Get the first copy_dicom_task_id from the list if available
+                # Find the matching CopyDicomTaskModel for this series
                 copy_dicom_task_instance = None
-                if input_data.get('copy_dicom_task_id') and len(input_data['copy_dicom_task_id']) > 0:
-                    try:
-                        copy_dicom_task_instance = CopyDicomTaskModel.objects.get(id=input_data['copy_dicom_task_id'][0])
-                    except CopyDicomTaskModel.DoesNotExist:
-                        logger.warning(f"CopyDicomTaskModel with ID {input_data['copy_dicom_task_id'][0]} not found")
-
+                if input_data.get('copy_dicom_task_id'):
+                    # Find the CopyDicomTaskModel that matches the source path
+                    for task_id in input_data['copy_dicom_task_id']:
+                        try:
+                            task = CopyDicomTaskModel.objects.get(id=task_id)
+                            if task.target_directory == series_data['series_import_directory']:
+                                copy_dicom_task_instance = task
+                                series_data['copy_dicom_task_id'] = task
+                                logger.info(f"Found matching CopyDicomTaskModel for series {series_uid}: {task.id}")
+                                break
+                        except CopyDicomTaskModel.DoesNotExist:
+                            continue
+                    
+                    if not copy_dicom_task_instance:
+                        logger.warning(f"No matching CopyDicomTaskModel found for series {series_uid} with import directory {series_data['series_import_directory']}")
+                
+                # Create the main series processing entry
                 series_processing = DicomSeriesProcessingModel.objects.create(
                     patient_id=series_data['patient_id'],
                     patient_name=series_data['patient_name'],
@@ -209,7 +220,7 @@ def series_preparation(input_data: dict) -> dict:
                     series_current_directory=series_data['series_current_directory'],
                     processing_status=ProcessingStatusChoices.SERIES_SEPARATED,
                     series_state=SeriesState.PROCESSING,
-                    copy_dicom_task_id=copy_dicom_task_instance  # Use the instance instead of the UUID
+                    copy_dicom_task_id=copy_dicom_task_instance
                 )
                 logger.info(f"Created database entry for series: {series_uid}")
                 series_processing_ids.append(str(series_processing.id))
