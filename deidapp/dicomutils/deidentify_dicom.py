@@ -3,7 +3,7 @@ import os
 import shutil
 from deidapp.models import Patient, DicomStudy, DicomSeries, DicomInstance
 from dicomapp.models import DicomSeriesProcessingModel
-from dicom_handler.models import DicomUnprocessed
+# from dicom_handler.models import DicomUnprocessed
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import random

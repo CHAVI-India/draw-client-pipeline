@@ -35,17 +35,6 @@ services:
       - app_data:/app
       - ./logs:/app/logs
       - ./static:/app/static
-      - ./dicom_folders/folder_unprocessed_dicom:/app/folder_unprocessed_dicom
-      - ./dicom_folders/folder_for_deidentification:/app/folder_for_deidentification
-      - ./dicom_folders/folder_dicom_processing:/app/folder_dicom_processing
-      - ./dicom_folders/folder_for_dicom_upload:/app/folder_for_dicom_upload
-      - ./dicom_folders/folder_for_dicom_import:/app/folder_for_dicom_import
-      - ./dicom_folders/folder_deidentified_rtstruct:/app/folder_deidentified_rtstruct
-      - ./dicom_folders/folder_identified_rtstruct:/app/folder_identified_rtstruct
-      - ./dicom_folders/folder_post_deidentification:/app/folder_post_deidentification
-      - ./dicom_folders/folder_unprocessed_dicom:/app/folder_unprocessed_dicom
-      - ./dicom_folders/folder_temp:/app/folder_temp
-      - ./dicom_folders/folder_archive:/app/folder_archive
       - /mnt/share/dicom_processing_test/datastore:/app/datastore # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     command: ["./entrypoint.docker.sh"]
 
@@ -57,12 +46,6 @@ services:
       - app_data:/app
       - ./static:/app/static
       - ./logs:/app/logs
-      - ./dicom_folders/folder_unprocessed_dicom:/app/folder_unprocessed_dicom
-      - ./dicom_folders/folder_for_deidentification:/app/folder_for_deidentification
-      - ./dicom_folders/folder_dicom_processing:/app/folder_dicom_processing
-      - ./dicom_folders/folder_for_dicom_upload:/app/folder_for_dicom_upload
-      - ./dicom_folders/folder_for_dicom_import:/app/folder_for_dicom_import
-      - ./dicom_folders/folder_deidentified_rtstruct:/app/folder_deidentified_rtstruct
       - /mnt/share/dicom_processing_test/datastore:/app/datastore # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     env_file:
       - .env.docker
@@ -81,18 +64,7 @@ services:
     volumes:
       - app_data:/app
       - ./static:/app/static
-      - ./logs:/app/logs
-      - ./dicom_folders/folder_unprocessed_dicom:/app/folder_unprocessed_dicom
-      - ./dicom_folders/folder_for_deidentification:/app/folder_for_deidentification
-      - ./dicom_folders/folder_dicom_processing:/app/folder_dicom_processing
-      - ./dicom_folders/folder_for_dicom_upload:/app/folder_for_dicom_upload
-      - ./dicom_folders/folder_for_dicom_import:/app/folder_for_dicom_import
-      - ./dicom_folders/folder_deidentified_rtstruct:/app/folder_deidentified_rtstruct
-      - ./dicom_folders/folder_identified_rtstruct:/app/folder_identified_rtstruct
-      - ./dicom_folders/folder_post_deidentification:/app/folder_post_deidentification
-      - ./dicom_folders/folder_unprocessed_dicom:/app/folder_unprocessed_dicom
-      - ./dicom_folders/folder_temp:/app/folder_temp
-      - ./dicom_folders/folder_archive:/app/folder_archive      
+      - ./logs:/app/logs     
       - /mnt/share/dicom_processing_test/datastore:/app/datastore # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     env_file:
       - .env.docker

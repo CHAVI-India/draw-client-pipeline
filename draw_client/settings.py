@@ -62,17 +62,11 @@ INSTALLED_APPS = [
     'celery',       
     'django_celery_results',
     'django_celery_beat',
-    # Your apps
-    'django_apscheduler',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'widget_tweaks',
-    'slippers',
     'dicom_handler',
     'docs',
-    # 'log_viewer',
-    'django_log_lens',
     'api_client',
     'deidapp',
     'dicomapp',
@@ -387,19 +381,19 @@ UNFOLD = {
             #     ],
             # },
 
-            {
-                "title": _("Upload DICOM File Manually"),
-                "separator": True,
-                "collapsible": True,
-                "items": [
-                    {
-                        "title": _("Upload zip"),
-                        "icon": "upload",
-                        "link": reverse_lazy("admin:dicom_handler_uploaddicom_changelist"),
-                    }
+            # {
+            #     "title": _("Upload DICOM File Manually"),
+            #     "separator": True,
+            #     "collapsible": True,
+            #     "items": [
+            #         {
+            #             "title": _("Upload zip"),
+            #             "icon": "upload",
+            #             "link": reverse_lazy("admin:dicom_handler_uploaddicom_changelist"),
+            #         }
                     
-                ],
-            },
+            #     ],
+            # },
 
             {
                 "title": _("API Settings and Transfers"),
@@ -466,8 +460,6 @@ UNFOLD = {
 }
 
 
-# file: settings.py
-from django_log_lens import LOG_FORMAT
 
 LOG_FOLDER = BASE_DIR / "logs"
 
@@ -479,7 +471,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "default": {
-            "format": LOG_FORMAT
+            "format": '%(levelname)s %(asctime)s %(name)s.%(funcName)s:%(lineno)s- %(message)s'
         }
     },
     "handlers": {

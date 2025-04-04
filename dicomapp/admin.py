@@ -1,8 +1,9 @@
 from django.contrib import admin
-from dicomapp.models import CopyDicomTaskModel, DicomSeriesProcessingModel, DicomSeriesProcessingLogModel
+from dicomapp.models import CopyDicomTaskModel, DicomSeriesProcessingModel, DicomSeriesProcessingLogModel, DicomFileUploadModel
 from unfold.admin import ModelAdmin
 from unfold.decorators import action
 from dicomapp.admin_actions.send_dicom_for_processing import send_dicom_for_processing_action
+from dicomapp.admin_actions.upload_dicom_zip import upload_dicom_zip
 
 @admin.register(CopyDicomTaskModel)
 class CopyDicomTaskAdmin(ModelAdmin):
@@ -38,3 +39,11 @@ class DicomSeriesProcessingLogAdmin(ModelAdmin):
     search_fields = ('task_id', 'processing_status')
     list_filter = ('processing_status',)
     ordering = ('-created_at',)
+
+@admin.register(DicomFileUploadModel)
+class DicomFileUploadAdmin(ModelAdmin):
+    list_display = ('id', 'file_name', 'unzipped', 'created_at', 'updated_at')
+    readonly_fields = ('id', 'file_name', 'unzipped', 'created_at', 'updated_at')
+    search_fields = ('file_name',)
+    ordering = ('-created_at',)
+    actions = [upload_dicom_zip]

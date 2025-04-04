@@ -1,6 +1,14 @@
 from django.db import models
 import uuid
-from dicom_handler.models import ModelYamlInfo
+from dicom_handler.models import ModelYamlInfo, DicomPathConfig
+from django.conf import settings
+import os
+import zipfile
+from django.core.exceptions import ValidationError
+from django.utils.text import slugify
+import re
+from pathlib import Path
+
 # Create your models here.
 
 class CopyDicomTaskModel(models.Model):
@@ -87,7 +95,11 @@ class DicomSeriesProcessingLogModel(models.Model):
         verbose_name = "Dicom Series Processing Log"
         verbose_name_plural = "Dicom Series Processing Logs"    
 
-
-
-    
+class DicomFileUploadModel(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    file_name = models.CharField(max_length=255, blank=True)
+    file = models.FileField(upload_to='folders/uploaded_files', blank=True)
+    unzipped = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
