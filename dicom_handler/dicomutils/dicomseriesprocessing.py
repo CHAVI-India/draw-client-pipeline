@@ -1,74 +1,89 @@
-# import os
-# import yaml
-# import glob
-# import shutil
-# import hashlib
-# import pydicom
-# import numpy as np
-# import pandas as pd
-# from datetime import datetime
-# from django.utils import timezone
-# from dicom_handler.models import DicomSeriesProcessing, ModelYamlInfo, Rule, RuleSet, DicomUnprocessed, ProcessingStatus
-# import logging
+import os
+import yaml
+import glob
+import shutil
+import hashlib
+import pydicom
+import numpy as np
+import pandas as pd
+from datetime import datetime
+from django.utils import timezone
+from dicom_handler.models import  ModelYamlInfo, Rule, RuleSet
+import logging
 
-# # Get logger
-# logger = logging.getLogger('dicom_handler_logs')
+# Get logger
+logger = logging.getLogger('__name__')
+
+## Hash Calculation
+def calculate_hash(file_path):
+    logger.debug(f"Calculating hash for file: {file_path}")
+    try:
+        hash_md5 = hashlib.sha512()
+        with open(file_path, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(chunk)
+        hash_value = hash_md5.hexdigest()
+        logger.debug(f"Hash calculation complete: {hash_value[:10]}...")
+        return hash_value
+    except Exception as e:
+        logger.error(f"Error calculating hash for {file_path}: {str(e)}")
+        raise
 
 
-# ## Function to get all files in a directory
-# def get_all_files(directory_path):
-#     logger.debug(f"Starting file search in directory: {directory_path}")
+## Function to get all files in a directory
+def get_all_files(directory_path):
+    logger.debug(f"Starting file search in directory: {directory_path}")
     
-#     if not os.path.exists(directory_path):
-#         logger.error(f"Directory does not exist: {directory_path}")
-#         return []
+    if not os.path.exists(directory_path):
+        logger.error(f"Directory does not exist: {directory_path}")
+        return []
        
-#     if not os.path.isdir(directory_path):
-#         logger.error(f"Path is not a directory: {directory_path}")
-#         return []
+    if not os.path.isdir(directory_path):
+        logger.error(f"Path is not a directory: {directory_path}")
+        return []
    
-#     all_files = []
+    all_files = []
     
-#     try:
-#         for root, dirs, files in os.walk(directory_path):
-#             logger.debug(f"Scanning directory: {root}")
-#             logger.debug(f"Found {len(files)} files")
+    try:
+        for root, dirs, files in os.walk(directory_path):
+            logger.debug(f"Scanning directory: {root}")
+            logger.debug(f"Found {len(files)} files")
             
-#             for file in files:
-#                 file_path = os.path.join(root, file)
-#                 all_files.append(file_path)
-#                 logger.debug(f"Added file: {file_path}")
+            for file in files:
+                file_path = os.path.join(root, file)
+                all_files.append(file_path)
+                logger.debug(f"Added file: {file_path}")
         
-#         logger.info(f"Total files found: {len(all_files)}")
-#         return all_files
+        logger.info(f"Total files found: {len(all_files)}")
+        return all_files
     
-#     except Exception as e:
-#         logger.error(f"Error while searching files: {str(e)}")
-#         return []
+    except Exception as e:
+        logger.error(f"Error while searching files: {str(e)}")
+        return []
 
-# ## Update DICOM tags
-# def update_dicom_tags(dicom_path, tags_to_check):
-#     logger.debug(f"Updating DICOM tags for file: {dicom_path}")
-#     try:
-#         dicom_data = pydicom.dcmread(dicom_path)
+## Update DICOM tags
+def update_dicom_tags(dicom_path, tags_to_check):
+    logger.debug(f"Updating DICOM tags for file: {dicom_path}")
+    try:
+        dicom_data = pydicom.dcmread(dicom_path)
 
-#         for tag in tags_to_check:
-#             logger.debug(f"Checking tag: {tag}")
-#             if tag in dicom_data:
-#                 field_value = dicom_data.get(tag)
-#                 if field_value is None or str(field_value).strip() == "":
-#                     logger.debug(f"Empty/None value found for {tag}, setting to NaN")
-#                     dicom_data[tag] = np.NaN
-#             else:
-#                 logger.debug(f"Tag {tag} not found in DICOM file")
-#                 dicom_data = "-"
+        for tag in tags_to_check:
+            logger.debug(f"Checking tag: {tag}")
+            if tag in dicom_data:
+                field_value = dicom_data.get(tag)
+                if field_value is None or str(field_value).strip() == "":
+                    logger.debug(f"Empty/None value found for {tag}, setting to NaN")
+                    dicom_data[tag] = np.NaN
+            else:
+                logger.debug(f"Tag {tag} not found in DICOM file")
+                dicom_data = "-"
         
-#         logger.info("Successfully updated DICOM tags")
-#         return dicom_data
+        logger.info("Successfully updated DICOM tags")
+        return dicom_data
     
-#     except Exception as e:
-#         logger.error(f"Error updating DICOM tags: {str(e)}")
-#         raise
+    except Exception as e:
+        logger.error(f"Error updating DICOM tags: {str(e)}")
+        raise
 
 # ## DICOM Series Separation
 # def dicom_series_separation(sourcedir, processeddir):
@@ -248,20 +263,7 @@
 #     return separated_series_dirs
 
 
-# ## Hash Calculation
-# def calculate_hash(file_path):
-#     logger.debug(f"Calculating hash for file: {file_path}")
-#     try:
-#         hash_md5 = hashlib.sha512()
-#         with open(file_path, "rb") as f:
-#             for chunk in iter(lambda: f.read(4096), b""):
-#                 hash_md5.update(chunk)
-#         hash_value = hash_md5.hexdigest()
-#         logger.debug(f"Hash calculation complete: {hash_value[:10]}...")
-#         return hash_value
-#     except Exception as e:
-#         logger.error(f"Error calculating hash for {file_path}: {str(e)}")
-#         raise
+
 
 # ## DICOM Metadata Reading
 # def read_dicom_metadata(dicom_series_path, unprocess_dicom_path, deidentified_dicom_path):
