@@ -56,10 +56,10 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
     ----------------
     File Processing:
     - If file is invalid DICOM: Skips file and continues to next
-    - If file already processed: Skips file and continues to next
     - If not RTSTRUCT modality: Skips file and continues to next
     - If no matching series found: Skips file and continues to next
     - If processing fails: Updates RTStructFile with error status
+    - Deletes the deidentified RTSTRUCT file
     
     Datastore Directory Operations:
     - If datastore directory doesn't exist:
@@ -133,10 +133,6 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
                 logger.warning(f"Invalid DICOM file: {file_path}")
                 continue
             
-            # Check if this file has already been successfully processed
-            if RTStructFile.objects.filter(original_file_path=file_path, processing_status='SUCCESS').exists():
-                logger.info(f"File already successfully processed: {file_path}")
-                continue
 
             # Step 2: Check if modality is RTSTRUCT
             if not hasattr(ds, 'Modality') or ds.Modality != 'RTSTRUCT':
@@ -290,8 +286,10 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
                 logger.warning(f"Dicom Series Processing Model not updated for series: {series.series_instance_uid} because of error: {str(e)}", exc_info=True)
                 # continue to the next file.
                 continue    
-
-
+            # Delete the deidentified RTSTRUCT file
+            os.remove(file_path)
+            logger.info(f"Deleted deidentified RTSTRUCT file: {file_path}")
+            # Move to the datastore directory
             logger.info(f"Starting to move the reidentified RTSTRUCT file to the datastore directory")
 
             try:
