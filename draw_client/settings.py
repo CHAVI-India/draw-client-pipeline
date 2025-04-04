@@ -349,7 +349,12 @@ UNFOLD = {
                         "title": _("Processing Logs"),
                         "icon": "task_alt",
                         "link": reverse_lazy("admin:dicomapp_dicomseriesprocessinglogmodel_changelist"),
-                    },                
+                    },
+                    {
+                        "title": _("Upload DICOM Zip Files"),
+                        "icon": "upload",
+                        "link": reverse_lazy("admin:dicomapp_dicomfileuploadmodel_changelist"),
+                    },                                         
                 ],
             },            
 
