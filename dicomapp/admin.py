@@ -1,7 +1,8 @@
 from django.contrib import admin
-from .models import CopyDicomTaskModel, DicomSeriesProcessingModel, DicomSeriesProcessingLogModel
+from dicomapp.models import CopyDicomTaskModel, DicomSeriesProcessingModel, DicomSeriesProcessingLogModel
 from unfold.admin import ModelAdmin
 from unfold.decorators import action
+from dicomapp.admin_actions.send_dicom_for_processing import send_dicom_for_processing_action
 
 @admin.register(CopyDicomTaskModel)
 class CopyDicomTaskAdmin(ModelAdmin):
@@ -25,6 +26,8 @@ class DicomSeriesProcessingAdmin(ModelAdmin):
     search_fields = ('patient_id', 'patient_name', 'modality', 'processing_status')
     list_filter = ('processing_status', 'series_state', 'modality')
     ordering = ('-created_at',)
+    
+    actions = [send_dicom_for_processing_action]
 
 @admin.register(DicomSeriesProcessingLogModel)
 class DicomSeriesProcessingLogAdmin(ModelAdmin):
