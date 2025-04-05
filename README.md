@@ -159,6 +159,9 @@ volumes:
   app_data:
 ```
 
+Please note there is a docker-compose.yml file in the repository which allows you to "BUILD" the docker image. The example docker-compose section above allows you to pull the latest image from the dockerhub repository.
+
+
 3. Create a .env.docker file in the same directory. Please make sure that the file name is correct and note the presence of the . before the name which indicates that this is a hidden file.:
 
 ```
