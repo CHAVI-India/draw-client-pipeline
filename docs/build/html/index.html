@@ -46,9 +46,9 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation the DRAW Client</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore_configuration.html">Configuration of the Datastore path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_api_tokens.html">Get API tokens from the DRAW Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creating_autosegmentation_templates.html">Creating Autosegmentation Templates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configure_rules.html">Configure Rules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="get_api_tokens.html">Get API tokens from the DRAW Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup_periodic_tasks.html">Setup Periodic Tasks</a></li>
 </ul>
 
@@ -79,6 +79,17 @@
   <section id="deep-learning-based-radiotherapy-autosegmentation-workflow-draw-client-documentation">
 <h1>Deep learning based Radiotherapy Autosegmentation Workflow (DRAW) - Client Documentation<a class="headerlink" href="#deep-learning-based-radiotherapy-autosegmentation-workflow-draw-client-documentation" title="Link to this heading"></a></h1>
 <p>Welcome to the Deep learning based Radiotherapy Autosegmentation Workflow (DRAW) - Client Documentation. In this documentation, you will find information on how to use the DRAW client to interact with the DRAW server.</p>
+<p>The DRAW client is a Django based application that runs on a computer and allows the user to send DICOM images to the DRAW server for autosegmentation. After the autosegmentation is completed, the DRAW client retrives the RTStructureSet files from the DRAW server and saves them to the correct path.</p>
+<p>The DRAW client performs the following major tasks:</p>
+<ol class="arabic simple">
+<li><p>It allows the user to configure a directory / folder from which the client will take DICOM data for autosegmentation.</p></li>
+<li><p>It allows the user to create autosegmentation templates. These templates are created using the data provided from the DRAW server and allow users to quickly modify / adapt the templates to new or updated models.</p></li>
+<li><p>It allows the user to configure rulesets that determine which autosegmentation template to use for a given DICOM data.</p></li>
+<li><p>It allows the user to schedule periodic autosegmentation tasks to run at specified intervals.</p></li>
+<li><p>Before sending the DICOM data to the DRAW server it ensures that the DICOM data is properly deidentifies and associates the autosegmentation templates (selected based on the ruleset or manually) with the DICOM data.</p></li>
+<li><p>It retrives the RTStructureSet files from the DRAW server and saves them to the correct path after the reidentification is completed.</p></li>
+<li><p>Finally it allows the users to view the File operations performed by the client.</p></li>
+</ol>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
@@ -95,18 +106,20 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore_configuration.html">Configuration of the Datastore path</a></li>
-<li class="toctree-l1"><a class="reference internal" href="creating_autosegmentation_templates.html">Creating Autosegmentation Templates</a></li>
-<li class="toctree-l1"><a class="reference internal" href="configure_rules.html">Configure Rules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="configure_rules.html#setup-rulesets">Setup Rulesets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="configure_rules.html#define-dicom-tags">Define DICOM tags</a></li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="get_api_tokens.html">Get API tokens from the DRAW Server</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="get_api_tokens.html#obtain-api-keys">Obtain API Keys</a></li>
 <li class="toctree-l2"><a class="reference internal" href="get_api_tokens.html#api-settings-in-the-client">API settings in the Client</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="creating_autosegmentation_templates.html">Creating Autosegmentation Templates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configure_rules.html">Configure Rules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configure_rules.html#setup-rulesets">Setup Rulesets</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="setup_periodic_tasks.html">Setup Periodic Tasks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="setup_periodic_tasks.html#export-dicom-to-the-draw-server">Export DICOM to the DRAW Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup_periodic_tasks.html#import-rtstructureset-from-the-draw-server">Import RTStructureSet from the DRAW Server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup_periodic_tasks.html#clean-up-files-and-folders">Clean up files and folders</a></li>
 <li class="toctree-l2"><a class="reference internal" href="setup_periodic_tasks.html#how-to-setup-the-periodic-tasks">How to setup the periodic tasks</a></li>
 </ul>
 </li>

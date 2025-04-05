@@ -57,9 +57,9 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore_configuration.html">Configuration of the Datastore path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_api_tokens.html">Get API tokens from the DRAW Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creating_autosegmentation_templates.html">Creating Autosegmentation Templates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configure_rules.html">Configure Rules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="get_api_tokens.html">Get API tokens from the DRAW Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup_periodic_tasks.html">Setup Periodic Tasks</a></li>
 </ul>
 
@@ -175,7 +175,8 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app_data:/app</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/app/logs</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/app/static</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/mnt/share/dicom_processing_test/datastore:/app/datastore</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./yaml-templates:/app/yaml-templates</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;/mnt/share/dicom_processing_test/datastore:/app/datastore&quot;</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;./entrypoint.docker.sh&quot;</span><span class="p p-Indicator">]</span>
 
 <span class="w">  </span><span class="nt">celery</span><span class="p">:</span>
@@ -186,7 +187,8 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app_data:/app</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/app/static</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/app/logs</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/mnt/share/dicom_processing_test/datastore:/app/datastore</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./yaml-templates:/app/yaml-templates</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;/mnt/share/dicom_processing_test/datastore:/app/datastore&quot;</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
 <span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env.docker</span>
 <span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
@@ -205,7 +207,8 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app_data:/app</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/app/static</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/app/logs</span><span class="w">     </span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/mnt/share/dicom_processing_test/datastore:/app/datastore</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./yaml-templates:/app/yaml-templates</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;/mnt/share/dicom_processing_test/datastore:/app/datastore&quot;</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
 <span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env.docker</span>
 <span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>

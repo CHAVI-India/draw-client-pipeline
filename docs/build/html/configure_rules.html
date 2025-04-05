@@ -19,7 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Get API tokens from the DRAW Server" href="get_api_tokens.html" />
+    <link rel="next" title="Setup Periodic Tasks" href="setup_periodic_tasks.html" />
     <link rel="prev" title="Creating Autosegmentation Templates" href="creating_autosegmentation_templates.html" /> 
 </head>
 
@@ -47,13 +47,12 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation the DRAW Client</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore_configuration.html">Configuration of the Datastore path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_api_tokens.html">Get API tokens from the DRAW Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creating_autosegmentation_templates.html">Creating Autosegmentation Templates</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Configure Rules</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#setup-rulesets">Setup Rulesets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#define-dicom-tags">Define DICOM tags</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="get_api_tokens.html">Get API tokens from the DRAW Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup_periodic_tasks.html">Setup Periodic Tasks</a></li>
 </ul>
 
@@ -94,7 +93,7 @@ A autosegmentation template can be associated with a single ruleset only. If you
 <p>To create a ruleset click on the left side bar menu item called “Template Rulesets” and navigate to the page under the submenu “Rule Sets”.</p>
 <a class="reference internal image-reference" href="_images/rulesets.png"><img alt="Rulesets" class="align-center" src="_images/rulesets.png" style="width: 800px;" />
 </a>
-<p>Clicking on the circular button with a plus sign will open a page where a new ruleset can be created. Add the name of the ruleset, and chose a description which tells you later on what this ruleset is for. Then select the autosegmentation template that you want to associate with this ruleset. After that you can add rules below, by selecting the DICOM tag and entering the tag value. If you do not see the desired DICOM tag, search for it using the search bar provided in the dropdown menu. If the tag is not present, you can add it to the DICOM tags section (see <a class="reference internal" href="#define-dicom-tags"><span class="std std-ref">Define DICOM tags</span></a>).</p>
+<p>Clicking on the circular button with a plus sign will open a page where a new ruleset can be created. Add the name of the ruleset, and chose a description which tells you later on what this ruleset is for. Then select the autosegmentation template that you want to associate with this ruleset. After that you can add rules below, by selecting the DICOM tag and entering the tag value. If you do not see the desired DICOM tag, search for it using the search bar provided in the dropdown menu.</p>
 <a class="reference internal image-reference" href="_images/ruleset_create.png"><img alt="Ruleset Create" class="align-center" src="_images/ruleset_create.png" style="width: 800px;" />
 </a>
 <p>If you wish to remove a rule from a ruleset, simply check the box at the right and then click on the save button at the bottom of the page.</p>
@@ -106,18 +105,6 @@ A autosegmentation template can be associated with a single ruleset only. If you
 <p>The DRAW client will copy the template that you have selected into the folder of the DICOM dataset before it is sent to the DRAW server for autosegmentation. The template file is available as a YAML file. To improve the security of the system, the code checks the checksum of the YAML file before it is associated with the DICOM dataset. If the checksum does not match, the system will not associate the template with the DICOM dataset. This checksum is calculated when the templates are created using the DRAW client. Thus a YAML file that has been created manually will not be associated with the DICOM dataset. Additionally, if a template is modified after being created using the DRAW client, the checksum will change and the template will not be associated with the DICOM dataset.</p>
 </div>
 </section>
-<section id="define-dicom-tags">
-<h2>Define DICOM tags<a class="headerlink" href="#define-dicom-tags" title="Link to this heading"></a></h2>
-<p>A list of DICOM tags which are available in the DICOM specification are already pre-populated in the system. However if you need to input addtional DICOM tags you can also add them such that theyu will be evaluated from the DICOM files. The system will automatically evaluate these tags.</p>
-<p>In order to add a DICOM tag which will be evaluated, click on the side bar menu called, Template Rulesets and navigate to the page under the submenu “DICOM Tags”.</p>
-<a class="reference internal image-reference" href="_images/dicom_tags.png"><img alt="DICOM Tags" class="align-center" src="_images/dicom_tags.png" style="width: 800px;" />
-</a>
-<p>To determine which DICOM tags are available, you can refer to the DICOM standards - <a class="reference external" href="https://dicom.nema.org/dicom/2013/output/chtml/part06/chapter_6.html">https://dicom.nema.org/dicom/2013/output/chtml/part06/chapter_6.html</a></p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>DICOM tag names are case sensitive and do not allow any spaces or special characters. Please ensure that the tag name is correct. If the tag name is incorrect, the system will not be able to evaluate the tag and the autosegmentation template will not be tagged correctly.</p>
-</div>
-</section>
 </section>
 
 
@@ -125,7 +112,7 @@ A autosegmentation template can be associated with a single ruleset only. If you
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="creating_autosegmentation_templates.html" class="btn btn-neutral float-left" title="Creating Autosegmentation Templates" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="get_api_tokens.html" class="btn btn-neutral float-right" title="Get API tokens from the DRAW Server" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="setup_periodic_tasks.html" class="btn btn-neutral float-right" title="Setup Periodic Tasks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

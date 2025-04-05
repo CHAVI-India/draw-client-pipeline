@@ -19,7 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Get API tokens from the DRAW Server" href="get_api_tokens.html" /> 
+    <link rel="prev" title="Configure Rules" href="configure_rules.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -46,10 +46,28 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation the DRAW Client</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore_configuration.html">Configuration of the Datastore path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_api_tokens.html">Get API tokens from the DRAW Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creating_autosegmentation_templates.html">Creating Autosegmentation Templates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configure_rules.html">Configure Rules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="get_api_tokens.html">Get API tokens from the DRAW Server</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Setup Periodic Tasks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#export-dicom-to-the-draw-server">Export DICOM to the DRAW Server</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#purpose">Purpose:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#task-name">Task name:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#suggested-interval">Suggested interval:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#import-rtstructureset-from-the-draw-server">Import RTStructureSet from the DRAW Server</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">Purpose:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Task name:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id3">Suggested interval:</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#clean-up-files-and-folders">Clean up files and folders</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id4">Purpose:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">Task name:</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id6">Suggested interval:</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#how-to-setup-the-periodic-tasks">How to setup the periodic tasks</a></li>
 </ul>
 </li>
@@ -81,57 +99,55 @@
              
   <section id="setup-periodic-tasks">
 <h1>Setup Periodic Tasks<a class="headerlink" href="#setup-periodic-tasks" title="Link to this heading"></a></h1>
-<p>The periodic tasks are used to schedule the tasks to be executed at specified intervals. The periodic tasks are defined in the DRAW client admin interface.</p>
+<p>The periodic tasks are used to schedule the tasks to be executed at specified intervals. The periodic tasks are defined in the DRAW client admin interface.
+The suggested tasks in the table below provide a convinient way to setup the periodic tasks quickly.</p>
 <p>The following periodic tasks need to be setup:</p>
-<table class="docutils align-default" id="id1">
-<caption><span class="caption-text">Periodic Tasks</span><a class="headerlink" href="#id1" title="Link to this table"></a></caption>
-<colgroup>
-<col style="width: 10.0%" />
-<col style="width: 60.0%" />
-<col style="width: 20.0%" />
-<col style="width: 10.0%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Task Name</p></th>
-<th class="head"><p>Description</p></th>
-<th class="head"><p>Task ID</p></th>
-<th class="head"><p>Recommended Interval</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>Copy DICOM</p></td>
-<td><p>This task copies the DICOM files from the datastore to the DRAW server after proper processing, attaching the autosegmentation template, deidentifying the Data and finally sending the DICOM files to the DRAW server for autosegmentation.</p></td>
-<td><p>dicom_handler.tasks.copy_dicom</p></td>
-<td><p>10 minutes</p></td>
-</tr>
-<tr class="row-odd"><td><p>Poll Server</p></td>
-<td><p>This task polls the DRAW server to check if there are any pending transfers. If there are, it will copy the DICOM RTSTRUCT files from the DRAW server to the datastore.</p></td>
-<td><p>api_client.tasks.poll_pending_transfes_task</p></td>
-<td><p>15 minutes</p></td>
-</tr>
-<tr class="row-even"><td><p>Notify Server</p></td>
-<td><p>Notify the DRAW server that the RTSTRUCT files have been received successfully. This allows the DRAW server to delete the files in the server.</p></td>
-<td><p>api_client.tasks.notify_completed_transfers_task</p></td>
-<td><p>1 hour</p></td>
-</tr>
-<tr class="row-odd"><td><p>Reidentify DICOM</p></td>
-<td><p>Reidentify the DICOM RTSTRUCT files after they have been autosegmented. After that it will move the DICOM RTSTRUCT files to the datastore to the folder where the patient data is stored.</p></td>
-<td><p>api_client.tasks.reidentify_rtstruct</p></td>
-<td><p>10 minutes</p></td>
-</tr>
-<tr class="row-even"><td><p>Export DICOM</p></td>
-<td><p>Export the DICOM files to the datastore.</p></td>
-<td><p>dicom_handler.tasks.export_dicom</p></td>
-<td><p>10 minutes</p></td>
-</tr>
-<tr class="row-odd"><td><p>Clean up files and folders</p></td>
-<td><p>Clean up the files and folders in the datastore.</p></td>
-<td><p>api_client.tasks.clean_up_files_and_folders</p></td>
-<td><p>1 day</p></td>
-</tr>
-</tbody>
-</table>
+<section id="export-dicom-to-the-draw-server">
+<h2>Export DICOM to the DRAW Server<a class="headerlink" href="#export-dicom-to-the-draw-server" title="Link to this heading"></a></h2>
+<section id="purpose">
+<h3>Purpose:<a class="headerlink" href="#purpose" title="Link to this heading"></a></h3>
+<p>This task copies the DICOM files from the datastore to the DRAW server ensuring that each series is copied into its own folder, attaching the autosegmentation template, deidentifying the Data and finally sending the DICOM files to the DRAW server for autosegmentation.</p>
+</section>
+<section id="task-name">
+<h3>Task name:<a class="headerlink" href="#task-name" title="Link to this heading"></a></h3>
+<p>DICOM Export - Pipeline to export DICOM to Remote Server</p>
+</section>
+<section id="suggested-interval">
+<h3>Suggested interval:<a class="headerlink" href="#suggested-interval" title="Link to this heading"></a></h3>
+<p>10 minutes</p>
+</section>
+</section>
+<section id="import-rtstructureset-from-the-draw-server">
+<h2>Import RTStructureSet from the DRAW Server<a class="headerlink" href="#import-rtstructureset-from-the-draw-server" title="Link to this heading"></a></h2>
+<section id="id1">
+<h3>Purpose:<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<p>This task polls the DRAW server to check if there are any pending transfers. If there are, it will copy the DICOM RTSTRUCT files from the DRAW server to the datastore. It will reidentify the DICOM RTSTRUCT files and move it back to the datastore folder from where the DICOM data originated.</p>
+</section>
+<section id="id2">
+<h3>Task name:<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<p>DICOM Import - Pipeline to import RTSTRUCT from remote server</p>
+</section>
+<section id="id3">
+<h3>Suggested interval:<a class="headerlink" href="#id3" title="Link to this heading"></a></h3>
+<p>15 minutes</p>
+</section>
+</section>
+<section id="clean-up-files-and-folders">
+<h2>Clean up files and folders<a class="headerlink" href="#clean-up-files-and-folders" title="Link to this heading"></a></h2>
+<section id="id4">
+<h3>Purpose:<a class="headerlink" href="#id4" title="Link to this heading"></a></h3>
+<p>This task cleans up the files and folders in the datastore.</p>
+</section>
+<section id="id5">
+<h3>Task name:<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<p>api_client.tasks.clean_up_files_and_folders</p>
+</section>
+<section id="id6">
+<h3>Suggested interval:<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<p>1 day</p>
 <p>Note that these recommended intervals are based on the case load at Tata Medical Center. If you are using the DRAW client at a different institution, you may need to adjust the intervals based on the case load at your institution. As a general rule of thumb, these intervals are ok if you have 20 - 25 patients undergoing CT scans per day. If you have a lower case load, then you can increase the intervals for the Notify Server and Poll Server tasks.</p>
+</section>
+</section>
 <section id="how-to-setup-the-periodic-tasks">
 <h2>How to setup the periodic tasks<a class="headerlink" href="#how-to-setup-the-periodic-tasks" title="Link to this heading"></a></h2>
 <p>Go to the DRAW client admin interface and click on the menu item called Scheduled Tasks under the Task Scheduling Section. You can see all the scheduled tasks that are currently configured. Clicking on the circular button with the plus sign will allow you to add a new task.</p>
@@ -154,7 +170,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="get_api_tokens.html" class="btn btn-neutral float-left" title="Get API tokens from the DRAW Server" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="configure_rules.html" class="btn btn-neutral float-left" title="Configure Rules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

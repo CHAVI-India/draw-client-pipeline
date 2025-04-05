@@ -47,9 +47,9 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation the DRAW Client</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore_configuration.html">Configuration of the Datastore path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_api_tokens.html">Get API tokens from the DRAW Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creating_autosegmentation_templates.html">Creating Autosegmentation Templates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configure_rules.html">Configure Rules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="get_api_tokens.html">Get API tokens from the DRAW Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup_periodic_tasks.html">Setup Periodic Tasks</a></li>
 </ul>
 
@@ -79,13 +79,19 @@
              
   <section id="configuration-steps">
 <h1>Configuration Steps<a class="headerlink" href="#configuration-steps" title="Link to this heading"></a></h1>
-<p>Please follow the following steps to configure the DRAW Client to ensure that the DRAW Client works as expected.</p>
+<p>When you first access the DRAW Client on the browser, you will be shown a page like this:</p>
+<a class="reference internal image-reference" href="_images/draw_client_configuration.png"><img alt="DRAW Client Configuration Page" src="_images/draw_client_configuration.png" style="width: 100%;" />
+</a>
+<p>Click on the link titled Log In at the top right corner of the page. You will be redirected to a page where you can log in to the DRAW Client.</p>
+<p>Please follow the following steps to configure the DRAW Client to ensure that the DRAW Client works as expected.  These steps are shown in the Client Configuration section on the sidebar and has a list of tasks that need to be completed.</p>
+<a class="reference internal image-reference" href="_images/draw_client_configuration_page_sidebar.png"><img alt="DRAW Client Configuration Page Sidebar" src="_images/draw_client_configuration_page_sidebar.png" style="width: 100%;" />
+</a>
 <ol class="arabic simple">
-<li><p>Configure the datastore path (See the page <a class="reference internal" href="datastore_configuration.html"><span class="doc">Configuration of the Datastore path</span></a>)</p></li>
-<li><p>Create Autosegmentation Templates (See the page <a class="reference internal" href="creating_autosegmentation_templates.html"><span class="doc">Creating Autosegmentation Templates</span></a>)</p></li>
-<li><p>Configure the rules for determining the Autosegmentation Template to use (See the page <a class="reference internal" href="configure_rules.html"><span class="doc">Configure Rules</span></a>)</p></li>
-<li><p>Get API tokens from the DRAW Server (See the page <a class="reference internal" href="get_api_tokens.html"><span class="doc">Get API tokens from the DRAW Server</span></a>)</p></li>
-<li><p>Setup Periodic Tasks (See the page <a class="reference internal" href="setup_periodic_tasks.html"><span class="doc">Setup Periodic Tasks</span></a>)</p></li>
+<li><p><strong>Configure the datastore path</strong> (See the page <a class="reference internal" href="datastore_configuration.html"><span class="doc">Configuration of the Datastore path</span></a>) : The datastore path is the path to the directory where the DRAW Client will read the DICOM data from. It also saves the RTStructureSet files to the directories inside this path. This path may a local folder or a shared network folder that has been mounted /  mapped to the DRAW Client machine.</p></li>
+<li><p><strong>Get API tokens from the DRAW Server</strong> (See the page <a class="reference internal" href="get_api_tokens.html"><span class="doc">Get API tokens from the DRAW Server</span></a>) : The API tokens are used to authenticate the DRAW Client with the DRAW Server. The API tokens are stored in the DRAW Client configuration file. The access token is used to authenticate the DRAW Client with the DRAW Server. The refresh token is used to refresh the access token.</p></li>
+<li><p><strong>Create Autosegmentation Templates</strong> (See the page <a class="reference internal" href="creating_autosegmentation_templates.html"><span class="doc">Creating Autosegmentation Templates</span></a>) : The autosegmentation templates are used to segment the data. These are stored as YAML files in a templates directory.</p></li>
+<li><p><strong>Configure the rulesets</strong> (See the page <a class="reference internal" href="configure_rules.html"><span class="doc">Configure Rules</span></a>) : A ruleset comprises of a set of rules that are used to determine the autosegmentation template to use for a given DICOM data.</p></li>
+<li><p><strong>Schedule Periodic Tasks</strong> (See the page <a class="reference internal" href="setup_periodic_tasks.html"><span class="doc">Setup Periodic Tasks</span></a>) : The periodic tasks are used to schedule the autosegmentation tasks to run periodically.</p></li>
 </ol>
 </section>
 

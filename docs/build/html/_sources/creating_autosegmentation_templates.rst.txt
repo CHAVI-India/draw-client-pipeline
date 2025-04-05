@@ -13,6 +13,11 @@ Before the DRAW client can send any DICOM series for autosegmentation, you need 
    :width: 300
    :align: center
 
+.. image:: images/home_page_link_3.png
+   :alt: Home Page
+   :width: 300
+   :align: center
+
 After clicking this the main page of the DRAW client will open. If you are using the dockerized version of the DRAW client then navigating to the link http://localhost:8001/ will also take you to the main page.
 
 .. image:: images/home_page1.png
@@ -30,7 +35,7 @@ The first step will be to enter the name of the template along with a descriptio
    :width: 800
    :align: center
 
-The next step will be select the structures that you would like to be segmented. Our model repository on the DRAW website is actively linked to this list and your client will reflect all the active models available on the DRAW website. 
+The next step will be select the structures that you would like to be segmented. Our model repository on the DRAW website is actively linked to this list and your client will reflect all the active models available on the DRAW website. Active models are those models that are currently validated and ready for use.
 
 .. image:: images/create_template_step_2.png
    :alt: Create Template Step 2

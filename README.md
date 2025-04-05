@@ -100,7 +100,8 @@ services:
       - app_data:/app
       - ./logs:/app/logs
       - ./static:/app/static
-      - /mnt/share/dicom_processing_test/datastore:/app/datastore # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
+      - ./yaml-templates:/app/yaml-templates
+      - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     command: ["./entrypoint.docker.sh"]
 
   celery:
@@ -111,7 +112,8 @@ services:
       - app_data:/app
       - ./static:/app/static
       - ./logs:/app/logs
-      - /mnt/share/dicom_processing_test/datastore:/app/datastore # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
+      - ./yaml-templates:/app/yaml-templates
+      - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     env_file:
       - .env.docker
     depends_on:
@@ -129,8 +131,9 @@ services:
     volumes:
       - app_data:/app
       - ./static:/app/static
-      - ./logs:/app/logs  
-      - /mnt/share/dicom_processing_test/datastore:/app/datastore # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
+      - ./logs:/app/logs
+      - ./yaml-templates:/app/yaml-templates  
+      - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     env_file:
       - .env.docker
     depends_on:

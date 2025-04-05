@@ -19,7 +19,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Creating Autosegmentation Templates" href="creating_autosegmentation_templates.html" />
+    <link rel="next" title="Get API tokens from the DRAW Server" href="get_api_tokens.html" />
     <link rel="prev" title="Configuration Steps" href="configuration.html" /> 
 </head>
 
@@ -47,9 +47,9 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation the DRAW Client</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Steps</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration of the Datastore path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_api_tokens.html">Get API tokens from the DRAW Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="creating_autosegmentation_templates.html">Creating Autosegmentation Templates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configure_rules.html">Configure Rules</a></li>
-<li class="toctree-l1"><a class="reference internal" href="get_api_tokens.html">Get API tokens from the DRAW Server</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup_periodic_tasks.html">Setup Periodic Tasks</a></li>
 </ul>
 
@@ -79,14 +79,13 @@
              
   <section id="configuration-of-the-datastore-path">
 <h1>Configuration of the Datastore path<a class="headerlink" href="#configuration-of-the-datastore-path" title="Link to this heading"></a></h1>
-<p>The datastore path is the directory from where the DRAW client will import the DICOM files for autosegmentation. This can be a local directory or a network directory accessible by the local machine. The DRAW client is designed to automatically impor the DICOM files from this directory at pre-configured intervals.</p>
+<p>The datastore path is the directory from where the DRAW client will import the DICOM files for autosegmentation. This can be a local directory or a network directory accessible by the local machine. The DRAW client is designed to automatically import the DICOM files from this directory at pre-configured intervals.</p>
+<a class="reference internal image-reference" href="_images/local_data_flow.png"><img alt="Local Data Flow from Datastore to the Client" class="align-center" src="_images/local_data_flow.png" style="width: 100%;" />
+</a>
 <p>Note that if you are running the dockerized version of the DRAW client, leave the default path as is.</p>
 <p>To configure the datastore path, please follow the following steps:</p>
 <p>In the sidebar in the admin panel click on the link called “DICOMPath Configuration”.</p>
 <a class="reference internal image-reference" href="_images/dicom_path_configuration.png"><img alt="DICOM Path Configuration" class="align-center" src="_images/dicom_path_configuration.png" style="width: 300px;" />
-</a>
-<p>This will open a submenu with the link called “DICOM Path”.</p>
-<a class="reference internal image-reference" href="_images/dicom_path_menu.png"><img alt="DICOM Path Submenu" class="align-center" src="_images/dicom_path_menu.png" style="width: 300px;" />
 </a>
 <p>The page that appears will be blank with a button called “Add DICOM Path Configuration”. Alternatively you can click on the circular button with a plus sign at the top right corner of the page.</p>
 <a class="reference internal image-reference" href="_images/datastore_changelist.png"><img alt="Add DICOM Path Configuration" class="align-center" src="_images/datastore_changelist.png" style="width: 800px;" />
@@ -102,6 +101,10 @@
 <p>After you have save the path, you will be bought back to the original page. Here you will see the path you just entered in the list of paths.</p>
 <a class="reference internal image-reference" href="_images/datastore_changelist_edited.png"><img alt="Datastore Path List" class="align-center" src="_images/datastore_changelist_edited.png" style="width: 800px;" />
 </a>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only a single Datastore Path is allowed to be configured. If you need support to configure multiple datastore paths please raise a support ticket.</p>
+</div>
 </section>
 
 
@@ -109,7 +112,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="configuration.html" class="btn btn-neutral float-left" title="Configuration Steps" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="creating_autosegmentation_templates.html" class="btn btn-neutral float-right" title="Creating Autosegmentation Templates" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="get_api_tokens.html" class="btn btn-neutral float-right" title="Get API tokens from the DRAW Server" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

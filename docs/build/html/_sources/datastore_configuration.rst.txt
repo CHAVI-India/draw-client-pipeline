@@ -1,7 +1,12 @@
 Configuration of the Datastore path
 ======================================
 
-The datastore path is the directory from where the DRAW client will import the DICOM files for autosegmentation. This can be a local directory or a network directory accessible by the local machine. The DRAW client is designed to automatically impor the DICOM files from this directory at pre-configured intervals. 
+The datastore path is the directory from where the DRAW client will import the DICOM files for autosegmentation. This can be a local directory or a network directory accessible by the local machine. The DRAW client is designed to automatically import the DICOM files from this directory at pre-configured intervals. 
+
+.. image:: images/local_data_flow.png
+   :alt: Local Data Flow from Datastore to the Client
+   :width: 100%
+   :align: center
 
 Note that if you are running the dockerized version of the DRAW client, leave the default path as is. 
 
@@ -14,12 +19,7 @@ In the sidebar in the admin panel click on the link called "DICOMPath Configurat
    :width: 300
    :align: center
 
-This will open a submenu with the link called "DICOM Path".
 
-.. image:: images/dicom_path_menu.png
-   :alt: DICOM Path Submenu
-   :width: 300
-   :align: center
 
 The page that appears will be blank with a button called "Add DICOM Path Configuration". Alternatively you can click on the circular button with a plus sign at the top right corner of the page.
 
@@ -36,6 +36,7 @@ After this in the page that appears you will see at text box which allows you en
    :align: center
 
 
+
 .. warning::
 
    If you are running the dockerized version of the DRAW client, **do not** change the path. If you are using the alternative installation method, you can change the path to the directory where the DICOM files need to be imported from.
@@ -49,3 +50,8 @@ After you have save the path, you will be bought back to the original page. Here
    :alt: Datastore Path List
    :width: 800
    :align: center
+
+.. note::
+
+   Only a single Datastore Path is allowed to be configured. If you need support to configure multiple datastore paths please raise a support ticket.
+
