@@ -19,8 +19,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Setup Periodic Tasks" href="setup_periodic_tasks.html" />
-    <link rel="prev" title="Configure Rules" href="configure_rules.html" /> 
+    <link rel="next" title="Creating Autosegmentation Templates" href="creating_autosegmentation_templates.html" />
+    <link rel="prev" title="Configuration of the Datastore path" href="datastore_configuration.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -47,13 +47,13 @@
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation the DRAW Client</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Steps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="datastore_configuration.html">Configuration of the Datastore path</a></li>
-<li class="toctree-l1"><a class="reference internal" href="creating_autosegmentation_templates.html">Creating Autosegmentation Templates</a></li>
-<li class="toctree-l1"><a class="reference internal" href="configure_rules.html">Configure Rules</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Get API tokens from the DRAW Server</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#obtain-api-keys">Obtain API Keys</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#api-settings-in-the-client">API settings in the Client</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="creating_autosegmentation_templates.html">Creating Autosegmentation Templates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configure_rules.html">Configure Rules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup_periodic_tasks.html">Setup Periodic Tasks</a></li>
 </ul>
 
@@ -119,18 +119,21 @@ There are two tokens:</p>
 As usual clicking on the circular button with a plus sign will open a window where you can add the API setting.</p>
 <a class="reference internal image-reference" href="_images/client_settings1.png"><img alt="Client Settings 1" class="align-center" src="_images/client_settings1.png" style="width: 800px;" />
 </a>
+<p>In the new page you will have to add the API base URL as follows:</p>
+<a class="reference internal image-reference" href="_images/client_settings1_1.png"><img alt="Client Settings 2" class="align-center" src="_images/client_settings1_1.png" style="width: 800px;" />
+</a>
 <p>Please enter the API Base URL as <a class="reference external" href="https://draw.chavi.ai/">https://draw.chavi.ai/</a> (the trailing slash is important)</p>
 <p>The client ID is the name of client that you created in the previous steps at the DRAW server. Usually this will be the institute name.</p>
 <p>Leave the max retries field as 3.</p>
 <p>Next you need to enter the API endpoints. The default values provided should not be changed unless you have been instructed to do so by the DRAW team.</p>
 <a class="reference internal image-reference" href="_images/client_settings2.png"><img alt="Client Settings 2" class="align-center" src="_images/client_settings2.png" style="width: 800px;" />
 </a>
-<p>Finally the tokens have to be entered.</p>
+<p>Finally the tokens have to be entered into the resepctive fields.</p>
 <a class="reference internal image-reference" href="_images/client_settings3.png"><img alt="Client Settings 3" class="align-center" src="_images/client_settings3.png" style="width: 800px;" />
 </a>
 <p>Please remember to enter the <strong>Access Token</strong> created in the previous steps in the field called <strong>“Bearer Token”</strong>.</p>
 <p>Please remember to enter the <strong>Refresh Token</strong> in the field called <strong>“Refresh Token”</strong>.</p>
-<p>It is important that you enter the tokens in the correct fields.</p>
+<p>It is important that you enter the tokens in the <strong>correct</strong> fields.</p>
 <p>The token expiry date will be as shown in the admin interface of the DRAW server which is shown after you have saved the client there. Please enter this value.</p>
 <p>After that click the Save button to complete the process.</p>
 </section>
@@ -140,8 +143,8 @@ As usual clicking on the circular button with a plus sign will open a window whe
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="configure_rules.html" class="btn btn-neutral float-left" title="Configure Rules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="setup_periodic_tasks.html" class="btn btn-neutral float-right" title="Setup Periodic Tasks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="datastore_configuration.html" class="btn btn-neutral float-left" title="Configuration of the Datastore path" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="creating_autosegmentation_templates.html" class="btn btn-neutral float-right" title="Creating Autosegmentation Templates" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

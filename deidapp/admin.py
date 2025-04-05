@@ -8,20 +8,20 @@ from unfold.decorators import action
 
 @admin.register(Patient)
 class PatientAdmin(ModelAdmin):
-    list_filter = ('patient_id','deidentified_patient_id','patient_name','deidentified_patient_name','patient_birth_date','deidentified_patient_birth_date')
-    list_display = ('patient_id','deidentified_patient_id','patient_name','deidentified_patient_name','patient_birth_date','deidentified_patient_birth_date')
+    list_filter = ('patient_id','deidentified_patient_id','patient_name','deidentified_patient_name','patient_birth_date','deidentified_patient_birth_date','created_at','updated_at')
+    list_display = ('patient_id','deidentified_patient_id','patient_name','deidentified_patient_name','patient_birth_date','deidentified_patient_birth_date','created_at','updated_at')
     readonly_fields = [field.name for field in Patient._meta.fields]
 
 @admin.register(DicomStudy)
 class DicomStudyAdmin(ModelAdmin):
-    list_filter = ('patient_id','study_instance_uid','deidentified_study_instance_uid','study_date','deidentified_study_date','study_description')
-    list_display = ('patient_id','study_instance_uid','deidentified_study_instance_uid','study_date','deidentified_study_date','study_description')
+    list_filter = ('patient_id','study_instance_uid','deidentified_study_instance_uid','study_date','deidentified_study_date','study_description','created_at','updated_at')
+    list_display = ('patient_id','study_instance_uid','deidentified_study_instance_uid','study_date','deidentified_study_date','study_description','created_at','updated_at')
     readonly_fields = [field.name for field in DicomStudy._meta.fields]
 
 @admin.register(DicomSeries)
 class DicomSeriesAdmin(ModelAdmin):
     list_filter = ('study__patient_id','series_date','created_at','updated_at')
-    list_display = ('series_instance_uid','study__patient_id','deidentified_series_instance_uid','series_date','deidentified_series_date','frame_of_reference_uid','deidentified_frame_of_reference_uid')
+    list_display = ('series_instance_uid','study__patient_id','deidentified_series_instance_uid','task_id','dicom_series_processing_id','series_date','deidentified_series_date','frame_of_reference_uid','deidentified_frame_of_reference_uid')
     readonly_fields = [field.name for field in DicomSeries._meta.fields]
 
 @admin.register(DicomInstance)

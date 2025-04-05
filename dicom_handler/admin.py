@@ -5,10 +5,10 @@ import logging
 from django.contrib import admin
 from django.contrib import messages
 from dicom_handler.models import *
-from dicom_handler.dicomutils.unprocesstoprocessing import move_folder_with_yaml_check
-from dicom_handler.dicomutils.dicomseriesprocessing import read_dicom_metadata, dicom_series_separation
-from dicom_handler.dicomutils.manual_dicom_zip_processing import send_to_autosegmentation
-from dicom_handler.dicomutils.move_from_unprocessed_to_processing import move_from_unprocessed_to_processing
+# from dicom_handler.dicomutils.unprocesstoprocessing import move_folder_with_yaml_check
+# from dicom_handler.dicomutils.dicomseriesprocessing import read_dicom_metadata, dicom_series_separation
+# from dicom_handler.dicomutils.manual_dicom_zip_processing import send_to_autosegmentation
+# from dicom_handler.dicomutils.move_from_unprocessed_to_processing import move_from_unprocessed_to_processing
 from django.conf import settings
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -91,17 +91,17 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
 class GroupAdmin(BaseGroupAdmin, ModelAdmin):
     pass
 
-@admin.register(DicomSeriesProcessing)
-class DicomSeriesProcessingAdmin(ModelAdmin):
-    list_display = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
-    search_fields = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
-    list_filter = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
+# @admin.register(DicomSeriesProcessing)
+# class DicomSeriesProcessingAdmin(ModelAdmin):
+#     list_display = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
+#     search_fields = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
+#     list_filter = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
 
-    def get_readonly_fields(self, request, obj=None):
-        # Make all fields readonly
-        if obj:  # Only apply when editing an existing object
-            return [f.name for f in self.model._meta.fields]
-        return []
+#     def get_readonly_fields(self, request, obj=None):
+#         # Make all fields readonly
+#         if obj:  # Only apply when editing an existing object
+#             return [f.name for f in self.model._meta.fields]
+#         return []
 
 @admin.register(DicomPathConfig)
 class DicomPathConfigAdmin(ModelAdmin):
@@ -222,104 +222,104 @@ def get_dicom_path_config():
 
 
 # dicom unprocess admin
-class UnprocessedAdmin(ModelAdmin):
-    list_display = (
-        'patientid', 
-        'patientname',
-        'gender',
-        'yaml_attached',
-        'ready_for_deidentification',
-        'studydate',
-        'modality',
-        'protocol',
-        'description'
-    )
+# class UnprocessedAdmin(ModelAdmin):
+#     list_display = (
+#         'patientid', 
+#         'patientname',
+#         'gender',
+#         'yaml_attached',
+#         'ready_for_deidentification',
+#         'studydate',
+#         'modality',
+#         'protocol',
+#         'description'
+#     )
 
-    readonly_fields = ['patientid', 
-        'patientname',
-        'gender',
-        'studyid',
-        'seriesid', 
-        'studydate',
-        'modality',
-        'protocol',
-        'description',
-        'processing_start',
-        'processing_end',
-        'dicomcount',
-        'ready_for_deidentification',
-        'unprocessed',
-        'series_folder_location']
+#     readonly_fields = ['patientid', 
+#         'patientname',
+#         'gender',
+#         'studyid',
+#         'seriesid', 
+#         'studydate',
+#         'modality',
+#         'protocol',
+#         'description',
+#         'processing_start',
+#         'processing_end',
+#         'dicomcount',
+#         'ready_for_deidentification',
+#         'unprocessed',
+#         'series_folder_location']
     
-    list_editable = ['yaml_attached',]
-    list_filter = ('unprocessed', 'ready_for_deidentification','modality','protocol','studydate')
-    search_fields = ('patientid',)
-    actions = [move_from_unprocessed_to_processing]
-    list_per_page = 10
+#     list_editable = ['yaml_attached',]
+#     list_filter = ('unprocessed', 'ready_for_deidentification','modality','protocol','studydate')
+#     search_fields = ('patientid',)
+#     actions = [move_from_unprocessed_to_processing]
+#     list_per_page = 10
 
-    # def get_queryset(self, request):
-    #     return super().get_queryset(request).filter(unprocessed=True)
+#     # def get_queryset(self, request):
+#     #     return super().get_queryset(request).filter(unprocessed=True)
 
-admin.site.register(DicomUnprocessed, UnprocessedAdmin)
+# admin.site.register(DicomUnprocessed, UnprocessedAdmin)
 
 
 
 # dicom processed admin
-class ProcessingStatusAdmin(ModelAdmin):
-    list_display = (
-        'patient_id',
-        'patient_name',
-        'patient_gender',
-        'patient_modality',
-        'patient_protocol',
-        'patient_description',
-        'status',
-        'dicom_move_folder_status',
-        'created_at',
-    )
-    list_filter = (
-        'dicom_move_folder_status',
-        'yaml_attach_status', 
-        'patient_id__modality',
-        'patient_id__studydate',
-        'created_at'
-    )
-    search_fields = (
-        'patient_id__patientid', 
-        'patient_id__patientname',
-        'patient_id__protocol',
-        'patient_id__description',
-    )
-    list_select_related = ('patient_id',)
-    list_per_page = 10
-    search_help_text = "Search by patient ID, patient name, protocol, or description"
-    def get_readonly_fields(self, request, obj=None):
-        # Make all fields readonly
-        if obj:  # Only apply when editing an existing object
-            return [f.name for f in self.model._meta.fields]
-        return []
+# class ProcessingStatusAdmin(ModelAdmin):
+#     list_display = (
+#         'patient_id',
+#         'patient_name',
+#         'patient_gender',
+#         'patient_modality',
+#         'patient_protocol',
+#         'patient_description',
+#         'status',
+#         'dicom_move_folder_status',
+#         'created_at',
+#     )
+#     list_filter = (
+#         'dicom_move_folder_status',
+#         'yaml_attach_status', 
+#         'patient_id__modality',
+#         'patient_id__studydate',
+#         'created_at'
+#     )
+#     search_fields = (
+#         'patient_id__patientid', 
+#         'patient_id__patientname',
+#         'patient_id__protocol',
+#         'patient_id__description',
+#     )
+#     list_select_related = ('patient_id',)
+#     list_per_page = 10
+#     search_help_text = "Search by patient ID, patient name, protocol, or description"
+#     def get_readonly_fields(self, request, obj=None):
+#         # Make all fields readonly
+#         if obj:  # Only apply when editing an existing object
+#             return [f.name for f in self.model._meta.fields]
+#         return []
 
-    @admin.display(description='Patient Name')
-    def patient_name(self, obj):
-        return obj.patient_id.patientname
+#     @admin.display(description='Patient Name')
+#     def patient_name(self, obj):
+#         return obj.patient_id.patientname
     
-    @admin.display(description='Gender')
-    def patient_gender(self, obj):
-        return obj.patient_id.gender
+#     @admin.display(description='Gender')
+#     def patient_gender(self, obj):
+#         return obj.patient_id.gender
 
-    @admin.display(description='Modality')
-    def patient_modality(self, obj):
-        return obj.patient_id.modality
+#     @admin.display(description='Modality')
+#     def patient_modality(self, obj):
+#         return obj.patient_id.modality
 
-    @admin.display(description='Protocol')
-    def patient_protocol(self, obj):
-        return obj.patient_id.protocol
+#     @admin.display(description='Protocol')
+#     def patient_protocol(self, obj):
+#         return obj.patient_id.protocol
 
-    @admin.display(description='Description')
-    def patient_description(self, obj):
-        return obj.patient_id.description
+#     @admin.display(description='Description')
+#     def patient_description(self, obj):
+#         return obj.patient_id.description
 
-admin.site.register(ProcessingStatus, ProcessingStatusAdmin)
+# admin.site.register(ProcessingStatus, ProcessingStatusAdmin)
 
 
 class ModelYamlInfoAdmin(ModelAdmin):
@@ -347,47 +347,47 @@ admin.site.register(ModelYamlInfo, ModelYamlInfoAdmin)
 
 
 
-class uploadDicomAdmin(ModelAdmin):
-    list_display = (
-        'id', 
-        'dicom_file',
-        'send_to_autosegmentation',
-        'created_at',
-        'modified_at'
-    )
+# class uploadDicomAdmin(ModelAdmin):
+#     list_display = (
+#         'id', 
+#         'dicom_file',
+#         'send_to_autosegmentation',
+#         'created_at',
+#         'modified_at'
+#     )
 
-    list_filter = ('send_to_autosegmentation','created_at',)
-    exclude = ('send_to_autosegmentation',)
-    search_fields = ('dicom_file',)
-    actions = [send_to_autosegmentation]
-    list_per_page = 10
+#     list_filter = ('send_to_autosegmentation','created_at',)
+#     exclude = ('send_to_autosegmentation',)
+#     search_fields = ('dicom_file',)
+#     actions = [send_to_autosegmentation]
+#     list_per_page = 10
 
-admin.site.register(uploadDicom, uploadDicomAdmin)
+# admin.site.register(uploadDicom, uploadDicomAdmin)
 
-class CopyDicomAdmin(ModelAdmin):
-    list_display = (
-        "sourcedirname",
-        "destinationdirname",
-        "dirsize",
-        "processing_status",
-        "dirmodifieddate",
-        "dircreateddate",
-        "copydate",
-    )
-    list_per_page = 14
-    search_fields = ('sourcedirname', 'destinationdirname')
-    list_filter = ('copydate',
-                   'dirmodifieddate',
-                   'dircreateddate',
-                   'processing_status',
-                   )
-    def get_readonly_fields(self, request, obj=None):
-        # Make all fields readonly
-        if obj:  # Only apply when editing an existing object
-            return [f.name for f in self.model._meta.fields]
-        return []
+# class CopyDicomAdmin(ModelAdmin):
+#     list_display = (
+#         "sourcedirname",
+#         "destinationdirname",
+#         "dirsize",
+#         "processing_status",
+#         "dirmodifieddate",
+#         "dircreateddate",
+#         "copydate",
+#     )
+#     list_per_page = 14
+#     search_fields = ('sourcedirname', 'destinationdirname')
+#     list_filter = ('copydate',
+#                    'dirmodifieddate',
+#                    'dircreateddate',
+#                    'processing_status',
+#                    )
+#     def get_readonly_fields(self, request, obj=None):
+#         # Make all fields readonly
+#         if obj:  # Only apply when editing an existing object
+#             return [f.name for f in self.model._meta.fields]
+#         return []
 
-admin.site.register(CopyDicom, CopyDicomAdmin)
+# admin.site.register(CopyDicom, CopyDicomAdmin)
 
 # Rule admin
 class RuleAdmin(ModelAdmin):

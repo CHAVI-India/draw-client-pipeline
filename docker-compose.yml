@@ -32,9 +32,11 @@ services:
     env_file:
       - .env.docker      
     volumes:
+      - app_data:/app
       - ./logs:/app/logs
       - ./static:/app/static
-      - /mnt/share/dicom_processing_test/datastore:/app/datastore # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
+      - ./yaml-templates:/app/yaml-templates
+      - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     command: ["./entrypoint.docker.sh"]
 
   celery:
@@ -42,8 +44,11 @@ services:
     container_name: celery-docker
     command: ["./entrypoint.docker.sh", "celery"]
     volumes:
+      - app_data:/app
       - ./static:/app/static
       - ./logs:/app/logs
+      - ./yaml-templates:/app/yaml-templates
+      - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     env_file:
       - .env.docker
     depends_on:
@@ -59,8 +64,11 @@ services:
     container_name: celery-beat-docker
     command: ["./entrypoint.docker.sh", "celery-beat"]
     volumes:
+      - app_data:/app
       - ./static:/app/static
-      - ./logs:/app/logs
+      - ./logs:/app/logs     
+      - ./yaml-templates:/app/yaml-templates
+      - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     env_file:
       - .env.docker
     depends_on:
@@ -83,3 +91,4 @@ services:
       - django-web
 volumes:
   postgres_data:
+  app_data:

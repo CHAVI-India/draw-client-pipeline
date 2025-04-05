@@ -12,6 +12,7 @@ from dicom_handler.dicomutils.create_yml import *
 from django.urls import reverse
 from dicom_handler.models import *
 from .dicomutils.dicomseriesprocessing import *
+from dicomapp.models import *
 from django.views.decorators.csrf import csrf_protect
 from collections import defaultdict
 from api_client.models import *
@@ -28,30 +29,30 @@ def index(request):
         'total_templates': ModelYamlInfo.objects.count(),
 
         # Today's Segmented
-        'todays_series_segmented': ProcessingStatus.objects.filter(
+        'todays_series_segmented': DicomSeriesProcessingModel.objects.filter(
             created_at__date=timezone.now().date(),
-            dicom_move_folder_status='Moved to DataStore'
+            processing_status='RTSTRUCT_EXPORTED'
         ).count(),
 
         # Today's Unprocessed
-        'todays_unprocessed_series': ProcessingStatus.objects.filter(
+        'todays_unprocessed_series': DicomSeriesProcessingModel.objects.filter(
             created_at__date=timezone.now().date(),
-            dicom_move_folder_status='Move to Unprocessed Folder'
+            series_state='UNPROCESSED'
         ).count(),
         
         # series_with_error
-        'series_with_error': DicomTransfer.objects.filter(
-            server_status='ERROR'
+        'series_with_error': DicomSeriesProcessingModel.objects.filter(
+            processing_status='ERROR'
         ).count(),
 
         # total_series_segmented
-        'total_series_segmented': ProcessingStatus.objects.filter(
-            dicom_move_folder_status='Moved to DataStore'
+        'total_series_segmented': DicomSeriesProcessingModel.objects.filter(
+            processing_status='RTSTRUCT_EXPORTED'
         ).count(),
         
         # total_series_unprocessed
-        'total_series_unprocessed': ProcessingStatus.objects.filter(
-            dicom_move_folder_status='Move to Unprocessed Folder'
+        'total_series_unprocessed': DicomSeriesProcessingModel.objects.filter(
+            series_state='UNPROCESSED'
         ).count(),
         
         # # Recent Activities

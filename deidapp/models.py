@@ -27,6 +27,8 @@ class DicomStudy(models.Model):
 class DicomSeries(models.Model):
     series_instance_uid = models.CharField(max_length=100,primary_key=True)
     study = models.ForeignKey(DicomStudy,on_delete=models.CASCADE)
+    task_id = models.CharField(max_length=100,null=True,blank=True)
+    dicom_series_processing_id = models.CharField(max_length=100,null=True,blank=True)
     deidentified_series_instance_uid = models.CharField(max_length=100,null=True,blank=True)
     series_date = models.DateField(null=True,blank=True)
     deidentified_series_date = models.DateField(null=True,blank=True)

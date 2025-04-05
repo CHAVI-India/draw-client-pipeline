@@ -1,38 +1,57 @@
 Setup Periodic Tasks
 =====================
 
-The periodic tasks are used to schedule the tasks to be executed at specified intervals. The periodic tasks are defined in the DRAW client admin interface.
+The periodic tasks are used to schedule the tasks to be executed at specified intervals. The periodic tasks are defined in the DRAW client admin interface. 
+The suggested tasks in the table below provide a convinient way to setup the periodic tasks quickly.
 
 The following periodic tasks need to be setup:
 
-.. list-table:: Periodic Tasks
-   :widths: 10 60 20 10
-   :header-rows: 1
+Export DICOM to the DRAW Server
+--------------------------------
 
-   * - Task Name
-     - Description
-     - Task ID
-     - Recommended Interval
+Purpose:
+^^^^^^^^^^
+This task copies the DICOM files from the datastore to the DRAW server ensuring that each series is copied into its own folder, attaching the autosegmentation template, deidentifying the Data and finally sending the DICOM files to the DRAW server for autosegmentation.
 
-   * - Copy DICOM
-     - This task copies the DICOM files from the datastore to the DRAW server after proper processing, attaching the autosegmentation template, deidentifying the Data and finally sending the DICOM files to the DRAW server for autosegmentation.
-     - dicom_handler.tasks.copy_dicom
-     - 10 minutes
+Task name:
+^^^^^^^^^^^^
+DICOM Export - Pipeline to export DICOM to Remote Server
 
-   * - Poll Server
-     - This task polls the DRAW server to check if there are any pending transfers. If there are, it will copy the DICOM RTSTRUCT files from the DRAW server to the datastore.
-     - api_client.tasks.poll_pending_transfes_task
-     - 15 minutes
+Suggested interval:
+^^^^^^^^^^^^^^^^^^^
+10 minutes
 
-   * - Notify Server
-     - Notify the DRAW server that the RTSTRUCT files have been received successfully. This allows the DRAW server to delete the files in the server.
-     - api_client.tasks.notify_completed_transfers_task
-     - 1 hour
+Import RTStructureSet from the DRAW Server
+------------------------------------------
 
-   * - Reidentify DICOM
-     - Reidentify the DICOM RTSTRUCT files after they have been autosegmented. After that it will move the DICOM RTSTRUCT files to the datastore to the folder where the patient data is stored.
-     - api_client.tasks.reidentify_rtstruct
-     - 10 minutes
+Purpose:
+^^^^^^^^^^
+This task polls the DRAW server to check if there are any pending transfers. If there are, it will copy the DICOM RTSTRUCT files from the DRAW server to the datastore. It will reidentify the DICOM RTSTRUCT files and move it back to the datastore folder from where the DICOM data originated.
+
+Task name:
+^^^^^^^^^^^^
+DICOM Import - Pipeline to import RTSTRUCT from remote server
+
+Suggested interval: 
+^^^^^^^^^^^^^^^^^^^
+15 minutes
+
+Clean up files and folders
+--------------------------
+
+Purpose:
+^^^^^^^^^^
+This task cleans up the files and folders in the datastore.
+
+Task name:
+^^^^^^^^^^^^
+api_client.tasks.clean_up_files_and_folders
+
+Suggested interval:  
+^^^^^^^^^^^^^^^^^^^
+1 day
+
+
 
 Note that these recommended intervals are based on the case load at Tata Medical Center. If you are using the DRAW client at a different institution, you may need to adjust the intervals based on the case load at your institution. As a general rule of thumb, these intervals are ok if you have 20 - 25 patients undergoing CT scans per day. If you have a lower case load, then you can increase the intervals for the Notify Server and Poll Server tasks.
 

@@ -63,7 +63,7 @@ Please play close attention to the name of the file called .env.docker. The dot 
 
 
 
-This folder path needs to be configured properly in the docker-compose.yml file. (please see the commented line under the volumes section of the service called 'django-web'). If it is a remote folder it is important that this folder is shared as a network drive to the local machine. 
+This folder path needs to be configured properly in the docker-compose.yml file. (please see the commented lines under the volumes section of the service called 'django-web'). If it is a remote folder it is important that this folder is shared as a network drive to the local machine. 
 
 Additionaly, we recommend that you choose a strong password for the postgres database.
 
@@ -75,6 +75,9 @@ The docker-compose.yml file
 .. literalinclude:: ../../docker-compose.yml
   :language: yaml
 
+
+.. note::
+   There are 3 places in the docker-compose.yml file where the datastore path needs to be configured. Please make sure that you update all of them.
 
 
 The .env.docker file

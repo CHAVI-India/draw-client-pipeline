@@ -3,7 +3,7 @@ import requests
 import os
 from django.utils import timezone
 from pathlib import Path
-from ..models import DicomTransfer, SystemSettings
+from api_client.models import DicomTransfer, SystemSettings
 from django.conf import settings
 
 logger = logging.getLogger('api_client')

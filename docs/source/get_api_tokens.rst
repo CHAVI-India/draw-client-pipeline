@@ -58,6 +58,15 @@ As usual clicking on the circular button with a plus sign will open a window whe
    :width: 800
    :align: center
 
+In the new page you will have to add the API base URL as follows:
+
+.. image:: images/client_settings1_1.png
+   :alt: Client Settings 2
+   :width: 800
+   :align: center
+
+
+
 Please enter the API Base URL as https://draw.chavi.ai/ (the trailing slash is important)
 
 The client ID is the name of client that you created in the previous steps at the DRAW server. Usually this will be the institute name.
@@ -71,7 +80,7 @@ Next you need to enter the API endpoints. The default values provided should not
    :width: 800
    :align: center
 
-Finally the tokens have to be entered. 
+Finally the tokens have to be entered into the resepctive fields.
 
 .. image:: images/client_settings3.png
    :alt: Client Settings 3
@@ -83,7 +92,7 @@ Please remember to enter the **Access Token** created in the previous steps in t
 
 Please remember to enter the **Refresh Token** in the field called **"Refresh Token"**.
 
-It is important that you enter the tokens in the correct fields.
+It is important that you enter the tokens in the **correct** fields.
 
 The token expiry date will be as shown in the admin interface of the DRAW server which is shown after you have saved the client there. Please enter this value.
 

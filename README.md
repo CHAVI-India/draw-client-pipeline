@@ -97,9 +97,11 @@ services:
     env_file:
       - .env.docker      
     volumes:
+      - app_data:/app
       - ./logs:/app/logs
       - ./static:/app/static
-      - /path/to/your/datastore:/app/datastore  # Modify this to match your datastore path
+      - ./yaml-templates:/app/yaml-templates
+      - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     command: ["./entrypoint.docker.sh"]
 
   celery:
@@ -107,8 +109,11 @@ services:
     container_name: celery-docker
     command: ["./entrypoint.docker.sh", "celery"]
     volumes:
+      - app_data:/app
       - ./static:/app/static
       - ./logs:/app/logs
+      - ./yaml-templates:/app/yaml-templates
+      - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     env_file:
       - .env.docker
     depends_on:
@@ -124,8 +129,11 @@ services:
     container_name: celery-beat-docker
     command: ["./entrypoint.docker.sh", "celery-beat"]
     volumes:
+      - app_data:/app
       - ./static:/app/static
       - ./logs:/app/logs
+      - ./yaml-templates:/app/yaml-templates  
+      - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     env_file:
       - .env.docker
     depends_on:
@@ -145,13 +153,14 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./static:/static:ro
     depends_on:
-      django-web:
-        condition: service_started
+      - django-web
 volumes:
   postgres_data:
+  app_data:
 ```
 
 3. Create a .env.docker file in the same directory. Please make sure that the file name is correct and note the presence of the . before the name which indicates that this is a hidden file.:
+
 ```
 # Django Security
 SECRET_KEY=your_secret_key_here
@@ -200,6 +209,7 @@ http {
        sendfile on;
        keepalive_timeout 65;
        listen 80;
+       client_max_body_size 1024M; # Add this line to increase the maximum upload size to 1024MB
 
        # Requests to /static/ are served directly from the /static/ directory
        location /static/ {

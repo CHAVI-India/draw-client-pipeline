@@ -62,21 +62,14 @@ INSTALLED_APPS = [
     'celery',       
     'django_celery_results',
     'django_celery_beat',
-    # Your apps
-    'django_apscheduler',
-    'solo',
-    'allauth_ui',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    'widget_tweaks',
-    'slippers',
     'dicom_handler',
     'docs',
-    # 'log_viewer',
-    'django_log_lens',
     'api_client',
     'deidapp',
+    'dicomapp',
 ]
 
 
@@ -211,16 +204,6 @@ LOGIN_URL = '/accounts/login/'
 LOGOUT_REDIRECT_URL = '/'
 
 
-
-# ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-# ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = None
-
-
-#Grappelli Dashboard
-
-# GRAPPELLI_INDEX_DASHBOARD = 'draw_client.dashboard.CustomIndexDashboard'
-# GRAPPELLI_ADMIN_TITLE = "DRAW-CLIENT"
-# Unfold Settings
 UNFOLD = {
     "SITE_HEADER": "DRAW CLIENT",
     "SITE_TITLE": "DRAW CLIENT",
@@ -235,7 +218,7 @@ UNFOLD = {
         },
         {
             'icon': 'home',
-            'title': _("View Site"),
+            'title': _("Frontpage"),
             'link': "/",
             'target': '_blank',
         },
@@ -272,70 +255,38 @@ UNFOLD = {
         "show_all_applications": False,  # Dropdown with all applications and models
         "navigation": [
             {
-                "title": _("DICOMPath Configuration"),
+                "title": _("Client Configuration"),
                 "separator": False,  # Top border
-                "collapsible": True,  # Collapsible group of links
+                "collapsible": True,  # Collapsible group of links#
                 "items": [
                     {
-                        "title": _("DICOM Path"),
+                        "title": _("1. Set Datastore Path"),
                         "icon": "folder_special",
                         "link": reverse_lazy("admin:dicom_handler_dicompathconfig_changelist"),
-                    },                               
-                ],
-            },
-
-            {
-                "title": _("Autsegmentation Templates"),
-                "separator": True,
-                "collapsible": True,
-                "items": [
+                    }, 
                     {
-                        "title": _("Autosegmentation Templates"),
+                        "title": _("2. Configure API Settings"),
+                        "icon": "settings",
+                        "link": reverse_lazy("admin:api_client_systemsettings_changelist"),
+                    },
+                    {
+                        "title": _("3. Create Autosegmentation Templates"),
                         "icon": "draw",
-                        "link": reverse_lazy("admin:dicom_handler_modelyamlinfo_changelist"),
-                    },
-                ],
-            },
-            {
-                "title": _("Template Rulesets"),
-                "separator": True,
-                "collapsible": True,
-                "items": [
+                        "link": '/check-template/',
+                    },                    
                     {
-                        "title": _("DICOM Tags"),
-                        "icon": "tag",
-                        "link": reverse_lazy("admin:dicom_handler_tagname_changelist"),
-                    },
-                     {
-                        "title": _("Rule Sets"),
+                        "title": _("4. Create Rule Sets"),
                         "icon": "rule",
                         "link": reverse_lazy("admin:dicom_handler_ruleset_changelist"),
-                    },
-                    #  {
-                    #     "title": _("Rules"),
-                    #     "icon": "rule_folder",
-                    #     "link": reverse_lazy("admin:dicom_handler_rule_changelist"),
-                    # },
-                ],
-            },
-
-            {
-                "title": _("Task Scheduling"),
-                "separator": True,
-                "collapsible": True,
-                "items": [
+                    },      
                     {
-                        "title": _("Celery Tasks Status"),
+                        "title": _("5. Schedule Tasks"),
                         "icon": "schedule",
-                        "link": reverse_lazy("admin:django_celery_results_taskresult_changelist"),
-                    },
-                    {
-                        "title": _("Scheduled Tasks"),
-                        "icon": "calendar_today",
                         "link": reverse_lazy("admin:django_celery_beat_periodictask_changelist"),
                     },
                 ],
             },
+
 
             {
                 "title": _("DICOM Processing"),
@@ -343,68 +294,30 @@ UNFOLD = {
                 "collapsible": True,
                 "items": [
                     {
-                        "title": _("Copied DICOM Data"),
+                        "title": _("Dicom Data copied from Datastore"),
                         "icon": "folder",
-                        "link": reverse_lazy("admin:dicom_handler_copydicom_changelist"),
+                        "link": reverse_lazy("admin:dicomapp_copydicomtaskmodel_changelist"),
                     },
                     {
                         "title": _("Dicom Series for Processing"),
                         "icon": "folder",
-                        "link": reverse_lazy("admin:dicom_handler_dicomseriesprocessing_changelist"),
+                        "link": reverse_lazy("admin:dicomapp_dicomseriesprocessingmodel_changelist"),
                     },
                     {
-                        "title": _("Processing Status"),
+                        "title": _("Processing Logs"),
                         "icon": "task_alt",
-                        "link": reverse_lazy("admin:dicom_handler_processingstatus_changelist"),
+                        "link": reverse_lazy("admin:dicomapp_dicomseriesprocessinglogmodel_changelist"),
                     },
                     {
-                        "title": _("Send to Processing"),
-                        "icon": "pending",
-                        "link": reverse_lazy("admin:dicom_handler_dicomunprocessed_changelist"),
-                    }                    
-                ],
-            },
-
-            {
-                "title": _("Upload DICOM File Manually"),
-                "separator": True,
-                "collapsible": True,
-                "items": [
-                    {
-                        "title": _("Upload zip"),
+                        "title": _("Upload DICOM Zip Files"),
                         "icon": "upload",
-                        "link": reverse_lazy("admin:dicom_handler_uploaddicom_changelist"),
-                    }
-                    
+                        "link": reverse_lazy("admin:dicomapp_dicomfileuploadmodel_changelist"),
+                    },                                         
                 ],
             },
 
             {
-                "title": _("API Settings and Transfers"),
-                "separator": True,
-                "collapsible": True,
-                "items": [
-                    {
-                        "title": _("Client Settings"),
-                        "icon": "settings",
-                        "link": reverse_lazy("admin:api_client_systemsettings_changelist"),
-                    },
-                    # {
-                    #     "title": _("Processing Folder Paths"),
-                    #     "icon": "folder",
-                    #     "link": reverse_lazy("admin:api_client_folderpaths_changelist"),
-                    # },
-                    {
-                        "title": _("DICOM Processing Status"),
-                        "icon": "cycle",
-                        "link": reverse_lazy("admin:api_client_dicomtransfer_changelist"),
-                    },                    
-                    
-                ],
-            },
-
-            {
-                'title': 'Deidentification Application',
+                'title': 'Deidentification Overview',
                 'separator': True,
                 'collapsible': True,
                 'items': [
@@ -436,7 +349,48 @@ UNFOLD = {
                     
                 ],    
                                
+            },                        
+            {
+                "title": _("Remote Transfers"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("API Data Processing Status"),
+                        "icon": "cycle",
+                        "link": reverse_lazy("admin:api_client_dicomtransfer_changelist"),
+                    },                    
+                    
+                ],
             },
+            {
+                "title": _("Autsegmentation Templates"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("View Autosegmentation Templates"),
+                        "icon": "draw",
+                        "link": reverse_lazy("admin:dicom_handler_modelyamlinfo_changelist"),
+                    },
+                ],
+            },
+
+            {
+                "title": _("Task Scheduling"),
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": _("View Task Status"),
+                        "icon": "schedule",
+                        "link": reverse_lazy("admin:django_celery_results_taskresult_changelist"),
+                    },
+                ],
+            },
+
+
+
 
         ],
     },    
@@ -444,8 +398,6 @@ UNFOLD = {
 }
 
 
-# file: settings.py
-from django_log_lens import LOG_FORMAT
 
 LOG_FOLDER = BASE_DIR / "logs"
 
@@ -457,7 +409,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "default": {
-            "format": LOG_FORMAT
+            "format": '%(levelname)s %(asctime)s %(name)s.%(funcName)s:%(lineno)s- %(message)s'
         }
     },
     "handlers": {
@@ -532,6 +484,12 @@ LOGGING = {
             "class": "logging.FileHandler", 
             "filename": str(LOG_FOLDER / "api_client.log"),
             "formatter": "default",
+        },
+        "dicomapp_file": {
+            "level": "DEBUG",
+            "class": "logging.FileHandler", 
+            "filename": str(LOG_FOLDER / "dicomapp.log"),
+            "formatter": "default",
         }
     },
     "loggers": {
@@ -569,6 +527,11 @@ LOGGING = {
             "handlers": ["api_client_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file"],
             "level": "DEBUG",
             "propagate": True
+        },
+        "dicomapp": {
+            "handlers": ["dicomapp_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file"],
+            "level": "DEBUG",
+            "propagate": True
         }
     }
 }
@@ -586,3 +549,4 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Kolkata'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_BEAT_PERIODIC = True
+CELERY_RESULT_EXTENDED =True #Needed to ensure that the task results are stored in the database with task names properly

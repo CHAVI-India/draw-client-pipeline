@@ -2,7 +2,8 @@ import pydicom
 import os
 import shutil
 from deidapp.models import Patient, DicomStudy, DicomSeries, DicomInstance
-from dicom_handler.models import DicomUnprocessed
+from dicomapp.models import DicomSeriesProcessingModel
+# from dicom_handler.models import DicomUnprocessed
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import random
@@ -105,12 +106,15 @@ class DicomDeidentifier:
 
         return ds
 
-    def process_dicom_directory(self, dicom_dir, processed_dir):
+    def process_dicom_directory(self, dicom_dir, processed_dir, task_id=None, dicom_series_processing_id=None):
         """Process a directory of DICOM files for deidentification"""
         self.processed_dir = processed_dir
+        logger.info(f"Starting to process directory: {dicom_dir}")
+        logger.info(f"Files in directory: {os.listdir(dicom_dir)}")
         
         # Generate a random date offset between -60 and 60 days
         date_offset = random.randint(-60, 60)
+        logger.info(f"Using date offset: {date_offset}")
         
         # Track the latest patient/study/series info for YAML files
         current_patient_id = None
@@ -120,11 +124,15 @@ class DicomDeidentifier:
         deidentified_series_dir = None
 
         for root, _, files in os.walk(dicom_dir):
+            logger.info(f"Processing directory: {root}")
+            logger.info(f"Files found: {files}")
             for file in files:
                 file_path = os.path.join(root, file)
+                logger.info(f"Processing file: {file_path}")
                 
                 # Handle YAML files
                 if file.lower().endswith(('.yml', '.yaml')):
+                    logger.info(f"Found YAML file: {file}")
                     if current_series_uid:  # We only need series UID now
                         yaml_dest_dir = os.path.join(
                             self.processed_dir,
@@ -143,7 +151,9 @@ class DicomDeidentifier:
 
                 try:
                     # Try to read the DICOM file
+                    logger.info(f"Reading DICOM file: {file_path}")
                     ds = pydicom.dcmread(file_path)
+                    logger.info(f"Successfully read DICOM file with UIDs: PatientID={ds.PatientID}, StudyInstanceUID={ds.StudyInstanceUID}, SeriesInstanceUID={ds.SeriesInstanceUID}")
                     
                     # Check if modality is one of CT, MRI, or PET
                     modality = getattr(ds, 'Modality', None)
@@ -187,6 +197,8 @@ class DicomDeidentifier:
                         defaults={
                             'study': study,
                             'series_date': self.parse_dicom_date(getattr(ds, 'SeriesDate', None)),
+                            'task_id': task_id, # Add task_id to the series table to keep track of the task that processed the series
+                            'dicom_series_processing_id': dicom_series_processing_id, # Add dicom_series_processing_id to the series table to keep track of the task that processed the series
                             'frame_of_reference_uid': getattr(ds, 'FrameOfReferenceUID', None),
                             'deidentified_series_instance_uid': deidentified_values['SeriesInstanceUID'],
                             'deidentified_series_date': self.parse_dicom_date(deidentified_values['SeriesDate']),
@@ -532,14 +544,15 @@ def process_pending_deidentifications(processed_dir='folder_post_deidentificatio
             "error": str(e)
         }
 
-def deidentify_dicom(dicom_dir='folder_for_deidentification', processed_dir='folder_post_deidentification'):
+def deidentify_dicom(dicom_dir='folder_for_deidentification', processed_dir='folder_post_deidentification', task_id=None, dicom_series_processing_id=None):
     """
     Deidentify DICOM files in a directory
     
     Args:
         dicom_dir (str): Directory containing DICOM files to process. Default is 'folder_for_deidentification'
         processed_dir (str): Directory where processed files will be stored. Default is 'folder_post_deidentification'
-    
+        task_id (str): ID of the task being processed. Optional.
+        dicom_series_processing_id (UUID): ID of the DicomSeriesProcessingModel record to update. Optional.
     Returns:
         dict: Summary of processing results including deidentified_path (the directory where deidentified files are stored)
     """
@@ -553,7 +566,7 @@ def deidentify_dicom(dicom_dir='folder_for_deidentification', processed_dir='fol
         deidentifier = DicomDeidentifier()
         
         # Process the directory
-        result = deidentifier.process_dicom_directory(dicom_dir, processed_dir)
+        result = deidentifier.process_dicom_directory(dicom_dir, processed_dir, task_id, dicom_series_processing_id)
         
         # Clean up empty directories
         deidentifier.cleanup_empty_directories(dicom_dir)
