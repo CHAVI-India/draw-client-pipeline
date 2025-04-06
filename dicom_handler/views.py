@@ -166,7 +166,7 @@ def create_yml(request):
         # For GET request
         return render(request, 'create_yml.html', {
             'apidata': raw_data,
-            'model_details_api': os.getenv('MODEL_DETAILS_API'),
+            'model_details_api': os.getenv('MODEL_API_URL'),
             'template_name': request.session.get('template_name'),
             'description': request.session.get('description')
         })
