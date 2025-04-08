@@ -16,6 +16,7 @@ django.setup()
 
 from api_client.api_utils.dicom_export import DicomExporter
 from api_client.models import SystemSettings
+from api_client.api_utils.proxy_config import get_proxy_settings, get_session_with_proxy
 
 # Set up logging
 logging.basicConfig(
@@ -36,10 +37,13 @@ def test_health_check_with_token(token):
         settings = SystemSettings.load()
         api_base_url = settings.api_base_url.rstrip('/')
         
+        # Create a session with proxy settings
+        session = get_session_with_proxy()
+        
         # Test direct access to the API base URL
         logger.info(f"Testing direct access to API base URL: {api_base_url}")
         try:
-            response = requests.get(api_base_url, timeout=5)
+            response = session.get(api_base_url, timeout=5)
             logger.info(f"API base URL response: {response.status_code}")
         except Exception as e:
             logger.error(f"Error accessing API base URL: {str(e)}")
@@ -48,7 +52,7 @@ def test_health_check_with_token(token):
         health_url = f"{api_base_url}/api/health/"
         logger.info(f"Testing direct access to health check URL: {health_url}")
         try:
-            response = requests.get(health_url, timeout=5)
+            response = session.get(health_url, timeout=5)
             logger.info(f"Health check URL direct response: {response.status_code}")
             if response.ok:
                 logger.info(f"Health check direct response content: {response.text}")
@@ -59,7 +63,7 @@ def test_health_check_with_token(token):
         logger.info(f"Testing health check with authentication")
         headers = exporter._get_headers()
         try:
-            response = requests.get(health_url, headers=headers, timeout=5)
+            response = session.get(health_url, headers=headers, timeout=5)
             logger.info(f"Health check with auth response: {response.status_code}")
             if response.ok:
                 logger.info(f"Health check with auth response content: {response.text}")

@@ -24,6 +24,7 @@ django.setup()
 from api_client.api_utils.dicom_export import DicomExporter
 from api_client.models import SystemSettings
 from django.utils import timezone
+from api_client.api_utils.proxy_config import get_proxy_settings, get_session_with_proxy
 
 # Set up logging
 logging.basicConfig(
@@ -84,7 +85,9 @@ def test_token_refresh(refresh_token):
             logger.info(f"Testing new token with health check URL: {health_url}")
             
             headers = {'Authorization': f'Bearer {new_bearer}'}
-            response = requests.get(health_url, headers=headers, timeout=5)
+            # Use session with proxy settings
+            session = get_session_with_proxy()
+            response = session.get(health_url, headers=headers, timeout=5)
             
             logger.info(f"Health check response: {response.status_code}")
             if response.ok:
