@@ -377,7 +377,7 @@ UNFOLD = {
             },
 
             {
-                "title": _("Task Scheduling"),
+                "title": _("Task Status"),
                 "separator": True,
                 "collapsible": True,
                 "items": [
