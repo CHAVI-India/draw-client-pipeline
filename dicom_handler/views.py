@@ -11,11 +11,12 @@ import json  # Keep this import only once
 from dicom_handler.dicomutils.create_yml import *
 from django.urls import reverse
 from dicom_handler.models import *
-from .dicomutils.dicomseriesprocessing import *
+from dicom_handler.dicomutils.dicomseriesprocessing import *
 from dicomapp.models import *
 from django.views.decorators.csrf import csrf_protect
 from collections import defaultdict
 from api_client.models import *
+from api_client.api_utils.proxy_config import get_session_with_proxy
 
 
 # yaml saving path
@@ -96,20 +97,20 @@ def check_template(request):
 
 def create_yml(request):
     try:
-        # Fetch API data
+        # Create a session with proxy settings
+        session = get_session_with_proxy()
+        
+        # Fetch API data using the session
         api_url = settings.API_URL
-        response = requests.get(api_url, timeout=10)
+        response = session.get(api_url, timeout=10)
         response.raise_for_status()
         raw_data = response.json()
 
         if request.method == 'POST':
             template_name = request.POST.get('templateName')
             description = request.POST.get('description')
-            selected_model_ids = request.POST.getlist('selected_model_ids')  # Changed from selected_models
-            selected_map_ids = request.POST.getlist('selected_map_ids')  # Added to get map IDs
-
-            # print("Selected Model IDs:", selected_model_ids)
-            # print("Selected Map IDs:", selected_map_ids)
+            selected_model_ids = request.POST.getlist('selected_model_ids')
+            selected_map_ids = request.POST.getlist('selected_map_ids')
 
             if not selected_model_ids:
                 messages.error(request, 'Please select at least one model')
@@ -123,7 +124,7 @@ def create_yml(request):
             selected_data = []
             for model_id, map_id in zip(selected_model_ids, selected_map_ids):
                 for info in raw_data:
-                    if str(info['model_id']) == str(model_id):  # Changed from modelId to model_id
+                    if str(info['model_id']) == str(model_id):
                         for map_info in info['modelmap']:
                             if str(map_info['mapid']) == str(map_id):
                                 selected_data.append({
@@ -182,7 +183,7 @@ def create_yml(request):
         print("Error in create_yml:", str(e))
         messages.error(request, f'An error occurred: {str(e)}')
         return render(request, 'create_yml.html', {
-            'apidata': raw_data,
+            'apidata': raw_data if 'raw_data' in locals() else None,
             'template_name': request.session.get('template_name'),
             'description': request.session.get('description')
         })
@@ -197,10 +198,11 @@ def autosegmentation_template(request):
         
         # Read and parse the YAML file
         yaml_path = latest_template.yaml_path
+        if not yaml_path:
+            raise ValueError("YAML path is not set in the database")
+            
         with open(yaml_path, 'r') as file:
             yaml_data = yaml.safe_load(file)
-        
-        # print("Loaded YAML data:", yaml_data)
 
         # Extract models data
         models_data = yaml_data.get('models', {})
@@ -221,6 +223,11 @@ def autosegmentation_template(request):
 
     except ModelYamlInfo.DoesNotExist:
         messages.error(request, 'No templates found.')
+        return redirect('create-yml')
+    
+    except ValueError as e:
+        print(f"Error in yaml view: {str(e)}")
+        messages.error(request, str(e))
         return redirect('create-yml')
     
     except Exception as e:

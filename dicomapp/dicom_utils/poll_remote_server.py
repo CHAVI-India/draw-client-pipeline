@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from api_client.models import DicomTransfer, SystemSettings
 from api_client.api_utils.dicom_export import DicomExporter
+from api_client.api_utils.proxy_config import get_proxy_settings
 from django.conf import settings
 logger = logging.getLogger('api_client')
 
@@ -37,7 +38,7 @@ def poll_pending_transfers():
     }
     
     try:
-        exporter = DicomExporter()
+        exporter = DicomExporter()  # DicomExporter already has proxy configuration
         system_settings = SystemSettings.load()
         
         # Create output folder if it doesn't exist - fix the Path handling
@@ -50,6 +51,10 @@ def poll_pending_transfers():
         )
 
         logger.info(f"Polling for {pending_transfers.count()} pending transfers")
+        
+        # Create a session with proxy settings for downloads
+        session = requests.Session()
+        session.proxies.update(get_proxy_settings())
 
         for transfer in pending_transfers:
             try:
@@ -92,8 +97,8 @@ def poll_pending_transfers():
                             'Authorization': f'Bearer {system_settings.get_bearer_token()}'
                         }
                         
-                        # Download RTSTRUCT file using requests to get access to headers
-                        download_response = requests.get(
+                        # Download RTSTRUCT file using session with proxy settings
+                        download_response = session.get(
                             download_url,
                             headers=headers,
                             stream=True

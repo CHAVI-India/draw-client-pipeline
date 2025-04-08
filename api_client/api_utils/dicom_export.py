@@ -5,6 +5,7 @@ from django.utils import timezone
 from pathlib import Path
 from api_client.models import DicomTransfer, SystemSettings
 from django.conf import settings
+from api_client.api_utils.proxy_config import get_proxy_settings
 
 logger = logging.getLogger('api_client')
 
@@ -14,6 +15,8 @@ class DicomExporter:
     def __init__(self):
         """Initialize exporter with settings."""
         self.settings = SystemSettings.load()
+        self.session = requests.Session()
+        self.session.proxies.update(get_proxy_settings())
 
     def set_test_token(self, token):
         """
@@ -117,7 +120,7 @@ class DicomExporter:
                     #logger.debug(f"Request params: {kwargs['params']}")
                 #logger.debug(f"Request kwargs: {kwargs}")
                 
-                response = requests.request(
+                response = self.session.request(
                     method,
                     url,
                     headers=self._get_headers(),
@@ -155,7 +158,7 @@ class DicomExporter:
         """Check if a URL is accessible with a simple GET request."""
         try:
             logger.info(f"Testing URL accessibility: {url}")
-            response = requests.get(url, timeout=5)
+            response = self.session.get(url, timeout=5)
             logger.info(f"URL accessibility test result: {response.status_code}")
             return response.status_code, response.text
         except Exception as e:
@@ -165,12 +168,8 @@ class DicomExporter:
     def _check_network_environment(self):
         """Check network environment for potential issues."""
         try:
-            # Log proxy settings
-            proxies = {
-                'http': os.environ.get('HTTP_PROXY', None),
-                'https': os.environ.get('HTTPS_PROXY', None),
-                'no_proxy': os.environ.get('NO_PROXY', None)
-            }
+            # Get proxy settings from our configuration
+            proxies = get_proxy_settings()
             logger.info(f"Proxy settings: {proxies}")
             
             # Log requests library version
@@ -178,7 +177,7 @@ class DicomExporter:
             
             # Check if we can reach a public website
             try:
-                test_response = requests.get('https://www.google.com', timeout=5)
+                test_response = self.session.get('https://www.google.com', timeout=5)
                 logger.info(f"Public internet access test: {test_response.status_code}")
             except Exception as e:
                 logger.error(f"Public internet access test failed: {str(e)}")
