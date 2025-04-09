@@ -1,5 +1,5 @@
 # Stage 1: Base build stage
-FROM python:3 AS builder
+FROM python:3.13-slim-bookworm AS builder
  
 # Create the app directory
 RUN mkdir /app
