@@ -77,7 +77,7 @@ def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
         # Validate time window
         if pull_start_time > current_time:
             logger.warning(f"Pull start time {pull_start_time} is in the future, adjusting to current time")
-            pull_start_time = current_time - timedelta(minutes=10)
+            pull_start_time = current_time - timedelta(minutes=20)
             logger.info(f"Pull start time: {pull_start_time}")
         # Iterate through directories in datastore_path
         for item in os.listdir(datastore_path):
