@@ -91,23 +91,11 @@ class UserAdmin(BaseUserAdmin, ModelAdmin):
 class GroupAdmin(BaseGroupAdmin, ModelAdmin):
     pass
 
-# @admin.register(DicomSeriesProcessing)
-# class DicomSeriesProcessingAdmin(ModelAdmin):
-#     list_display = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
-#     search_fields = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
-#     list_filter = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
 
-#     def get_readonly_fields(self, request, obj=None):
-#         # Make all fields readonly
-#         if obj:  # Only apply when editing an existing object
-#             return [f.name for f in self.model._meta.fields]
-#         return []
 
 @admin.register(DicomPathConfig)
 class DicomPathConfigAdmin(ModelAdmin):
-    list_display = ('datastorepath', )
-    search_fields = ('datastorepath', )
-    list_filter = ('datastorepath', )
+    list_display = ('datastorepath', 'date_time_to_start_pulling_data')
 
 # Function to get DicomPathConfig values when needed, not at module import time
 def get_dicom_path_config():
@@ -146,6 +134,132 @@ def get_dicom_path_config():
         return import_dir, deidentified_dir, unprocessed_dir, processing_dir
    
 
+class ModelYamlInfoAdmin(ModelAdmin):
+    list_display = (
+        'yaml_name', 
+        'protocol', 
+        'yaml_description',
+        'created_at',
+    )
+    readonly_fields = [
+        'yaml_name',
+        'yaml_path',
+        'protocol',
+        'file_hash',
+        'yaml_description',
+        'created_at',
+        'modified_at',
+    ]
+    search_fields = ('yaml_name','protocol','yaml_description')
+    search_help_text = "Search by YAML name, protocol, or description"
+    list_filter = ('yaml_name', 'protocol','created_at',)
+    list_per_page = 10
+
+admin.site.register(ModelYamlInfo, ModelYamlInfoAdmin)
+
+# Rule admin
+class RuleAdmin(ModelAdmin):
+    list_display = (
+        "rule_set",
+        "tag_name",
+        "tag_value",
+        "created_at",
+        "modified_at",
+
+    )
+    list_per_page = 14
+    search_fields = ('rule_set','tag_name','tag_value')
+    list_filter = ('rule_set','tag_name','tag_value')
+
+admin.site.register(Rule, RuleAdmin)
+
+# RuleSet admin
+class RuleInline(TabularInline):
+    model = Rule
+    extra = 1
+    autocomplete_fields = ['tag_name']
+    
+class RuleSetAdmin(ModelAdmin):
+    inlines = [RuleInline]
+    list_display = (
+        "rule_set_name",
+        "description",
+        "model_yaml",
+        "created_at",
+        "modified_at",
+    )
+    ordering = ('rule_set_name',)
+    list_per_page = 14
+    search_fields = ('rule_set_name', "description", "model_yaml", "created_at")
+    list_filter = ('rule_set_name', "model_yaml", "created_at")
+   
+
+admin.site.register(RuleSet, RuleSetAdmin)
+
+# Tagname admin
+class TagnameAdmin(ModelAdmin):
+    search_fields = ('tag_id', 'tag_name', 'tag_description', 'value_representation')
+    list_display = ('tag_id', 'tag_name', 'tag_description', 'value_representation')
+    ordering = ('tag_name',)
+    list_per_page = 14
+
+admin.site.register(TagName, TagnameAdmin)
+
+
+# @admin.register(DicomSeriesProcessing)
+# class DicomSeriesProcessingAdmin(ModelAdmin):
+#     list_display = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
+#     search_fields = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
+#     list_filter = ('patientid', 'patientname', 'gender', 'studyid', 'seriesid', 'studydate', 'modality', 'protocol', 'description', 'dicomcount', 'series_split_done', 'processing_start', 'processing_end', 'created_at', 'modified_at')
+
+#     def get_readonly_fields(self, request, obj=None):
+#         # Make all fields readonly
+#         if obj:  # Only apply when editing an existing object
+#             return [f.name for f in self.model._meta.fields]
+#         return []
+
+
+# class uploadDicomAdmin(ModelAdmin):
+#     list_display = (
+#         'id', 
+#         'dicom_file',
+#         'send_to_autosegmentation',
+#         'created_at',
+#         'modified_at'
+#     )
+
+#     list_filter = ('send_to_autosegmentation','created_at',)
+#     exclude = ('send_to_autosegmentation',)
+#     search_fields = ('dicom_file',)
+#     actions = [send_to_autosegmentation]
+#     list_per_page = 10
+
+# admin.site.register(uploadDicom, uploadDicomAdmin)
+
+# class CopyDicomAdmin(ModelAdmin):
+#     list_display = (
+#         "sourcedirname",
+#         "destinationdirname",
+#         "dirsize",
+#         "processing_status",
+#         "dirmodifieddate",
+#         "dircreateddate",
+#         "copydate",
+#     )
+#     list_per_page = 14
+#     search_fields = ('sourcedirname', 'destinationdirname')
+#     list_filter = ('copydate',
+#                    'dirmodifieddate',
+#                    'dircreateddate',
+#                    'processing_status',
+#                    )
+#     def get_readonly_fields(self, request, obj=None):
+#         # Make all fields readonly
+#         if obj:  # Only apply when editing an existing object
+#             return [f.name for f in self.model._meta.fields]
+#         return []
+
+# admin.site.register(CopyDicom, CopyDicomAdmin)
 
 
 # class MyModelAdmin(ModelAdmin):
@@ -320,119 +434,3 @@ def get_dicom_path_config():
 #         return obj.patient_id.description
 
 # admin.site.register(ProcessingStatus, ProcessingStatusAdmin)
-
-
-class ModelYamlInfoAdmin(ModelAdmin):
-    list_display = (
-        'yaml_name', 
-        'protocol', 
-        'yaml_description',
-        'created_at',
-    )
-    readonly_fields = [
-        'yaml_name',
-        'yaml_path',
-        'protocol',
-        'file_hash',
-        'yaml_description',
-        'created_at',
-        'modified_at',
-    ]
-    search_fields = ('yaml_name','protocol','yaml_description')
-    search_help_text = "Search by YAML name, protocol, or description"
-    list_filter = ('yaml_name', 'protocol','created_at',)
-    list_per_page = 10
-
-admin.site.register(ModelYamlInfo, ModelYamlInfoAdmin)
-
-
-
-# class uploadDicomAdmin(ModelAdmin):
-#     list_display = (
-#         'id', 
-#         'dicom_file',
-#         'send_to_autosegmentation',
-#         'created_at',
-#         'modified_at'
-#     )
-
-#     list_filter = ('send_to_autosegmentation','created_at',)
-#     exclude = ('send_to_autosegmentation',)
-#     search_fields = ('dicom_file',)
-#     actions = [send_to_autosegmentation]
-#     list_per_page = 10
-
-# admin.site.register(uploadDicom, uploadDicomAdmin)
-
-# class CopyDicomAdmin(ModelAdmin):
-#     list_display = (
-#         "sourcedirname",
-#         "destinationdirname",
-#         "dirsize",
-#         "processing_status",
-#         "dirmodifieddate",
-#         "dircreateddate",
-#         "copydate",
-#     )
-#     list_per_page = 14
-#     search_fields = ('sourcedirname', 'destinationdirname')
-#     list_filter = ('copydate',
-#                    'dirmodifieddate',
-#                    'dircreateddate',
-#                    'processing_status',
-#                    )
-#     def get_readonly_fields(self, request, obj=None):
-#         # Make all fields readonly
-#         if obj:  # Only apply when editing an existing object
-#             return [f.name for f in self.model._meta.fields]
-#         return []
-
-# admin.site.register(CopyDicom, CopyDicomAdmin)
-
-# Rule admin
-class RuleAdmin(ModelAdmin):
-    list_display = (
-        "rule_set",
-        "tag_name",
-        "tag_value",
-        "created_at",
-        "modified_at",
-
-    )
-    list_per_page = 14
-    search_fields = ('rule_set','tag_name','tag_value')
-    list_filter = ('rule_set','tag_name','tag_value')
-
-admin.site.register(Rule, RuleAdmin)
-
-# RuleSet admin
-class RuleInline(TabularInline):
-    model = Rule
-    extra = 1
-    autocomplete_fields = ['tag_name']
-    
-class RuleSetAdmin(ModelAdmin):
-    inlines = [RuleInline]
-    list_display = (
-        "rule_set_name",
-        "description",
-        "model_yaml",
-        "created_at",
-        "modified_at",
-    )
-    ordering = ('rule_set_name',)
-    list_per_page = 14
-    search_fields = ('rule_set_name', "description", "model_yaml", "created_at")
-    list_filter = ('rule_set_name', "model_yaml", "created_at")
-   
-
-admin.site.register(RuleSet, RuleSetAdmin)
-
-# Tagname admin
-class TagnameAdmin(ModelAdmin):
-    search_fields = ('tag_id', 'tag_name', 'tag_description', 'value_representation')
-    list_display = ('tag_id', 'tag_name', 'tag_description', 'value_representation')
-    ordering = ('tag_name',)
-    list_per_page = 14
-
-admin.site.register(TagName, TagnameAdmin)
