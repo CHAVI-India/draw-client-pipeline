@@ -40,6 +40,7 @@ def series_preparation(input_data: dict) -> dict:
         - gender
         - scan_date
         - modality
+        - protocol_name
         - study_instance_uid
         - series_instance_uid
         - series_description
@@ -153,6 +154,7 @@ def series_preparation(input_data: dict) -> dict:
                                 'scan_date': parse_dicom_date(getattr(dcm, 'StudyDate', '')),
                                 'modality': getattr(dcm, 'Modality', ''),
                                 'study_instance_uid': getattr(dcm, 'StudyInstanceUID', ''),
+                                'protocol_name': getattr(dcm, 'ProtocolName', ''),
                                 'series_instance_uid': series_uid,
                                 'series_description': getattr(dcm, 'SeriesDescription', ''),
                                 'series_import_directory': source_path,
@@ -213,6 +215,7 @@ def series_preparation(input_data: dict) -> dict:
                     gender=series_data['gender'],
                     scan_date=series_data['scan_date'],
                     modality=series_data['modality'],
+                    protocol_name=series_data['protocol_name'],
                     study_instance_uid=series_data['study_instance_uid'],
                     series_instance_uid=series_data['series_instance_uid'],
                     series_description=series_data['series_description'],

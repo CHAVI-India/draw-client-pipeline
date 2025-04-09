@@ -107,6 +107,21 @@ def deidentify_dicom_series(match_result: dict) -> dict:
                         logger.info(f"Directory exists: {os.path.exists(series_dir)}")
                         logger.info(f"Directory contents: {os.listdir(series_dir)}")
                         
+                        # Before deidentifying copy the series_folder to directory called the folder_processed_dicom.
+                        # Ensure that the folder path is properly updated in the database and prevent the folder path from being updated in the next step.
+
+                        # Create a new directory called folder_processed_dicom if it doesn't exist.
+                        processed_dicom_dir = os.path.join(settings.BASE_DIR, "folder_processed_dicom")
+                        if not os.path.exists(processed_dicom_dir):
+                            os.makedirs(processed_dicom_dir)
+
+                        # Copy the series_folder to the folder_processed_dicom directory.
+                        shutil.copytree(series_dir, processed_dicom_dir)
+
+                        # Update the database to reflect the new folder path.
+                        series_model.series_current_directory = processed_dicom_dir
+                        series_model.save()
+
                         # Call the deidentify_dicom function from deidapp
                         logger.info(f"Calling deidentify_dicom with dicom_dir={series_dir} and processed_dir={processed_dir}")
                         try:
@@ -119,10 +134,10 @@ def deidentify_dicom_series(match_result: dict) -> dict:
                             logger.info(f"Deidentification result: {result}")
                             
                             if result.get("status") == "success" and result.get("deidentified_path"):
-                                # Update database
+                                # Update database but not the series current directory as if the deidentification succeds the folder is deleted.
                                 series_model.processing_status = ProcessingStatusChoices.DEIDENTIFIED
                                 series_model.series_state = SeriesState.PROCESSING
-                                series_model.series_current_directory = result["deidentified_path"]
+                                #series_model.series_current_directory = result["deidentified_path"]
                                 series_model.save()
                                 
                                 # Create log entry
@@ -138,7 +153,7 @@ def deidentify_dicom_series(match_result: dict) -> dict:
                                 successful_series_paths.append(result["deidentified_path"])
                             else:
                                 error_msg = result.get("message", "Unknown error during deidentification")
-                                # Update database for failure
+                                # Update database for failure. 
                                 series_model.processing_status = ProcessingStatusChoices.DEIDENTIFICATION_FAILED
                                 series_model.series_state = SeriesState.FAILED
                                 series_model.save()
