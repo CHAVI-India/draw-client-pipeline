@@ -35,6 +35,7 @@ services:
       - app_data:/app
       - ./logs:/app/logs
       - ./static:/app/static
+      - ./dicom:/app/folders
       - ./yaml-templates:/app/yaml-templates
       - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     command: ["./entrypoint.docker.sh"]
@@ -47,6 +48,7 @@ services:
       - app_data:/app
       - ./static:/app/static
       - ./logs:/app/logs
+      - ./dicom:/app/folders      
       - ./yaml-templates:/app/yaml-templates
       - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     env_file:
@@ -67,6 +69,7 @@ services:
       - app_data:/app
       - ./static:/app/static
       - ./logs:/app/logs     
+      - ./dicom:/app/folders
       - ./yaml-templates:/app/yaml-templates
       - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     env_file:
