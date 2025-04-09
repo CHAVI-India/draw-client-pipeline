@@ -16,8 +16,8 @@ class CopyDicomTaskAdmin(ModelAdmin):
 
 @admin.register(DicomSeriesProcessingModel)
 class DicomSeriesProcessingAdmin(ModelAdmin):
-    list_display = ('id', 'patient_id', 'patient_name', 'modality', 'processing_status', 'template_file',
-                   'series_state', 'created_at', 'updated_at')
+    list_display = ('patient_id', 'patient_name', 'modality','series_description', 'processing_status', 'template_file',
+                   'series_state','scan_date' ,'created_at')
     list_editable = ('template_file',)
     readonly_fields = ('id', 'copy_dicom_task_id', 'patient_id', 'patient_name',
                       'gender', 'scan_date', 'modality', 'study_instance_uid',
@@ -25,7 +25,7 @@ class DicomSeriesProcessingAdmin(ModelAdmin):
                       'series_current_directory', 'processing_status', 'series_state',
                       'created_at', 'updated_at')
     search_fields = ('patient_id', 'patient_name', 'modality', 'processing_status')
-    list_filter = ('processing_status', 'series_state', 'modality')
+    list_filter = ('processing_status', 'series_state', 'modality','scan_date')
     ordering = ('-created_at',)
     
     actions = [send_dicom_for_processing_action]
