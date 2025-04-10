@@ -187,8 +187,8 @@ class DicomDeidentifier:
                 try:
                     # Try to read the DICOM file
                     logger.info(f"Reading DICOM file: {file_path}")
-                    with open(file_path, 'rb') as f:
-                        ds = pydicom.dcmread(f)
+                    
+                    ds = pydicom.dcmread(f)
                     logger.info(f"Successfully read DICOM file with UIDs: PatientID={ds.PatientID}, StudyInstanceUID={ds.StudyInstanceUID}, SeriesInstanceUID={ds.SeriesInstanceUID}")
                     
                     # Check if modality is one of CT, MRI, or PET
@@ -281,8 +281,8 @@ class DicomDeidentifier:
                     
                     new_file_path = os.path.join(new_dir, filename)
                     try:
-                        with open(new_file_path, 'wb') as f:
-                            ds.save_as(f, enforce_file_format=True)
+                        
+                        ds.save_as(f, enforce_file_format=True)
                             
                         # Set permissions on the new file
                         os.chmod(new_file_path, 0o666)
