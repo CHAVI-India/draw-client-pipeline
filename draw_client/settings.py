@@ -400,20 +400,78 @@ UNFOLD = {
 
 LOG_FOLDER = BASE_DIR / "logs"
 
-# Create logs directory with better error handling
-try:
-    os.makedirs(LOG_FOLDER, exist_ok=True)
-    # Try to make log directory writable
-    os.chmod(LOG_FOLDER, 0o777)
-except Exception as e:
-    print(f"WARNING: Could not create or set permissions on logs directory: {e}")
-    # Fallback to /tmp directory which should be writable
-    LOG_FOLDER = Path("/tmp/draw_client_logs")
+# Detect if we're running in a Docker container - typically done by checking environment variables
+# or by checking for container-specific files
+IN_DOCKER = os.path.exists('/.dockerenv') or os.environ.get('DOCKER_CONTAINER', '') == 'true'
+
+# If we're in Docker, log only to console
+if IN_DOCKER:
+    print("Running in Docker environment - using console-only logging")
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "default": {
+                "format": '%(levelname)s %(asctime)s %(name)s.%(funcName)s:%(lineno)s- %(message)s'
+            }
+        },
+        "handlers": {
+            "console": {
+                "level": "INFO",
+                "class": "logging.StreamHandler",
+                "formatter": "default",
+            }
+        },
+        "loggers": {
+            "django": {
+                "handlers": ["console"],
+                "level": "INFO", 
+                "propagate": True
+            },
+            "dicom_handler_logs": {
+                "handlers": ["console"],
+                "level": "INFO",
+            },
+            "deidapp": {
+                "handlers": ["console"],
+                "level": "INFO",
+            },
+            "celery": {
+                "handlers": ["console"],
+                "level": "INFO",
+            },
+            "celery.task": {
+                "handlers": ["console"],
+                "level": "INFO",
+            },
+            "celery.beat": {
+                "handlers": ["console"],
+                "level": "INFO",
+            },
+            "api_client": {
+                "handlers": ["console"],
+                "level": "INFO",
+            },
+            "dicomapp": {
+                "handlers": ["console"],
+                "level": "INFO",
+            },
+            # Root logger as fallback
+            "": {
+                "handlers": ["console"],
+                "level": "INFO",
+            }
+        }
+    }
+else:
+    # Regular environment (not Docker) - create logs directory with better error handling
     try:
         os.makedirs(LOG_FOLDER, exist_ok=True)
+        # Try to make log directory writable
+        os.chmod(LOG_FOLDER, 0o777)
     except Exception as e:
-        print(f"CRITICAL: Could not create fallback logs directory: {e}")
-        # If we can't create log directories, use a very simple console-only logging config
+        print(f"WARNING: Could not create or set permissions on logs directory: {e}")
+        # Fallback to simple console logging
         LOGGING = {
             "version": 1,
             "disable_existing_loggers": False,
@@ -436,194 +494,194 @@ except Exception as e:
                 }
             }
         }
-else:
-    # If LOG_FOLDER was successfully created, try to create log files
-    # Pre-create log files with proper permissions
-    log_files = [
-        "debug.log", "info.log", "warning.log", "error.log", "critical.log",
-        "django.log", "dicom_handler.log", "deidapp.log", "celery.log",
-        "celery_beat.log", "api_client.log", "dicomapp.log"
-    ]
-    
-    for log_file in log_files:
-        log_path = LOG_FOLDER / log_file
-        try:
-            # Create file if it doesn't exist
-            if not os.path.exists(log_path):
-                with open(log_path, 'w'):
-                    pass  # Just create the file
-            # Set permissions
-            os.chmod(log_path, 0o666)
-        except Exception as e:
-            print(f"WARNING: Could not create or set permissions on log file {log_file}: {e}")
-    
-    # Standard logging configuration with rotating file handlers
-    LOGGING = {
-        "version": 1,
-        "disable_existing_loggers": False,
-        "formatters": {
-            "default": {
-                "format": '%(levelname)s %(asctime)s %(name)s.%(funcName)s:%(lineno)s- %(message)s'
-            }
-        },
-        "handlers": {
-            # Debug level handler
-            "debug_file": {
-                "level": "DEBUG",
-                "class": "logging.handlers.RotatingFileHandler",
-                "filename": str(LOG_FOLDER / "debug.log"),
-                "formatter": "default",
-                "maxBytes": 10485760,  # 10MB
-                "backupCount": 3,
+    else:
+        # If LOG_FOLDER was successfully created, try to create log files
+        # Pre-create log files with proper permissions
+        log_files = [
+            "debug.log", "info.log", "warning.log", "error.log", "critical.log",
+            "django.log", "dicom_handler.log", "deidapp.log", "celery.log",
+            "celery_beat.log", "api_client.log", "dicomapp.log"
+        ]
+        
+        for log_file in log_files:
+            log_path = LOG_FOLDER / log_file
+            try:
+                # Create file if it doesn't exist
+                if not os.path.exists(log_path):
+                    with open(log_path, 'w'):
+                        pass  # Just create the file
+                # Set permissions
+                os.chmod(log_path, 0o666)
+            except Exception as e:
+                print(f"WARNING: Could not create or set permissions on log file {log_file}: {e}")
+        
+        # Standard logging configuration with rotating file handlers
+        LOGGING = {
+            "version": 1,
+            "disable_existing_loggers": False,
+            "formatters": {
+                "default": {
+                    "format": '%(levelname)s %(asctime)s %(name)s.%(funcName)s:%(lineno)s- %(message)s'
+                }
             },
-            # Info level handler
-            "info_file": {
-                "level": "INFO",
-                "class": "logging.handlers.RotatingFileHandler", 
-                "filename": str(LOG_FOLDER / "info.log"),
-                "formatter": "default",
-                "maxBytes": 10485760,  # 10MB
-                "backupCount": 3,
+            "handlers": {
+                # Debug level handler
+                "debug_file": {
+                    "level": "DEBUG",
+                    "class": "logging.handlers.RotatingFileHandler",
+                    "filename": str(LOG_FOLDER / "debug.log"),
+                    "formatter": "default",
+                    "maxBytes": 10485760,  # 10MB
+                    "backupCount": 3,
+                },
+                # Info level handler
+                "info_file": {
+                    "level": "INFO",
+                    "class": "logging.handlers.RotatingFileHandler", 
+                    "filename": str(LOG_FOLDER / "info.log"),
+                    "formatter": "default",
+                    "maxBytes": 10485760,  # 10MB
+                    "backupCount": 3,
+                },
+                # Warning level handler
+                "warning_file": {
+                    "level": "WARNING",
+                    "class": "logging.handlers.RotatingFileHandler",
+                    "filename": str(LOG_FOLDER / "warning.log"),
+                    "formatter": "default",
+                    "maxBytes": 10485760,  # 10MB
+                    "backupCount": 3,
+                },
+                # Error level handler
+                "error_file": {
+                    "level": "ERROR",
+                    "class": "logging.handlers.RotatingFileHandler",
+                    "filename": str(LOG_FOLDER / "error.log"),
+                    "formatter": "default",
+                    "maxBytes": 10485760,  # 10MB
+                    "backupCount": 3,
+                },
+                # Critical level handler
+                "critical_file": {
+                    "level": "CRITICAL",
+                    "class": "logging.handlers.RotatingFileHandler",
+                    "filename": str(LOG_FOLDER / "critical.log"),
+                    "formatter": "default",
+                    "maxBytes": 10485760,  # 10MB
+                    "backupCount": 3,
+                },
+                # Dedicated handlers for specific apps
+                "django_file": {
+                    "level": "DEBUG",
+                    "class": "logging.handlers.RotatingFileHandler",
+                    "filename": str(LOG_FOLDER / "django.log"),
+                    "formatter": "default",
+                    "maxBytes": 10485760,  # 10MB
+                    "backupCount": 3,
+                },
+                "dicom_handler_file": {
+                    "level": "DEBUG",
+                    "class": "logging.handlers.RotatingFileHandler",
+                    "filename": str(LOG_FOLDER / "dicom_handler.log"),
+                    "formatter": "default",
+                    "maxBytes": 10485760,  # 10MB
+                    "backupCount": 3,
+                },
+                "deidapp_file": {
+                    "level": "DEBUG",
+                    "class": "logging.handlers.RotatingFileHandler",
+                    "filename": str(LOG_FOLDER / "deidapp.log"),
+                    "formatter": "default",
+                    "maxBytes": 10485760,  # 10MB
+                    "backupCount": 3,
+                },
+                "celery_file": {
+                    "level": "DEBUG",
+                    "class": "logging.handlers.RotatingFileHandler", 
+                    "filename": str(LOG_FOLDER / "celery.log"),
+                    "formatter": "default",
+                    "maxBytes": 10485760,  # 10MB
+                    "backupCount": 3,
+                },
+                "celery_beat_file": {
+                    "level": "DEBUG",
+                    "class": "logging.handlers.RotatingFileHandler", 
+                    "filename": str(LOG_FOLDER / "celery_beat.log"),
+                    "formatter": "default",
+                    "maxBytes": 10485760,  # 10MB
+                    "backupCount": 3,
+                },
+                "api_client_file": {
+                    "level": "DEBUG",
+                    "class": "logging.handlers.RotatingFileHandler", 
+                    "filename": str(LOG_FOLDER / "api_client.log"),
+                    "formatter": "default",
+                    "maxBytes": 10485760,  # 10MB
+                    "backupCount": 3,
+                },
+                "dicomapp_file": {
+                    "level": "DEBUG",
+                    "class": "logging.handlers.RotatingFileHandler", 
+                    "filename": str(LOG_FOLDER / "dicomapp.log"),
+                    "formatter": "default",
+                    "maxBytes": 10485760,  # 10MB
+                    "backupCount": 3,
+                },
+                # Console handler as fallback
+                "console": {
+                    "level": "INFO",
+                    "class": "logging.StreamHandler",
+                    "formatter": "default",
+                }
             },
-            # Warning level handler
-            "warning_file": {
-                "level": "WARNING",
-                "class": "logging.handlers.RotatingFileHandler",
-                "filename": str(LOG_FOLDER / "warning.log"),
-                "formatter": "default",
-                "maxBytes": 10485760,  # 10MB
-                "backupCount": 3,
-            },
-            # Error level handler
-            "error_file": {
-                "level": "ERROR",
-                "class": "logging.handlers.RotatingFileHandler",
-                "filename": str(LOG_FOLDER / "error.log"),
-                "formatter": "default",
-                "maxBytes": 10485760,  # 10MB
-                "backupCount": 3,
-            },
-            # Critical level handler
-            "critical_file": {
-                "level": "CRITICAL",
-                "class": "logging.handlers.RotatingFileHandler",
-                "filename": str(LOG_FOLDER / "critical.log"),
-                "formatter": "default",
-                "maxBytes": 10485760,  # 10MB
-                "backupCount": 3,
-            },
-            # Dedicated handlers for specific apps
-            "django_file": {
-                "level": "DEBUG",
-                "class": "logging.handlers.RotatingFileHandler",
-                "filename": str(LOG_FOLDER / "django.log"),
-                "formatter": "default",
-                "maxBytes": 10485760,  # 10MB
-                "backupCount": 3,
-            },
-            "dicom_handler_file": {
-                "level": "DEBUG",
-                "class": "logging.handlers.RotatingFileHandler",
-                "filename": str(LOG_FOLDER / "dicom_handler.log"),
-                "formatter": "default",
-                "maxBytes": 10485760,  # 10MB
-                "backupCount": 3,
-            },
-            "deidapp_file": {
-                "level": "DEBUG",
-                "class": "logging.handlers.RotatingFileHandler",
-                "filename": str(LOG_FOLDER / "deidapp.log"),
-                "formatter": "default",
-                "maxBytes": 10485760,  # 10MB
-                "backupCount": 3,
-            },
-            "celery_file": {
-                "level": "DEBUG",
-                "class": "logging.handlers.RotatingFileHandler", 
-                "filename": str(LOG_FOLDER / "celery.log"),
-                "formatter": "default",
-                "maxBytes": 10485760,  # 10MB
-                "backupCount": 3,
-            },
-            "celery_beat_file": {
-                "level": "DEBUG",
-                "class": "logging.handlers.RotatingFileHandler", 
-                "filename": str(LOG_FOLDER / "celery_beat.log"),
-                "formatter": "default",
-                "maxBytes": 10485760,  # 10MB
-                "backupCount": 3,
-            },
-            "api_client_file": {
-                "level": "DEBUG",
-                "class": "logging.handlers.RotatingFileHandler", 
-                "filename": str(LOG_FOLDER / "api_client.log"),
-                "formatter": "default",
-                "maxBytes": 10485760,  # 10MB
-                "backupCount": 3,
-            },
-            "dicomapp_file": {
-                "level": "DEBUG",
-                "class": "logging.handlers.RotatingFileHandler", 
-                "filename": str(LOG_FOLDER / "dicomapp.log"),
-                "formatter": "default",
-                "maxBytes": 10485760,  # 10MB
-                "backupCount": 3,
-            },
-            # Console handler as fallback
-            "console": {
-                "level": "INFO",
-                "class": "logging.StreamHandler",
-                "formatter": "default",
-            }
-        },
-        "loggers": {
-            "django": {
-                "handlers": ["django_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
-                "level": "DEBUG", 
-                "propagate": True
-            },
-            "dicom_handler_logs": {
-                "handlers": ["dicom_handler_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
-                "level": "DEBUG",
-                "propagate": True
-            },
-            "deidapp": {
-                "handlers": ["deidapp_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
-                "level": "DEBUG",
-                "propagate": True
-            },
-            "celery": {
-                "handlers": ["celery_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
-                "level": "DEBUG",
-                "propagate": True
-            },
-            "celery.task": {
-                "handlers": ["celery_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
-                "level": "DEBUG",
-                "propagate": True
-            },
-            "celery.beat": {
-                "handlers": ["celery_beat_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
-                "level": "DEBUG",
-                "propagate": True
-            },
-            "api_client": {
-                "handlers": ["api_client_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
-                "level": "DEBUG",
-                "propagate": True
-            },
-            "dicomapp": {
-                "handlers": ["dicomapp_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
-                "level": "DEBUG",
-                "propagate": True
-            },
-            # Root logger with console fallback
-            "": {
-                "handlers": ["console"],
-                "level": "INFO",
+            "loggers": {
+                "django": {
+                    "handlers": ["django_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
+                    "level": "DEBUG", 
+                    "propagate": True
+                },
+                "dicom_handler_logs": {
+                    "handlers": ["dicom_handler_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
+                    "level": "DEBUG",
+                    "propagate": True
+                },
+                "deidapp": {
+                    "handlers": ["deidapp_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
+                    "level": "DEBUG",
+                    "propagate": True
+                },
+                "celery": {
+                    "handlers": ["celery_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
+                    "level": "DEBUG",
+                    "propagate": True
+                },
+                "celery.task": {
+                    "handlers": ["celery_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
+                    "level": "DEBUG",
+                    "propagate": True
+                },
+                "celery.beat": {
+                    "handlers": ["celery_beat_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
+                    "level": "DEBUG",
+                    "propagate": True
+                },
+                "api_client": {
+                    "handlers": ["api_client_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
+                    "level": "DEBUG",
+                    "propagate": True
+                },
+                "dicomapp": {
+                    "handlers": ["dicomapp_file", "debug_file", "info_file", "warning_file", "error_file", "critical_file", "console"],
+                    "level": "DEBUG",
+                    "propagate": True
+                },
+                # Root logger with console fallback
+                "": {
+                    "handlers": ["console"],
+                    "level": "INFO",
+                }
             }
         }
-    }
 
 # ALLOW_JS_LOGGING = DEBUG # it's recommendable not to allow client logging in production
 
