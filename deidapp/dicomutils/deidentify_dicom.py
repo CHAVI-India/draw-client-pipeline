@@ -126,8 +126,27 @@ class DicomDeidentifier:
         """Process a directory of DICOM files for deidentification"""
         self.processed_dir = processed_dir
         logger.info(f"Starting to process directory: {dicom_dir}")
-        logger.info(f"Files in directory: {os.listdir(dicom_dir)}")
         
+        # Create the processed directory if it doesn't exist
+        try:
+            os.makedirs(processed_dir, exist_ok=True)
+            logger.info(f"Created or confirmed processed directory: {processed_dir}")
+        except Exception as e:
+            logger.error(f"Failed to create processed directory {processed_dir}: {str(e)}")
+            return {
+                "status": "error",
+                "message": f"Failed to create output directory: {str(e)}"
+            }
+            
+        try:
+            logger.info(f"Files in directory: {os.listdir(dicom_dir)}")
+        except Exception as e:
+            logger.error(f"Failed to list files in {dicom_dir}: {str(e)}")
+            return {
+                "status": "error",
+                "message": f"Failed to access input directory: {str(e)}"
+            }
+            
         # Generate a random date offset between -60 and 60 days
         date_offset = random.randint(-60, 60)
         logger.info(f"Using date offset: {date_offset}")
@@ -243,7 +262,14 @@ class DicomDeidentifier:
                         self.processed_dir,
                         str(ds.SeriesInstanceUID)  # Only use SeriesInstanceUID for directory
                     )
-                    os.makedirs(new_dir, exist_ok=True)
+                    
+                    try:
+                        os.makedirs(new_dir, exist_ok=True)
+                        # Set permissions explicitly for Docker environments
+                        os.chmod(new_dir, 0o777)
+                    except Exception as e:
+                        logger.error(f"Failed to create output directory {new_dir}: {str(e)}")
+                        continue
                     
                     # Store the series directory for return - THIS IS THE KEY CHANGE
                     deidentified_series_dir = new_dir
@@ -254,14 +280,23 @@ class DicomDeidentifier:
                     filename = f"{deidentified_sop_uid}.dcm"
                     
                     new_file_path = os.path.join(new_dir, filename)
-                    with open(new_file_path, 'wb') as f:
-                        ds.save_as(f, enforce_file_format=True)
+                    try:
+                        with open(new_file_path, 'wb') as f:
+                            ds.save_as(f, enforce_file_format=True)
+                            
+                        # Set permissions on the new file
+                        os.chmod(new_file_path, 0o666)
+                        logger.info(f'Successfully processed and saved: {file} -> {filename}')
+                    except Exception as e:
+                        logger.error(f"Failed to save processed file to {new_file_path}: {str(e)}")
+                        continue
 
-                    # Delete the original file
-                    os.remove(file_path)
-
-                    logger.info(f'Successfully processed and saved: {file} -> {filename}')
-
+                    # Try to delete the original file
+                    try:
+                        os.remove(file_path)
+                    except Exception as e:
+                        logger.warning(f"Could not delete original file {file_path}: {str(e)}")
+                    
                     # Update current context for YAML files
                     current_patient_id = ds.PatientID
                     current_study_uid = ds.StudyInstanceUID
