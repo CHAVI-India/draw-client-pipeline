@@ -84,7 +84,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     "allauth.account.middleware.AccountMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
 
@@ -377,7 +376,7 @@ UNFOLD = {
             },
 
             {
-                "title": _("Task Scheduling"),
+                "title": _("Task Status"),
                 "separator": True,
                 "collapsible": True,
                 "items": [

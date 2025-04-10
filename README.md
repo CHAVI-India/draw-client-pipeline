@@ -61,6 +61,16 @@ cd draw-client
 
 
 2. Ensure that you have the correct folder path for the **datastore folder**. See the commented section in the docker-compose.yml file below. Ensure that the folder exists. Additionally if in Windows then change all \ to a / in the folder path. 
+
+The other folders are as follows:
+
+| Host Folder Name | Docker Folder Name | Purpose |
+| ---- | ----- | ---- |
+| logs | /app/logs | This folder will have all the logs of the application |
+| static | /app/static | This folder stores the static files |
+| dicom | /app/folders | This folder stores the dicom data that is being processed |
+| yaml-templates | /app/yaml-templates | This folder has all the autosegmentation templates created for the DRAW client |
+
 Then create a docker-compose.yml file with the following content:
 ```yaml
 services:
@@ -100,6 +110,7 @@ services:
       - app_data:/app
       - ./logs:/app/logs
       - ./static:/app/static
+      - ./dicom:/app/folders      
       - ./yaml-templates:/app/yaml-templates
       - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     command: ["./entrypoint.docker.sh"]
@@ -112,6 +123,7 @@ services:
       - app_data:/app
       - ./static:/app/static
       - ./logs:/app/logs
+      - ./dicom:/app/folders      
       - ./yaml-templates:/app/yaml-templates
       - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     env_file:
@@ -132,6 +144,7 @@ services:
       - app_data:/app
       - ./static:/app/static
       - ./logs:/app/logs
+      - ./dicom:/app/folders      
       - ./yaml-templates:/app/yaml-templates  
       - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     env_file:
@@ -158,6 +171,9 @@ volumes:
   postgres_data:
   app_data:
 ```
+
+Please note there is a docker-compose.yml file in the repository which allows you to "BUILD" the docker image. The example docker-compose section above allows you to pull the latest image from the dockerhub repository.
+
 
 3. Create a .env.docker file in the same directory. Please make sure that the file name is correct and note the presence of the . before the name which indicates that this is a hidden file.:
 

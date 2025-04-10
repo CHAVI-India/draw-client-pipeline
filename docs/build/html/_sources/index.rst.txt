@@ -32,4 +32,7 @@ The DRAW client performs the following major tasks:
    creating_autosegmentation_templates
    configure_rules
    setup_periodic_tasks
+   how_to_manual_segmentation
+   interface_guide
+   processsing_status_choices
 

@@ -4,6 +4,7 @@ from urllib.parse import urljoin
 from typing import Optional, Dict, Any, BinaryIO
 import logging
 from requests.exceptions import RequestException
+from api_client.api_utils.proxy_config import get_proxy_settings
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,8 @@ class DrawAPIClient:
         self.base_url = base_url.rstrip('/')
         self.api_key = api_key
         self.settings = settings
+        self.session = requests.Session()
+        self.session.proxies.update(get_proxy_settings())
         
     def _get_headers(self) -> Dict[str, str]:
         """Get headers for API requests."""
@@ -53,7 +56,7 @@ class DrawAPIClient:
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         kwargs['headers'] = {**kwargs.get('headers', {}), **self._get_headers()}
         
-        response = requests.request(method, url, **kwargs)
+        response = self.session.request(method, url, **kwargs)
         response.raise_for_status()
         return response
         

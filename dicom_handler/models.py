@@ -3,7 +3,7 @@ import os
 from django.core.exceptions import ValidationError
 from urllib.parse import urlparse
 from pathlib import Path
-
+from django.utils import timezone
 
 
 class DicomPathConfig(models.Model):
@@ -12,6 +12,7 @@ class DicomPathConfig(models.Model):
                                      default= "/app/datastore", 
                                      help_text="Enter the full path to the datastore which is the remote folder from the DICOM data will be imported. This can be a remote folder in which case the full path is required. We would suggest that in such a situation the remote folder is mapped as a shared drive on the machine where this client runs."
                                      )
+    date_time_to_start_pulling_data = models.DateTimeField(null=True, blank=True, default=timezone.now, help_text="Enter the date and time to start pulling data from the datastore. This setting can be changed manually at a later time to trigger a new pull of the data from the datastore.")
 
     class Meta:
         db_table = "dicom_path_config"
@@ -82,6 +83,81 @@ class ProcessingStatusChoices(models.TextChoices):
     PROCESSED = 'PROCESSED', 'PROCESSED'
     FAILED = 'FAILED', 'FAILED'
 
+
+
+
+class ModelYamlInfo(models.Model):
+    id = models.AutoField(primary_key=True)
+    yaml_name = models.CharField(max_length=255, unique=True)
+    yaml_path = models.CharField(max_length=512, null=True, blank=True)
+    protocol = models.CharField(max_length=255)
+    file_hash = models.CharField(max_length=128, null=True)
+    yaml_description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    modified_at = models.DateTimeField(auto_now=True, null=True)
+
+    def __str__(self):
+        return f"{self.yaml_name} | {self.protocol}" 
+    
+    class Meta:
+        managed = True
+        db_table = "model_yaml_info"
+        verbose_name = "Autosegmentation Template"
+
+
+
+
+
+class RuleSet(models.Model):
+    id = models.AutoField(primary_key=True)
+    rule_set_name = models.CharField(max_length=255, unique=True,help_text="Enter a name for the rule set. This must be a unique name and not match any other existing rule set.")
+    description = models.CharField(max_length=255, help_text="Enter a description for the rule set.")
+    model_yaml = models.OneToOneField(ModelYamlInfo, on_delete=models.CASCADE, null=True, help_text="Select the model yaml file for the rule set.")
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    modified_at = models.DateTimeField(auto_now=True, null=True)
+    
+    def __str__(self): 
+        return self.rule_set_name
+    
+    class Meta:
+        db_table = "rule_set"
+        verbose_name = "Rule Set For Matching Template"
+        verbose_name_plural = "Rule Sets For Matching Template"
+
+class TagName(models.Model):
+    id = models.PositiveBigIntegerField(primary_key=True)
+    tag_id = models.CharField(max_length=255, help_text="Enter the DICOM tag id. Please ensure that it matches the DICOM tag id properly")
+    tag_name = models.CharField(max_length=255, help_text="Enter the DICOM tag name. Please ensure that it matches the DICOM tag name properly")
+    tag_description = models.TextField(help_text="Enter the DICOM tag description. Please ensure that it matches the DICOM tag description properly")
+    value_representation = models.CharField(max_length=255, help_text="Enter the DICOM tag value representation. Please ensure that it matches the DICOM tag value representation properly")
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    modified_at = models.DateTimeField(auto_now=True, null=True)
+    
+    def __str__(self):
+        return self.tag_name
+    
+    class Meta:
+        db_table = "tag_name"
+        verbose_name = "DICOM Tag List"
+        verbose_name_plural = "DICOM Tag List"
+
+class Rule(models.Model):
+    id = models.AutoField(primary_key=True)
+    rule_set = models.ForeignKey(RuleSet, on_delete=models.PROTECT)
+    tag_name = models.ForeignKey(TagName, on_delete=models.PROTECT)
+    tag_value = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    modified_at = models.DateTimeField(auto_now=True, null=True)
+
+    # def __str__(self):
+    #     return self.id
+    
+    class Meta:
+        db_table = "rule"
+        verbose_name = "Rule"
+
+
+
 # Dicom copy
 # class CopyDicom(models.Model):
 #     id = models.AutoField(primary_key=True)
@@ -129,26 +205,6 @@ class ProcessingStatusChoices(models.TextChoices):
 #         db_table = "dicom_import"
 #         verbose_name = "Dicom Series for Processing"
 #         verbose_name_plural = "Dicom Series for Processing"
-
-
-class ModelYamlInfo(models.Model):
-    id = models.AutoField(primary_key=True)
-    yaml_name = models.CharField(max_length=255, unique=True)
-    yaml_path = models.CharField(max_length=512, null=True, blank=True)
-    protocol = models.CharField(max_length=255)
-    file_hash = models.CharField(max_length=128, null=True)
-    yaml_description = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    modified_at = models.DateTimeField(auto_now=True, null=True)
-
-    def __str__(self):
-        return f"{self.yaml_name} | {self.protocol}" 
-    
-    class Meta:
-        managed = True
-        db_table = "model_yaml_info"
-        verbose_name = "Autosegmentation Template"
-
 
 # class DicomUnprocessed(models.Model):
 #     id = models.AutoField(primary_key=True)
@@ -217,55 +273,6 @@ class ModelYamlInfo(models.Model):
 #     class Meta:
 #         db_table = "series_metadata"
 #         verbose_name = "Series Metadata"
-
-
-class RuleSet(models.Model):
-    id = models.AutoField(primary_key=True)
-    rule_set_name = models.CharField(max_length=255, unique=True,help_text="Enter a name for the rule set. This must be a unique name and not match any other existing rule set.")
-    description = models.CharField(max_length=255, help_text="Enter a description for the rule set.")
-    model_yaml = models.OneToOneField(ModelYamlInfo, on_delete=models.CASCADE, null=True, help_text="Select the model yaml file for the rule set.")
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    modified_at = models.DateTimeField(auto_now=True, null=True)
-    
-    def __str__(self): 
-        return self.rule_set_name
-    
-    class Meta:
-        db_table = "rule_set"
-        verbose_name = "Rule Set For Matching Template"
-        verbose_name_plural = "Rule Sets For Matching Template"
-
-class TagName(models.Model):
-    id = models.PositiveBigIntegerField(primary_key=True)
-    tag_id = models.CharField(max_length=255, help_text="Enter the DICOM tag id. Please ensure that it matches the DICOM tag id properly")
-    tag_name = models.CharField(max_length=255, help_text="Enter the DICOM tag name. Please ensure that it matches the DICOM tag name properly")
-    tag_description = models.TextField(help_text="Enter the DICOM tag description. Please ensure that it matches the DICOM tag description properly")
-    value_representation = models.CharField(max_length=255, help_text="Enter the DICOM tag value representation. Please ensure that it matches the DICOM tag value representation properly")
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    modified_at = models.DateTimeField(auto_now=True, null=True)
-    
-    def __str__(self):
-        return self.tag_name
-    
-    class Meta:
-        db_table = "tag_name"
-        verbose_name = "DICOM Tag List"
-        verbose_name_plural = "DICOM Tag List"
-
-class Rule(models.Model):
-    id = models.AutoField(primary_key=True)
-    rule_set = models.ForeignKey(RuleSet, on_delete=models.PROTECT)
-    tag_name = models.ForeignKey(TagName, on_delete=models.PROTECT)
-    tag_value = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True, null=True)
-    modified_at = models.DateTimeField(auto_now=True, null=True)
-
-    # def __str__(self):
-    #     return self.id
-    
-    class Meta:
-        db_table = "rule"
-        verbose_name = "Rule"
 
 
 # class uploadDicom(models.Model):

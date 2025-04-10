@@ -46,7 +46,16 @@ def delete_yml_in_folder(folder_path: str) -> bool:
 def send_dicom_for_processing_action(modeladmin, request, queryset: QuerySet) -> None:
     """
     Admin action to send DICOM files for processing. This function:
-    1. Validates the processing status of selected series
+    1. Validates the processing status of selected series : The valid statues are:
+        - SERIES_SEPARATED ( here the series have been seperated but the file was not processed further)
+        - TEMPLATE_NOT_MATCHED (autosegmentation template was not matched)
+        - MULTIPLE_TEMPLATES_MATCHED (multiple autosegmentation templates were matched)
+        - MULTIPLE_TEMPLATES_FOUND (multiple autosegmentation templates were found)
+        - NO_TEMPLATE_FOUND (no autosegmentation template was found)
+        - READY_FOR_DEIDENTIFICATION (the series is ready for deidentification but has become stuck.)
+        - RTSTRUCT_EXPORTED (the rtstruct file has been exported. This special condition to allow manual processing of a successfully processed series).
+        - ERROR (an error occurred)
+        
     2. Verifies series folder existence
     3. Cleans up existing yaml files
     4. Copies new template yaml files
@@ -66,6 +75,7 @@ def send_dicom_for_processing_action(modeladmin, request, queryset: QuerySet) ->
         'MULTIPLE_TEMPLATES_FOUND',
         'NO_TEMPLATE_FOUND',
         'READY_FOR_DEIDENTIFICATION',
+        'RTSTRUCT_EXPORTED', 
         'ERROR'
     ]
 

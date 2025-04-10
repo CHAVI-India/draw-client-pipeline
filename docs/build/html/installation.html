@@ -175,6 +175,7 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app_data:/app</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/app/logs</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/app/static</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./dicom:/app/folders</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./yaml-templates:/app/yaml-templates</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;/mnt/share/dicom_processing_test/datastore:/app/datastore&quot;</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;./entrypoint.docker.sh&quot;</span><span class="p p-Indicator">]</span>
@@ -187,6 +188,7 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app_data:/app</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/app/static</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/app/logs</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./dicom:/app/folders</span><span class="w">      </span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./yaml-templates:/app/yaml-templates</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;/mnt/share/dicom_processing_test/datastore:/app/datastore&quot;</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
 <span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
@@ -207,6 +209,7 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app_data:/app</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/app/static</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/app/logs</span><span class="w">     </span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./dicom:/app/folders</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./yaml-templates:/app/yaml-templates</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;/mnt/share/dicom_processing_test/datastore:/app/datastore&quot;</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
 <span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
@@ -271,6 +274,11 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="nv">DJANGO_SUPERUSER_USERNAME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>admin
 <span class="nv">DJANGO_SUPERUSER_PASSWORD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>admin
 <span class="nv">DJANGO_SUPERUSER_EMAIL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>admin@example.com
+
+<span class="c1"># Proxy Configuration uncomment and modify the values to use proxy</span>
+<span class="c1"># HTTP_PROXY = http://proxy.example.com:8080</span>
+<span class="c1"># HTTPS_PROXY = http://proxy.example.com:8080</span>
+<span class="c1"># NO_PROXY = localhost,127.0.0.1,db,rabbitmq</span>
 </pre></div>
 </div>
 </section>

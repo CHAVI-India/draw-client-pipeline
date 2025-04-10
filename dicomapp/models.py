@@ -60,6 +60,7 @@ class DicomSeriesProcessingModel(models.Model):
     gender = models.CharField(max_length=10,blank=True)
     scan_date = models.DateField(blank=True)
     modality = models.CharField(max_length=50,blank=True)
+    protocol_name = models.CharField(max_length=255,blank=True)
     study_instance_uid = models.CharField(max_length=255,blank=True)
     series_instance_uid = models.CharField(max_length=255,blank=True)
     series_description = models.CharField(max_length=255,blank=True)

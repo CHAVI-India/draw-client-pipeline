@@ -3,9 +3,10 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Index &mdash; DRAW Client 1.0 documentation</title>
+  <title>Processing Status Choices &mdash; DRAW Client 1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
@@ -16,7 +17,7 @@
       <script src="_static/doctools.js?v=9bcbadda"></script>
       <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="#" />
+    <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 </head>
 
@@ -50,7 +51,6 @@
 <li class="toctree-l1"><a class="reference internal" href="setup_periodic_tasks.html">Setup Periodic Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how_to_manual_segmentation.html">How to initiate a manual segmentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="interface_guide.html">Interface Guidance</a></li>
-<li class="toctree-l1"><a class="reference internal" href="processsing_status_choices.html">Processing Status Choices</a></li>
 </ul>
 
         </div>
@@ -67,8 +67,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Index</li>
+      <li class="breadcrumb-item active">Processing Status Choices</li>
       <li class="wy-breadcrumbs-aside">
+            <a href="_sources/processsing_status_choices.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -76,12 +77,36 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-
-<h1 id="index">Index</h1>
-
-<div class="genindex-jumpbox">
- 
-</div>
+  <section id="processing-status-choices">
+<h1>Processing Status Choices<a class="headerlink" href="#processing-status-choices" title="Link to this heading"></a></h1>
+<section id="processing-status">
+<h2>Processing Status<a class="headerlink" href="#processing-status" title="Link to this heading"></a></h2>
+<p>The following are the processing status choices that are available in the DRAW Client.</p>
+<ol class="arabic simple">
+<li><p>SERIES_SEPARATED: The series has been separated into individual studies.</p></li>
+<li><p>TEMPLATE_NOT_MATCHED: The series does not match any of the autosegmentation templates.</p></li>
+<li><p>MULTIPLE_TEMPLATES_MATCHED: The series matches multiple autosegmentation templates.</p></li>
+<li><p>MULTIPLE_TEMPLATES_FOUND: The series matches multiple autosegmentation templates.</p></li>
+<li><p>NO_TEMPLATE_FOUND: The series does not match any of the autosegmentation templates.</p></li>
+<li><p>READY_FOR_DEIDENTIFICATION: The series is ready for deidentification.</p></li>
+<li><p>DEIDENTIFIED: The series has been deidentified.</p></li>
+<li><p>DEIDENTIFICATION_FAILED: The series deidentification failed.</p></li>
+<li><p>RTSTRUCT_EXPORT_FAILED: The RTStruct export failed.</p></li>
+<li><p>RTSTRUCT_EXPORTED: The RTStruct has been exported.</p></li>
+<li><p>ERROR: An error occurred during the processing of the series.</p></li>
+</ol>
+</section>
+<section id="series-state-choices">
+<h2>Series State Choices<a class="headerlink" href="#series-state-choices" title="Link to this heading"></a></h2>
+<p>The following are the series state choices that are available in the DRAW Client.</p>
+<ol class="arabic simple">
+<li><p>PROCESSING: The series is being processed.</p></li>
+<li><p>UNPROCESSED: The series has not been processed as the autosegmentation templates are not matched.</p></li>
+<li><p>COMPLETE: The series has been processed completely.</p></li>
+<li><p>FAILED: The series processing failed. Please see the Series Processing Logs for more details.</p></li>
+</ol>
+</section>
+</section>
 
 
            </div>
