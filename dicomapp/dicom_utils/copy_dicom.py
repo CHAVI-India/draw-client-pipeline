@@ -64,21 +64,22 @@ def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
         dicom_path_config = DicomPathConfig.objects.first()
         if dicom_path_config and dicom_path_config.date_time_to_start_pulling_data:
             date_time_to_start_pulling_data = dicom_path_config.date_time_to_start_pulling_data
-            logger.info(f"Date time to start pulling data from the datastore: {date_time_to_start_pulling_data}")
+            logger.info(f"Date time to start pulling data from the datastore: {date_time_to_start_pulling_data} (timezone: {date_time_to_start_pulling_data.tzinfo})")
         else:
             date_time_to_start_pulling_data = current_time
             logger.warning("No valid date time to start pulling data from the datastore found, using current time")
 
         # Get the time delta w.r.t to date_time_to_start_pulling_data
         pull_start_time = date_time_to_start_pulling_data - timedelta(minutes=10)
-        logger.info(f"Pull start time: {pull_start_time}")
+        logger.info(f"Pull start time: {pull_start_time} (timezone: {pull_start_time.tzinfo})")
         ten_minutes_ago = current_time - timedelta(minutes=10)
-        logger.info(f"Ten minutes ago: {ten_minutes_ago}")
+        logger.info(f"Ten minutes ago: {ten_minutes_ago} (timezone: {ten_minutes_ago.tzinfo})")
+        
         # Validate time window
         if pull_start_time > current_time:
             logger.warning(f"Pull start time {pull_start_time} is in the future, adjusting to current time")
             pull_start_time = current_time - timedelta(minutes=20)
-            logger.info(f"Pull start time: {pull_start_time}")
+            logger.info(f"Pull start time: {pull_start_time} (timezone: {pull_start_time.tzinfo})")
         # Iterate through directories in datastore_path
         for item in os.listdir(datastore_path):
             source_dir = os.path.join(datastore_path, item)
@@ -90,8 +91,10 @@ def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
                 
             # Get directory stats
             stats = os.stat(source_dir)
-            creation_time = datetime.fromtimestamp(stats.st_ctime)
-            modification_time = datetime.fromtimestamp(stats.st_mtime)
+            # Convert timestamps to timezone-aware datetimes
+            creation_time = timezone.make_aware(datetime.fromtimestamp(stats.st_ctime))
+            modification_time = timezone.make_aware(datetime.fromtimestamp(stats.st_mtime))
+            logger.info(f"Directory {item} modification time: {modification_time} (timezone: {modification_time.tzinfo})")
             
             # Calculate directory size
             total_size = 0
