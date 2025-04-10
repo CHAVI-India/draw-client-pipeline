@@ -415,80 +415,104 @@ LOGGING = {
         # Debug level handler
         "debug_file": {
             "level": "DEBUG",
-            "class": "logging.FileHandler",
+            "class": "logging.handlers.RotatingFileHandler",
             "filename": str(LOG_FOLDER / "debug.log"),
             "formatter": "default",
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 3,
         },
         # Info level handler
         "info_file": {
             "level": "INFO",
-            "class": "logging.FileHandler", 
+            "class": "logging.handlers.RotatingFileHandler", 
             "filename": str(LOG_FOLDER / "info.log"),
             "formatter": "default",
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 3,
         },
         # Warning level handler
         "warning_file": {
             "level": "WARNING",
-            "class": "logging.FileHandler",
+            "class": "logging.handlers.RotatingFileHandler",
             "filename": str(LOG_FOLDER / "warning.log"),
             "formatter": "default",
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 3,
         },
         # Error level handler
         "error_file": {
             "level": "ERROR",
-            "class": "logging.FileHandler",
+            "class": "logging.handlers.RotatingFileHandler",
             "filename": str(LOG_FOLDER / "error.log"),
             "formatter": "default",
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 3,
         },
         # Critical level handler
         "critical_file": {
             "level": "CRITICAL",
-            "class": "logging.FileHandler",
+            "class": "logging.handlers.RotatingFileHandler",
             "filename": str(LOG_FOLDER / "critical.log"),
             "formatter": "default",
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 3,
         },
         # Dedicated handlers for specific apps
         "django_file": {
             "level": "DEBUG",
-            "class": "logging.FileHandler",
+            "class": "logging.handlers.RotatingFileHandler",
             "filename": str(LOG_FOLDER / "django.log"),
             "formatter": "default",
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 3,
         },
         "dicom_handler_file": {
             "level": "DEBUG",
-            "class": "logging.FileHandler",
+            "class": "logging.handlers.RotatingFileHandler",
             "filename": str(LOG_FOLDER / "dicom_handler.log"),
             "formatter": "default",
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 3,
         },
         "deidapp_file": {
             "level": "DEBUG",
-            "class": "logging.FileHandler",
+            "class": "logging.handlers.RotatingFileHandler",
             "filename": str(LOG_FOLDER / "deidapp.log"),
             "formatter": "default",
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 3,
         },
         "celery_file": {
             "level": "DEBUG",
-            "class": "logging.FileHandler", 
+            "class": "logging.handlers.RotatingFileHandler", 
             "filename": str(LOG_FOLDER / "celery.log"),
             "formatter": "default",
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 3,
         },
         "celery_beat_file": {
             "level": "DEBUG",
-            "class": "logging.FileHandler", 
+            "class": "logging.handlers.RotatingFileHandler", 
             "filename": str(LOG_FOLDER / "celery_beat.log"),
             "formatter": "default",
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 3,
         },
         "api_client_file": {
             "level": "DEBUG",
-            "class": "logging.FileHandler", 
+            "class": "logging.handlers.RotatingFileHandler", 
             "filename": str(LOG_FOLDER / "api_client.log"),
             "formatter": "default",
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 3,
         },
         "dicomapp_file": {
             "level": "DEBUG",
-            "class": "logging.FileHandler", 
+            "class": "logging.handlers.RotatingFileHandler", 
             "filename": str(LOG_FOLDER / "dicomapp.log"),
             "formatter": "default",
+            "maxBytes": 10485760,  # 10MB
+            "backupCount": 3,
         }
     },
     "loggers": {

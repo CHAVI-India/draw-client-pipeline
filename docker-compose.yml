@@ -39,6 +39,10 @@ services:
       - ./yaml-templates:/app/yaml-templates
       - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     command: ["./entrypoint.docker.sh"]
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
 
   celery:
     build: .
@@ -60,6 +64,10 @@ services:
         condition: service_started
       rabbitmq:
         condition: service_started
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
 
   celery-beat:
     build: .
@@ -81,6 +89,10 @@ services:
         condition: service_started
       rabbitmq:
         condition: service_started
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
 
   frontend-proxy:
     image: nginx:latest

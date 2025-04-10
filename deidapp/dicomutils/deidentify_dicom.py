@@ -10,12 +10,28 @@ import random
 import time
 import calendar
 import logging
+import sys
 
 # Setup logging
 logger = logging.getLogger('deidapp')
 
 # Add Celery's logger
 celery_logger = logging.getLogger('celery.task')
+
+# Make sure logging handlers properly close file descriptors
+for handler in logger.handlers + celery_logger.handlers:
+    if hasattr(handler, 'close'):
+        try:
+            handler.flush()
+            handler.close()
+        except (AttributeError, IOError, ValueError):
+            pass
+
+# Create new stream handler that won't require file handles if file logging fails
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setFormatter(logging.Formatter('%(levelname)s %(asctime)s %(name)s.%(funcName)s:%(lineno)s- %(message)s'))
+logger.addHandler(stream_handler)
+celery_logger.addHandler(stream_handler)
 
 class DicomDeidentifier:
     def __init__(self):
