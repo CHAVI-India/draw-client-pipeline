@@ -111,15 +111,18 @@ def deidentify_dicom_series(match_result: dict) -> dict:
                         # Ensure that the folder path is properly updated in the database and prevent the folder path from being updated in the next step.
 
                         # Create a new directory called folder_processed_dicom if it doesn't exist.
-                        processed_dicom_dir = os.path.join(settings.BASE_DIR, "folder_processed_dicom")
-                        if not os.path.exists(processed_dicom_dir):
-                            os.makedirs(processed_dicom_dir)
-
-                        # Copy the series_folder to the folder_processed_dicom directory.
-                        shutil.copytree(series_dir, processed_dicom_dir)
+                        processed_dicom_dir = os.path.join(settings.BASE_DIR,'folders', "folder_processed_dicom")
+                        os.makedirs(processed_dicom_dir, exist_ok=True)
+                        
+                        # Create a unique subdirectory for this series using the series ID
+                        series_subdir = os.path.join(processed_dicom_dir, str(series_id))
+                        os.makedirs(series_subdir, exist_ok=True)
+                        
+                        # Copy the series_folder to the unique subdirectory
+                        shutil.copytree(series_dir, series_subdir, dirs_exist_ok=True)
 
                         # Update the database to reflect the new folder path.
-                        series_model.series_current_directory = processed_dicom_dir
+                        series_model.series_current_directory = series_subdir
                         series_model.save()
 
                         # Call the deidentify_dicom function from deidapp
