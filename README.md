@@ -192,24 +192,32 @@ DJANGO_DB_PASSWORD=postgres
 DJANGO_DB_HOST=db
 DJANGO_DB_PORT=5432
 
-# Postgres
+# Postgres (credentials for database. Ensure database username and password supplied here match what is provided to the section above).
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_DB=draw-client
 
-# API URLs
+# API URLs (these URLs point to the server)
 API_URL=https://draw.chavi.ai/api/models/
 MODEL_API_URL=https://draw.chavi.ai/models
 
-# Celery
+# Celery (Required for tasks)
 CELERY_BROKER_URL=pyamqp://guest:guest@rabbitmq:5672
 
-# Django Superuser
+# Django Superuser (Used to create a superuser at the application start)
 DJANGO_SUPERUSER_USERNAME=admin
 DJANGO_SUPERUSER_PASSWORD=admin
 DJANGO_SUPERUSER_EMAIL=admin@example.com
+
+# Proxy setting
+# HTTP_PROXY = http://proxy.example.com:8080
+# HTTPS_PROXY = http://proxy.example.com:8080
+# NO_PROXY = localhost,127.0.0.1,db,rabbitmq
+
 ```
 
+  
+> **Important**: Configuring the correct proxy settings is needed if you hospital connects to the internet through a proxy server. Please contact your IT personnel to get the complete string as it may require special authentication also. The above example is for a proxy which does not require authentication.
 
 4. Create a nginx.conf file (required for the nginx container):
 ```

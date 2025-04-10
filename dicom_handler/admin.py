@@ -139,6 +139,7 @@ class ModelYamlInfoAdmin(ModelAdmin):
         'yaml_name', 
         'protocol', 
         'yaml_description',
+        'get_rule_set_name',
         'created_at',
     )
     readonly_fields = [
@@ -154,6 +155,13 @@ class ModelYamlInfoAdmin(ModelAdmin):
     search_help_text = "Search by YAML name, protocol, or description"
     list_filter = ('yaml_name', 'protocol','created_at',)
     list_per_page = 10
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('ruleset')
+
+    @admin.display(description='Rule Set')
+    def get_rule_set_name(self, obj):
+        return obj.ruleset.rule_set_name if hasattr(obj, 'ruleset') else '-'
 
 admin.site.register(ModelYamlInfo, ModelYamlInfoAdmin)
 
