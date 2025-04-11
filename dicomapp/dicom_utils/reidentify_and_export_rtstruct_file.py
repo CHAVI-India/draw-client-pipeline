@@ -9,7 +9,7 @@ from deidapp.models import *
 from dicomapp.models import *
 import shutil
 # Configure logger
-logger = logging.getLogger('deidapp')
+logger = logging.getLogger('__name__')
 
 def reidentify_rtstruct_file_and_export_to_datastore(dict):
     """

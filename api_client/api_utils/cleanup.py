@@ -4,7 +4,7 @@ from pathlib import Path
 from ..models import DicomTransfer
 from django.conf import settings
 
-logger = logging.getLogger('api_client')
+logger = logging.getLogger('__name__')
 
 def cleanup_old_transfers():
     """

@@ -5,10 +5,7 @@ import os
 import numpy as np
 import logging
 
-
-# # Get loggers for different purposes
-logger = logging.getLogger('dicom_handler_logs')
-# logger = logging.getLogger('django')
+logger = logging.getLogger('__name__')
 
 def create_yaml_from_pandas_df(data, save_yaml_path, yaml_name):
     try:

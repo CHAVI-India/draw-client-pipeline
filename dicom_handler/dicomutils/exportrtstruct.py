@@ -6,7 +6,7 @@ from dicom_handler.models import DicomSeriesProcessing, CopyDicom, DicomUnproces
 import logging
 from django.conf import settings
 # Get logger
-logger = logging.getLogger('dicom_handler_logs')
+logger = logging.getLogger('__name__')
 
 
 def export_rtstruct():

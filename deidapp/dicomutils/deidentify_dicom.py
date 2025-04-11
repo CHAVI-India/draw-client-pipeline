@@ -12,10 +12,8 @@ import calendar
 import logging
 
 # Setup logging
-logger = logging.getLogger('deidapp')
+logger = logging.getLogger('__name__')
 
-# Add Celery's logger
-celery_logger = logging.getLogger('celery.task')
 
 class DicomDeidentifier:
     def __init__(self):

@@ -7,7 +7,7 @@ from api_client.models import DicomTransfer, SystemSettings
 from api_client.api_utils.dicom_export import DicomExporter
 from api_client.api_utils.proxy_config import get_proxy_settings
 from django.conf import settings
-logger = logging.getLogger('api_client')
+logger = logging.getLogger('__name__')
 
 def compute_file_checksum(file_path):
     """

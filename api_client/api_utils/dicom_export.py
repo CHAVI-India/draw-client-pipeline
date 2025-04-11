@@ -7,7 +7,7 @@ from api_client.models import DicomTransfer, SystemSettings
 from django.conf import settings
 from api_client.api_utils.proxy_config import get_proxy_settings
 
-logger = logging.getLogger('api_client')
+logger = logging.getLogger('__name__')
 
 class DicomExporter:
     """Handles DICOM file exports and API interactions."""

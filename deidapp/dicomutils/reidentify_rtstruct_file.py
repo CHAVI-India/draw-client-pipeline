@@ -8,7 +8,7 @@ from django.conf import settings
 from deidapp.models import DicomSeries, DicomInstance, RTStructFile
 
 # Configure logger
-logger = logging.getLogger('deidapp')
+logger = logging.getLogger('__name__')
 
 def reidentify_rtstruct_files(source_dir=None, target_dir=None):
     """
