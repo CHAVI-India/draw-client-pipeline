@@ -110,6 +110,12 @@ def series_preparation(input_data: dict) -> dict:
         os.makedirs(series_directory_path, exist_ok=True)
         logger.info(f"Created series directory at: {series_directory_path}")
         
+        # Create the archive directory
+        archive_directory_string = f"folders/folder_for_series_archive"
+        archive_directory_path = os.path.join(settings.BASE_DIR, archive_directory_string)
+        os.makedirs(archive_directory_path, exist_ok=True)
+        logger.info(f"Created archive directory at: {archive_directory_path}")
+        
         # Dictionary to store series data by SeriesInstanceUID
         series_dict = {}
         # Dictionary to store file paths for each series
@@ -190,6 +196,10 @@ def series_preparation(input_data: dict) -> dict:
                 # Create series directory if it doesn't exist
                 os.makedirs(series_data['series_current_directory'], exist_ok=True)
                 
+                # Create series-specific archive directory
+                series_archive_directory = os.path.join(archive_directory_path, series_uid)
+                os.makedirs(series_archive_directory, exist_ok=True)
+                
                 # Find the matching CopyDicomTaskModel for this series
                 copy_dicom_task_instance = None
                 if input_data.get('copy_dicom_task_id'):
@@ -221,6 +231,7 @@ def series_preparation(input_data: dict) -> dict:
                     series_description=series_data['series_description'],
                     series_import_directory=series_data['series_import_directory'],
                     series_current_directory=series_data['series_current_directory'],
+                    series_archive_directory=series_archive_directory,
                     processing_status=ProcessingStatusChoices.SERIES_SEPARATED,
                     series_state=SeriesState.PROCESSING,
                     copy_dicom_task_id=copy_dicom_task_instance
@@ -251,8 +262,12 @@ def series_preparation(input_data: dict) -> dict:
                     try:
                         file_name = os.path.basename(file_path)
                         target_path = os.path.join(series_data['series_current_directory'], file_name)
+                        # First copy to series-specific archive directory
+                        archive_path = os.path.join(series_archive_directory, file_name)
+                        shutil.copy2(file_path, archive_path, follow_symlinks=True)
+                        # Then move to target directory
                         shutil.move(file_path, target_path)
-                        logger.info(f"Successfully moved DICOM file: {file_name}")
+                        logger.info(f"Successfully archived and moved DICOM file: {file_name}")
                     except Exception as e:
                         logger.error(f"Error moving file {file_name}: {str(e)}")
                         processing_errors.append(f"Error moving file {file_name}: {str(e)}")

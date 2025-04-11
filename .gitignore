@@ -167,3 +167,4 @@ yaml-templates/*
 db.sqlite3-journal
 logs/debug.log.1
 logs/debug.log.1
+logs/debug.log.1
