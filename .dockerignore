@@ -163,3 +163,4 @@ GitHub.sublime-settings
 uploaddicom/
 yaml-templates/*
 !/yaml-templates/
+logs/

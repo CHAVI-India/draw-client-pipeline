@@ -24,6 +24,8 @@ folder_unprocessed_dicom/
 folder_temp/
 folder_archive/
 static/
+logs/
+
 # Backup files # 
 *.bak 
 
@@ -163,3 +165,4 @@ uploaddicom/
 yaml-templates/*
 !/yaml-templates/
 db.sqlite3-journal
+logs/debug.log.1
