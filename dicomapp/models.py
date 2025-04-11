@@ -65,6 +65,7 @@ class DicomSeriesProcessingModel(models.Model):
     series_instance_uid = models.CharField(max_length=255,blank=True)
     series_description = models.CharField(max_length=255,blank=True,null=True)
     series_import_directory = models.CharField(max_length=512,blank=True,null=True)
+    series_archive_directory = models.CharField(max_length=512,blank=True,null=True)
     series_current_directory = models.CharField(max_length=512,blank=True,null=True)
     template_file = models.ForeignKey(ModelYamlInfo,on_delete=models.SET_NULL, null=True, blank=True)
     processing_status = models.CharField(max_length=60,blank=True,choices=ProcessingStatusChoices.choices)
