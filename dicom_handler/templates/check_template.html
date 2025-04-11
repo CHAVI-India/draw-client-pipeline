@@ -1,0 +1,367 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block content %}
+<div class="container">
+
+
+    <!-- Add this after your "Create Draw Templates" heading -->
+    <div class="step-diagram-container">
+        <h4>Create DRAW Template</h4>
+        <div class="step-diagram">
+            <div class="step-item {% if current_step == 1 %}active{% endif %} completed">
+                <div class="step-circle">1</div>
+                <div class="step-line"></div>
+                <div class="step-title">Template Details</div>
+                <div class="step-description">Define name and description</div>
+            </div>
+            <div class="step-item {% if current_step == 2 %}active{% endif %} completed">
+                <div class="step-circle">2</div>
+                <div class="step-line"></div>
+                <div class="step-title">Choose Models</div>
+                <div class="step-description">Select required models</div>
+            </div>
+            <div class="step-item {% if current_step == 3 %}active{% endif %} completed">
+                <div class="step-circle">3</div>
+                <div class="step-title">Review & Submit</div>
+                <div class="step-description">Confirm your selections</div>
+            </div>
+        </div>
+    </div>
+    <!-- <p class="text-muted">Step 1: Enter Template Details</p> -->
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="templateDetailsForm" method="POST">
+                {% csrf_token %}
+                <div id="templateDetails" class="mb-4">
+                    <div class="form-group mb-4">
+                        <label for="templatename" class="form-label">Template Name</label>
+                        <input type="text" class="form-control form-control-lg" id="templatename" name="templatename"
+                            value="{{ template_name }}" placeholder="Enter template name" required>
+                        <small class="form-text text-muted">Template name must be unique</small>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4"
+                            placeholder="Enter template description" required>{{ description }}</textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="ri-arrow-right-line me-2"></i>Next: Select Models
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-lg ms-2" onclick="resetForm()">
+                        <i class="ri-refresh-line me-2"></i>Reset
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    {% if template_exists %}
+    <!-- Template Exists Modal -->
+    <div class="modal fade show" id="existingFileModal" tabindex="-1" style="display: block;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">
+                        <i class="ri-error-warning-line me-2"></i>Template Already Exists
+                    </h5>
+                    <button type="button" class="btn-close" onclick="closeModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <p>A template with this name already exists. Would you like to:</p>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" onclick="generateNewName()">
+                            <i class="ri-magic-line me-2"></i>Generate New Name
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="closeModal()">
+                            <i class="ri-edit-line me-2"></i>Enter Different Name
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+    {% endif %}
+</div>
+
+<style>
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        padding: 0.75rem 1rem;
+    }
+
+    .form-control:focus {
+        border-color: #9333ea;
+        box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+    }
+
+    .form-control-lg {
+        font-size: 1.125rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background-color: #9333ea;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: #7e22ce;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-secondary {
+        border: 2px solid #64748b;
+        color: #64748b;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: #9333ea;
+        border-color: #9333ea;
+        color: white;
+    }
+
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1040;
+    }
+
+    .modal {
+        z-index: 1050;
+    }
+
+    .modal-content {
+        border-radius: 15px;
+        border: none;
+    }
+
+    .modal-header {
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+        padding: 1rem 1.5rem;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .btn-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        padding: 0;
+        margin: 0;
+    }
+
+    .btn-close:hover {
+        opacity: 0.75;
+    }
+
+    .footer {
+        flex-shrink: 10;
+        background-color: #f8f9fa;
+        padding: 20px 0;
+        border-top: 1px solid #dee2e6;
+        width: 100%;
+    }
+
+    .footer a {
+        color: #6c757d;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .footer a:hover {
+        color: #9333ea;
+    }
+
+    /* Step Diagram Styles */
+    .step-diagram-container {
+        padding: 20px 0;
+    }
+
+    .step-diagram {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        max-width: 800px;
+        margin: 0 auto;
+        position: relative;
+        padding: 20px 0;
+    }
+
+    .step-item {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+
+    .step-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-weight: bold;
+        position: relative;
+        z-index: 2;
+        transition: all 0.3s ease;
+    }
+
+    .step-line {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        width: 100%;
+        height: 3px;
+        background-color: #e9ecef;
+        z-index: 1;
+    }
+
+    .step-item:last-child .step-line {
+        display: none;
+    }
+
+    .step-title {
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: #495057;
+    }
+
+    .step-description {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+
+    /* Active and Completed States */
+    .step-item.active .step-circle {
+        background-color: #9333ea;
+        color: white;
+        box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.2);
+    }
+
+    .step-item.active .step-title {
+        color: #9333ea;
+    }
+
+    .step-item.completed .step-circle {
+        background-color: #9333ea;
+        color: white;
+    }
+
+    .step-item.completed .step-line {
+        background-color: #9333ea;
+    }
+
+    /* Hover Effects */
+    .step-item:hover .step-circle {
+        transform: scale(1.1);
+    }
+
+    .step-diagram-container h4 {
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Animation */
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.4);
+        }
+
+        70% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 10px rgba(147, 51, 234, 0);
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(147, 51, 234, 0);
+        }
+    }
+
+    .step-item.active .step-circle {
+        animation: pulse 2s infinite;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .step-diagram {
+            flex-direction: column;
+            align-items: center;
+            padding: 0;
+        }
+
+        .step-item {
+            width: 100%;
+            margin-bottom: 30px;
+            padding: 0 20px;
+        }
+
+        .step-line {
+            width: 3px;
+            height: 30px;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .footer {
+            text-align: center;
+        }
+
+        .footer .text-md-end {
+            text-align: center !important;
+            margin-top: 10px;
+        }
+    }
+</style>
+
+
+<script>
+    function resetForm() {
+        document.getElementById('templateDetailsForm').reset();
+    }
+
+    function closeModal() {
+        document.getElementById('existingFileModal').style.display = 'none';
+        document.querySelector('.modal-backdrop').remove();
+    }
+
+    function generateNewName() {
+        const currentName = document.getElementById('templatename').value;
+        const timestamp = new Date().getTime();
+        document.getElementById('templatename').value = `${currentName}_${timestamp}`;
+        closeModal();
+    }
+</script>
+{% endblock content %}
