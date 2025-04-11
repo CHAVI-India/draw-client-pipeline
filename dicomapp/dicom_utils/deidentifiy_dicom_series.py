@@ -123,7 +123,7 @@ def deidentify_dicom_series(match_result: dict) -> dict:
                                 # Update database but not the series current directory as if the deidentification succeds the folder is deleted.
                                 series_model.processing_status = ProcessingStatusChoices.DEIDENTIFIED
                                 series_model.series_state = SeriesState.PROCESSING
-                                #series_model.series_current_directory = result["deidentified_path"]
+                                series_model.series_current_directory = result["deidentified_path"]
                                 series_model.save()
                                 
                                 # Create log entry
