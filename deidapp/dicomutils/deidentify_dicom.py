@@ -188,7 +188,7 @@ class DicomDeidentifier:
                     # Try to read the DICOM file
                     logger.info(f"Reading DICOM file: {file_path}")
                     
-                    ds = pydicom.dcmread(f)
+                    ds = pydicom.dcmread(file_path)
                     logger.info(f"Successfully read DICOM file with UIDs: PatientID={ds.PatientID}, StudyInstanceUID={ds.StudyInstanceUID}, SeriesInstanceUID={ds.SeriesInstanceUID}")
                     
                     # Check if modality is one of CT, MRI, or PET
@@ -265,8 +265,6 @@ class DicomDeidentifier:
                     
                     try:
                         os.makedirs(new_dir, exist_ok=True)
-                        # Set permissions explicitly for Docker environments
-                        os.chmod(new_dir, 0o777)
                     except Exception as e:
                         logger.error(f"Failed to create output directory {new_dir}: {str(e)}")
                         continue
@@ -280,12 +278,8 @@ class DicomDeidentifier:
                     filename = f"{deidentified_sop_uid}.dcm"
                     
                     new_file_path = os.path.join(new_dir, filename)
-                    try:
-                        
-                        ds.save_as(f, enforce_file_format=True)
-                            
-                        # Set permissions on the new file
-                        os.chmod(new_file_path, 0o666)
+                    try: 
+                        ds.save_as(new_file_path, enforce_file_format=True)
                         logger.info(f'Successfully processed and saved: {file} -> {filename}')
                     except Exception as e:
                         logger.error(f"Failed to save processed file to {new_file_path}: {str(e)}")
