@@ -48,7 +48,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#the-docker-compose-yml-file">The docker-compose.yml file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#the-env-docker-file">The .env.docker file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-env-file">The .env file</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#the-nginx-conf-file">The nginx.conf file</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#running-the-draw-client">Running the DRAW Client</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#docker-desktop-interface">Docker Desktop Interface</a></li>
@@ -61,6 +61,9 @@
 <li class="toctree-l1"><a class="reference internal" href="creating_autosegmentation_templates.html">Creating Autosegmentation Templates</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configure_rules.html">Configure Rules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup_periodic_tasks.html">Setup Periodic Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_manual_segmentation.html">How to initiate a manual segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interface_guide.html">Interface Guidance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processsing_status_choices.html">Processing Status Choices</a></li>
 </ul>
 
         </div>
@@ -122,7 +125,7 @@ While the repository hosts the complete source code, for the docker based instal
 <li><p>Create three files inside the directory:</p>
 <ol class="arabic simple">
 <li><p>docker-compose.yml</p></li>
-<li><p>.env.docker</p></li>
+<li><p>.env</p></li>
 <li><p>nginx.conf</p></li>
 </ol>
 </li>
@@ -138,6 +141,7 @@ While the repository hosts the complete source code, for the docker based instal
 </section>
 <section id="the-docker-compose-yml-file">
 <h2>The docker-compose.yml file<a class="headerlink" href="#the-docker-compose-yml-file" title="Link to this heading"></a></h2>
+<p>Copy the file called example_docker-compose.yml from the docker_example_files folder in the repository and paste its contents into the docker-compose.yml file that you created in step 2.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">services</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">db</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres:17</span>
@@ -147,7 +151,7 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres_data:/var/lib/postgresql/data</span>
 <span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env.docker</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env</span>
 <span class="w">    </span><span class="nt">healthcheck</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">test</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;CMD-SHELL&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;pg_isready</span><span class="nv"> </span><span class="s">-U</span><span class="nv"> </span><span class="s">$${POSTGRES_USER}</span><span class="nv"> </span><span class="s">-d</span><span class="nv"> </span><span class="s">$${POSTGRES_DB}&quot;</span><span class="p p-Indicator">]</span>
 <span class="w">      </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5s</span>
@@ -164,35 +168,45 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RABBITMQ_DEFAULT_PASS=guest</span>
 
 <span class="w">  </span><span class="nt">django-web</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">build</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaviapp/drawclient:v2.0.2</span><span class="w"> </span><span class="c1">#Replace with the version of the image you want to use</span>
 <span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">django-docker</span>
 <span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">db</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_healthy</span>
 <span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env.docker</span><span class="w">      </span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env</span><span class="w">      </span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app_data:/app</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/app/logs</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/app/static</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./staticfiles:/app/staticfiles</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./dicom:/app/folders</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./yaml-templates:/app/yaml-templates</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;/mnt/share/dicom_processing_test/datastore:/app/datastore&quot;</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;dicomdata:/app/datastore&quot;</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;./entrypoint.docker.sh&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DOCKER_CONTAINER=true</span>
+<span class="w">    </span><span class="nt">ulimits</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">nofile</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">soft</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">65536</span>
+<span class="w">        </span><span class="nt">hard</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">65536</span>
 
 <span class="w">  </span><span class="nt">celery</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">build</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaviapp/drawclient:v2.0.2</span><span class="w"> </span><span class="c1">#Replace with the version of the image you want to use</span>
 <span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">celery-docker</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;./entrypoint.docker.sh&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;celery&quot;</span><span class="p p-Indicator">]</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app_data:/app</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/app/static</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./staticfiles:/app/staticfiles</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/app/logs</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./dicom:/app/folders</span><span class="w">      </span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./yaml-templates:/app/yaml-templates</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;/mnt/share/dicom_processing_test/datastore:/app/datastore&quot;</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;dicomdata:/app/datastore&quot;</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
 <span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env.docker</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DOCKER_CONTAINER=true</span>
 <span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">db</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_healthy</span>
@@ -200,20 +214,27 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_started</span>
 <span class="w">      </span><span class="nt">rabbitmq</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_started</span>
+<span class="w">    </span><span class="nt">ulimits</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">nofile</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">soft</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">65536</span>
+<span class="w">        </span><span class="nt">hard</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">65536</span>
 
 <span class="w">  </span><span class="nt">celery-beat</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">build</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaviapp/drawclient:v2.0.2</span><span class="w"> </span><span class="c1">#Replace with the version of the image you want to use</span>
 <span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">celery-beat-docker</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;./entrypoint.docker.sh&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;celery-beat&quot;</span><span class="p p-Indicator">]</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">app_data:/app</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/app/static</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./staticfiles:/app/staticfiles</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./logs:/app/logs</span><span class="w">     </span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./dicom:/app/folders</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./yaml-templates:/app/yaml-templates</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;/mnt/share/dicom_processing_test/datastore:/app/datastore&quot;</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;dicomdata:/app/datastore&quot;</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
 <span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env.docker</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env</span>
+<span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DOCKER_CONTAINER=true</span>
 <span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">db</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_healthy</span>
@@ -221,6 +242,10 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_started</span>
 <span class="w">      </span><span class="nt">rabbitmq</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">condition</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">service_started</span>
+<span class="w">    </span><span class="nt">ulimits</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">nofile</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">soft</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">65536</span>
+<span class="w">        </span><span class="nt">hard</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">65536</span>
 
 <span class="w">  </span><span class="nt">frontend-proxy</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx:latest</span>
@@ -229,24 +254,50 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;8001:80&quot;</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./nginx.conf:/etc/nginx/nginx.conf:ro</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./static:/static:ro</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./staticfiles:/staticfiles:ro</span>
 <span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">django-web</span>
 <span class="nt">volumes</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">postgres_data</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">app_data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">dicomdata</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cifs</span>
+<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;username=${NETWORK_USER},domain=${NETWORK_DOMAIN},password=${NETWORK_PASSWORD},rw&quot;</span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NETWORK_PATH}</span><span class="w">  </span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>There are 3 places in the docker-compose.yml file where the datastore path needs to be configured. Please make sure that you update all of them.</p>
 </div>
+<p>Please note the following configuration items:</p>
+<ol class="arabic simple">
+<li><p>If you are using a local folder as a datastore then the path should be provided in the section dicomdata at the bottom. However most commonly this folder will be a network shared folder. In that case we need the IP address, username, password and domain to log into the folder. Hence a cifs storage configuration is provided as an example.</p></li>
+<li><p>The folder paths starting with a ./ indicate that the folder will be created at same folder where the docker-compose.yml file is located.</p></li>
+<li><p>If you are using a proxy to get to internet then you need to provide the proxy settings in the .env file</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>We will inform you which is the correct version of the image to be used. Please make sure that you use the correct version of the image.</p>
+</div>
 </section>
-<section id="the-env-docker-file">
-<h2>The .env.docker file<a class="headerlink" href="#the-env-docker-file" title="Link to this heading"></a></h2>
+<section id="the-env-file">
+<h2>The .env file<a class="headerlink" href="#the-env-file" title="Link to this heading"></a></h2>
+<p>Copy the file called .env.docker.example from the docker_example_files folder in the repository and paste its contents into the .env file that you created in step 2.</p>
+<p>Please note that the following environment variables are sensitive:</p>
+<ol class="arabic simple">
+<li><p>SECRET_KEY - This is the secret key for the django application. You can generate a new secret key for the django application using the following website: <a class="reference external" href="https://djecrety.ir/">https://djecrety.ir/</a></p></li>
+<li><p>NETWORK_USER - This is the username for the network shared folder.</p></li>
+<li><p>NETWORK_PASSWORD - This is the password for the network shared folder.</p></li>
+<li><p>NETWORK_DOMAIN - This is the domain for the network shared folder.</p></li>
+<li><p>POSTGRES_PASSWORD - This is the password for the postgres database.</p></li>
+<li><p>DJANGO_SUPERUSER_PASSWORD - This is the password for the django superuser.</p></li>
+<li><p>DJANGO_DB_PASSWORD - This is the password for the django database. This should be the same as the POSTGRES_PASSWORD.</p></li>
+</ol>
 <p>You can generate a new secret key for the django application using the following website: <a class="reference external" href="https://djecrety.ir/">https://djecrety.ir/</a></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">SECRET_KEY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">&amp;</span>^<span class="p">&amp;</span>7stc^ijtq1e0a280<span class="o">=</span>0w8g-luul^au^^13<span class="o">=</span>p6ko1c8jwahn
-<span class="nv">DJANGO_DEBUG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>True
+<span class="nv">DJANGO_DEBUG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>False
 <span class="nv">DJANGO_ALLOWED_HOSTS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">127</span>.0.0.1,localhost
 <span class="nv">DJANGO_CSRF_TRUSTED_ORIGINS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>http://localhost:8001,http://127.0.0.1:8001
 
@@ -279,8 +330,17 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="c1"># HTTP_PROXY = http://proxy.example.com:8080</span>
 <span class="c1"># HTTPS_PROXY = http://proxy.example.com:8080</span>
 <span class="c1"># NO_PROXY = localhost,127.0.0.1,db,rabbitmq</span>
+
+<span class="c1"># Configuration for CIFS storage</span>
+<span class="c1"># NETWORK_USER=user</span>
+<span class="c1"># NETWORK_PASSWORD=password</span>
+<span class="c1"># NETWORK_DOMAIN=domain</span>
+<span class="c1"># NETWORK_PATH=//172.16.19.61/dicom/import</span>
 </pre></div>
 </div>
+<p>There are two sections which have been commmented out as they may not be required  for all cases:
+The first is the proxy configuration which is used to access the internet from the container. The second is the section for the celery worker which is used to run the celery worker in the container.
+The second is the CIFS storage configuration which is used to access the network shared folder from the container.</p>
 </section>
 <section id="the-nginx-conf-file">
 <h2>The nginx.conf file<a class="headerlink" href="#the-nginx-conf-file" title="Link to this heading"></a></h2>
@@ -300,7 +360,7 @@ http<span class="w"> </span><span class="o">{</span>
 
 <span class="w">       </span><span class="c1"># Requests to /static/ are served directly from the /static/ directory</span>
 <span class="w">       </span>location<span class="w"> </span>/static/<span class="w"> </span><span class="o">{</span>
-<span class="w">           </span><span class="nb">alias</span><span class="w"> </span>/static/<span class="p">;</span>
+<span class="w">           </span><span class="nb">alias</span><span class="w"> </span>/staticfiles/<span class="p">;</span>
 <span class="w">           </span>expires<span class="w"> </span>7d<span class="p">;</span>
 <span class="w">       </span><span class="o">}</span>
 

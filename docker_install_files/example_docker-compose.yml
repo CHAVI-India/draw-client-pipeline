@@ -7,7 +7,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file:
-      - .env.docker
+      - .env
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -24,13 +24,13 @@ services:
       - RABBITMQ_DEFAULT_PASS=guest
 
   django-web:
-    build: .
+    image: chaviapp/drawclient:v2.0.2 #Replace with the version of the image you want to use
     container_name: django-docker
     depends_on:
       db:
         condition: service_healthy
     env_file:
-      - .env.docker      
+      - .env      
     volumes:
       - app_data:/app
       - ./logs:/app/logs
@@ -38,7 +38,7 @@ services:
       - ./staticfiles:/app/staticfiles
       - ./dicom:/app/folders
       - ./yaml-templates:/app/yaml-templates
-      - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
+      - "dicomdata:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     command: ["./entrypoint.docker.sh"]
     environment:
       - DOCKER_CONTAINER=true
@@ -48,7 +48,7 @@ services:
         hard: 65536
 
   celery:
-    build: .
+    image: chaviapp/drawclient:v2.0.2 #Replace with the version of the image you want to use
     container_name: celery-docker
     command: ["./entrypoint.docker.sh", "celery"]
     volumes:
@@ -58,9 +58,9 @@ services:
       - ./logs:/app/logs
       - ./dicom:/app/folders      
       - ./yaml-templates:/app/yaml-templates
-      - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
+      - "dicomdata:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     env_file:
-      - .env.docker
+      - .env
     environment:
       - DOCKER_CONTAINER=true
     depends_on:
@@ -76,7 +76,7 @@ services:
         hard: 65536
 
   celery-beat:
-    build: .
+    image: chaviapp/drawclient:v2.0.2 #Replace with the version of the image you want to use
     container_name: celery-beat-docker
     command: ["./entrypoint.docker.sh", "celery-beat"]
     volumes:
@@ -86,9 +86,9 @@ services:
       - ./logs:/app/logs     
       - ./dicom:/app/folders
       - ./yaml-templates:/app/yaml-templates
-      - "/mnt/share/dicom_processing_test/datastore:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
+      - "dicomdata:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
     env_file:
-      - .env.docker
+      - .env
     environment:
       - DOCKER_CONTAINER=true
     depends_on:
@@ -116,3 +116,8 @@ services:
 volumes:
   postgres_data:
   app_data:
+  dicomdata:
+    driver_opts:
+      type: cifs
+      o: "username=${NETWORK_USER},domain=${NETWORK_DOMAIN},password=${NETWORK_PASSWORD},rw"
+      device: ${NETWORK_PATH}  

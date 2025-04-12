@@ -52,7 +52,7 @@ Briefly the steps are:
 #. Create three files inside the directory:    
 
    #. docker-compose.yml    
-   #. .env.docker    
+   #. .env    
    #. nginx.conf  
 
 Please play close attention to the name of the file called .env.docker. The dot in the beginning of the file name is important. It may be hidden in the file explorer.
@@ -72,27 +72,55 @@ For reference here are the text for the three files
 The docker-compose.yml file
 ---------------------------
 
-.. literalinclude:: ../../docker-compose.yml
+Copy the file called example_docker-compose.yml from the docker_example_files folder in the repository and paste its contents into the docker-compose.yml file that you created in step 2.
+
+.. literalinclude:: ../../docker_install_files/example_docker-compose.yml
   :language: yaml
 
 
 .. note::
    There are 3 places in the docker-compose.yml file where the datastore path needs to be configured. Please make sure that you update all of them.
 
+Please note the following configuration items:
 
-The .env.docker file
+#. If you are using a local folder as a datastore then the path should be provided in the section dicomdata at the bottom. However most commonly this folder will be a network shared folder. In that case we need the IP address, username, password and domain to log into the folder. Hence a cifs storage configuration is provided as an example.
+#. The folder paths starting with a ./ indicate that the folder will be created at same folder where the docker-compose.yml file is located.
+#. If you are using a proxy to get to internet then you need to provide the proxy settings in the .env file
+
+.. note::
+   We will inform you which is the correct version of the image to be used. Please make sure that you use the correct version of the image.
+
+The .env file
 ---------------------
+
+Copy the file called .env.docker.example from the docker_example_files folder in the repository and paste its contents into the .env file that you created in step 2.
+
+Please note that the following environment variables are sensitive: 
+
+#. SECRET_KEY - This is the secret key for the django application. You can generate a new secret key for the django application using the following website: https://djecrety.ir/
+#. NETWORK_USER - This is the username for the network shared folder.
+#. NETWORK_PASSWORD - This is the password for the network shared folder.
+#. NETWORK_DOMAIN - This is the domain for the network shared folder.
+#. POSTGRES_PASSWORD - This is the password for the postgres database.
+#. DJANGO_SUPERUSER_PASSWORD - This is the password for the django superuser.
+#. DJANGO_DB_PASSWORD - This is the password for the django database. This should be the same as the POSTGRES_PASSWORD.
 
 You can generate a new secret key for the django application using the following website: https://djecrety.ir/
 
 
-.. literalinclude:: ../../.env.docker.example
+
+.. literalinclude:: ../../docker_install_files/.env.docker.example
   :language: bash
+
+There are two sections which have been commmented out as they may not be required  for all cases:
+The first is the proxy configuration which is used to access the internet from the container. The second is the section for the celery worker which is used to run the celery worker in the container.
+The second is the CIFS storage configuration which is used to access the network shared folder from the container.
+
 
 The nginx.conf file
 ---------------------
 
-.. literalinclude:: ../../nginx.conf
+.. literalinclude:: ../../docker_install_files/example_nginx.conf
   :language: bash
 
 We recommend that you copy paste the text first in the files instead of typing them. 
