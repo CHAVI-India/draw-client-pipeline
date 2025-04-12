@@ -24,13 +24,15 @@
                                 <thead>
                                     <tr>
                                         <th><input type="checkbox" id="selectAll"> All</th>
-                                        <th>Model Id</th>
-                                        <th>Model Name</th>
-                                        <th>Map ID</th>
+                                        <th style="display: none;">Model Id</th>
+                                        <th style="display: none;">Model Name</th>
+                                        <th style="display: none;">Map ID</th>
                                         <th>Structure Name</th>
+                                        <th>Modality</th>
+                                        <th>Validation Dice</th>
+                                        <th>Model Name</th>
                                         <th>Structure Info</th>
-                                        <!-- <th>Trainer Name</th> -->
-                                        <!-- <th>Postprocess</th> -->
+                                       
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -44,10 +46,13 @@
                                                 data-model-name="{{ info.model_name }}"
                                                 data-structure-name="{{ map.map_tg263_primary_name }}">
                                         </td>
-                                        <td>{{ info.model_id }}</td>
-                                        <td>{{ info.model_name }}</td>
-                                        <td>{{ map.mapid }}</td>
+                                        <td style="display: none;">{{ info.model_id }}</td>
+                                        <td style="display: none;">{{ info.model_name }}</td>
+                                        <td style="display: none;">{{ map.mapid }}</td>
                                         <td>{{ map.map_tg263_primary_name }}</td>
+                                        <td>{{ map.delineation_modality }}</td>
+                                        <td>{{ map.average_dice_score }}</td>
+                                        <td>{{ info.model_name }}</td>
                                         <!-- Replace the existing View Details column -->
                                         <td>
                                             <a href="{{model_details_api}}/{{map.id}}" target="_blank"
@@ -112,13 +117,13 @@
                             <span id="templateNameConfirm"></span>
                         </div>
                         <div class="mb-3">
-                            <label class="fw-bold">Selected Models:</label>
+                            <label class="fw-bold">Selected Structures:</label>
                             <span id="selectedCountConfirm"></span>
                         </div>
                     </div>
                     <div class="alert alert-info mt-3">
                         <i class="fas fa-info-circle me-2"></i>
-                        Are you sure you want to create this template with the selected models?
+                        Are you sure you want to create this template with the selected structures and models?
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -334,7 +339,7 @@
 
             // Update confirmation modal with details
             $('#templateNameConfirm').text($('input[name="templateName"]').val());
-            $('#selectedCountConfirm').text(selectedModels.size + ' models');
+            $('#selectedCountConfirm').text(selectedModels.size + ' Structures');
 
             // Show confirmation modal
             $('#confirmationModal').modal('show');
