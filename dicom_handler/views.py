@@ -7,6 +7,7 @@ import pandas as pd
 from django.http import JsonResponse  # Keep this import only once
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
 import json  # Keep this import only once
 from dicom_handler.dicomutils.create_yml import *
 from django.urls import reverse
@@ -71,6 +72,7 @@ def index(request):
     
     return render(request, 'dicom_handler/dashboard.html', context=context)
 
+@login_required
 def check_template(request):
     if request.method == 'POST':
         template_name = request.POST.get('templatename')
@@ -101,6 +103,7 @@ def check_template(request):
     return render(request, 'dicom_handler/check_template.html')
 
 
+@login_required
 def create_yml(request):
     try:
         # Create a session with proxy settings
