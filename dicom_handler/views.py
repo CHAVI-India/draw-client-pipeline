@@ -63,7 +63,7 @@ def index(request):
         # 'notifications': Notification.objects.order_by('-created_at')[:5],
     }
     
-    return render(request, 'dashboard.html', context=context)
+    return render(request, 'dicom_handler/dashboard.html', context=context)
 
 def check_template(request):
     if request.method == 'POST':
@@ -80,7 +80,7 @@ def check_template(request):
         
         if template_exists:
             print(f"Template '{template_name}' already exists!")
-            return render(request, 'check_template.html', {
+            return render(request, 'dicom_handler/check_template.html', {
                 'template_name': template_name,
                 'description': description,
                 'template_exists': True
@@ -92,7 +92,7 @@ def check_template(request):
         return redirect('create-yml')
     
     # For GET requests, just render the empty form
-    return render(request, 'check_template.html')
+    return render(request, 'dicom_handler/check_template.html')
 
 
 def create_yml(request):
@@ -114,7 +114,7 @@ def create_yml(request):
 
             if not selected_model_ids:
                 messages.error(request, 'Please select at least one model')
-                return render(request, 'create_yml.html', {
+                return render(request, 'dicom_handler/create_yml.html', {
                     'apidata': raw_data,
                     'template_name': template_name,
                     'description': description
@@ -165,7 +165,7 @@ def create_yml(request):
             return redirect('autosegmentation-template')
         
         # For GET request
-        return render(request, 'create_yml.html', {
+        return render(request, 'dicom_handler/create_yml.html', {
             'apidata': raw_data,
             'model_details_api': os.getenv('MODEL_API_URL'),
             'template_name': request.session.get('template_name'),
@@ -174,7 +174,7 @@ def create_yml(request):
 
     except requests.RequestException as e:
         messages.error(request, f'Failed to fetch API data: {str(e)}')
-        return render(request, 'create_yml.html', {
+        return render(request, 'dicom_handler/create_yml.html', {
             'template_name': request.session.get('template_name'),
             'description': request.session.get('description')
         })
@@ -182,7 +182,7 @@ def create_yml(request):
         # Add more detailed error logging
         print("Error in create_yml:", str(e))
         messages.error(request, f'An error occurred: {str(e)}')
-        return render(request, 'create_yml.html', {
+        return render(request, 'dicom_handler/create_yml.html', {
             'apidata': raw_data if 'raw_data' in locals() else None,
             'template_name': request.session.get('template_name'),
             'description': request.session.get('description')
@@ -219,7 +219,7 @@ def autosegmentation_template(request):
             'grouped_models': grouped_models,
         }
 
-        return render(request, 'yaml_view.html', context)
+        return render(request, 'dicom_handler/yaml_view.html', context)
 
     except ModelYamlInfo.DoesNotExist:
         messages.error(request, 'No templates found.')
