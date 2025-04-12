@@ -19,9 +19,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Stage 2: Production stage
 FROM python:3
  
+# Create user and required directories
 RUN useradd -m -r appuser && \
-   mkdir /app && \
-   chown -R appuser /app
+    mkdir /app && \
+    mkdir -p /app/staticfiles && \
+    chown -R appuser:appuser /app
  
 # Copy the Python dependencies from the builder stage
 COPY --from=builder /usr/local/lib/python3.13/site-packages/ /usr/local/lib/python3.13/site-packages/
@@ -32,9 +34,6 @@ WORKDIR /app
  
 # Copy application code
 COPY --chown=appuser:appuser . .
-
-# Create staticfiles directory and set permissions
-RUN mkdir -p /app/staticfiles && chown -R appuser:appuser /app/staticfiles
 
 # Set environment variables to optimize Python
 ENV PYTHONDONTWRITEBYTECODE=1
