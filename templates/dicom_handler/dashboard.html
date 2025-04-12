@@ -153,32 +153,36 @@
                             {% for series in recent_series %}
                             <tr>
                                 <td>
-                                    <a href="{% url 'admin:dicomapp_dicomseriesprocessingmodel_changelist' %}?patient_id={{ series.patient_id }}" class="text-primary text-decoration-none">
-                                        {{ series.patient_id }}
+                                    <a href="{% url 'admin:dicomapp_dicomseriesprocessingmodel_changelist' %}?patient_id={{ series.patient_id|default:'' }}" class="text-primary text-decoration-none">
+                                        {{ series.patient_id|default:'N/A' }}
                                         <i class="ri-external-link-line small ms-1"></i>
                                     </a>
                                 </td>
-                                <td>{{ series.patient_name }}</td>
-                                <td>{{ series.scan_date|date:"M d, Y" }}</td>
+                                <td>{{ series.patient_name|default:'N/A' }}</td>
+                                <td>{{ series.scan_date|date:"M d, Y"|default:'N/A' }}</td>
                                 <td>
-                                    {% if series.processing_status == 'SERIES_SEPARATED' %}
-                                        <span class="badge bg-primary">{{ series.processing_status }}</span>
-                                    {% elif series.processing_status == 'DEIDENTIFIED' %}
-                                        <span class="badge bg-success">{{ series.processing_status }}</span>
-                                    {% elif series.processing_status == 'RTSTRUCT_EXPORTED' %}
-                                        <span class="badge bg-success">{{ series.processing_status }}</span>
-                                    {% elif series.processing_status == 'ERROR' %}
-                                        <span class="badge bg-danger">{{ series.processing_status }}</span>
-                                    {% elif series.processing_status == 'DEIDENTIFICATION_FAILED' %}
-                                        <span class="badge bg-danger">{{ series.processing_status }}</span>
-                                    {% elif series.processing_status == 'RTSTRUCT_EXPORT_FAILED' %}
-                                        <span class="badge bg-danger">{{ series.processing_status }}</span>
-                                    {% elif series.processing_status == 'TEMPLATE_NOT_MATCHED' %}
-                                        <span class="badge bg-warning text-dark">{{ series.processing_status }}</span>
-                                    {% elif series.processing_status == 'MULTIPLE_TEMPLATES_MATCHED' %}
-                                        <span class="badge bg-warning text-dark">{{ series.processing_status }}</span>
+                                    {% if series.processing_status %}
+                                        {% if series.processing_status == 'SERIES_SEPARATED' %}
+                                            <span class="badge bg-primary">{{ series.processing_status }}</span>
+                                        {% elif series.processing_status == 'DEIDENTIFIED' %}
+                                            <span class="badge bg-success">{{ series.processing_status }}</span>
+                                        {% elif series.processing_status == 'RTSTRUCT_EXPORTED' %}
+                                            <span class="badge bg-success">{{ series.processing_status }}</span>
+                                        {% elif series.processing_status == 'ERROR' %}
+                                            <span class="badge bg-danger">{{ series.processing_status }}</span>
+                                        {% elif series.processing_status == 'DEIDENTIFICATION_FAILED' %}
+                                            <span class="badge bg-danger">{{ series.processing_status }}</span>
+                                        {% elif series.processing_status == 'RTSTRUCT_EXPORT_FAILED' %}
+                                            <span class="badge bg-danger">{{ series.processing_status }}</span>
+                                        {% elif series.processing_status == 'TEMPLATE_NOT_MATCHED' %}
+                                            <span class="badge bg-warning text-dark">{{ series.processing_status }}</span>
+                                        {% elif series.processing_status == 'MULTIPLE_TEMPLATES_MATCHED' %}
+                                            <span class="badge bg-warning text-dark">{{ series.processing_status }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ series.processing_status }}</span>
+                                        {% endif %}
                                     {% else %}
-                                        <span class="badge bg-secondary">{{ series.processing_status }}</span>
+                                        <span class="badge bg-secondary">Unknown</span>
                                     {% endif %}
                                 </td>
                             </tr>
