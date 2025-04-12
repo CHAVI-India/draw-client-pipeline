@@ -1,6 +1,7 @@
 #!/bin/bash
 
-
+# Create staticfiles directory and set permissions
+RUN mkdir -p /app/staticfiles && chown -R appuser:appuser /app/staticfiles
 
 # Apply database migrations
 python manage.py migrate
