@@ -25,6 +25,12 @@ os.makedirs(templatefolderpath, exist_ok=True)
         
 
 def index(request):
+    # Get recent series data for the table
+    recent_series = DicomSeriesProcessingModel.objects.all().order_by('-created_at')
+    
+    # Debug: Print count of series found
+    print(f"Number of series records found: {recent_series.count()}")
+    
     context = {
         # Total Templates
         'total_templates': ModelYamlInfo.objects.count(),
@@ -56,8 +62,8 @@ def index(request):
             series_state='UNPROCESSED'
         ).count(),
         
-        # # Recent Activities
-        # 'recent_activities': ActivityLog.objects.select_related('user').order_by('-date')[:10],
+        # Recent Series for the activity table
+        'recent_series': recent_series,
         
         # # System Notifications
         # 'notifications': Notification.objects.order_by('-created_at')[:5],

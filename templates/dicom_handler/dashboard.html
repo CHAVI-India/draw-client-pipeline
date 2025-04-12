@@ -1,6 +1,12 @@
 {% extends 'index.html' %}
 
 {% block content %}
+{% load static %}
+
+<!-- Add DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
+
 <!-- Dashboard Header -->
 <div class="welcome-section mb-4">
     <h4 class="text-primary mb-1">Welcome back, {{ user.username }}</h4>
@@ -131,43 +137,54 @@
                     </button>
                 </div>
             </div>
-            <div class="card-body p-0">
+            <div class="card-body">
+                <!-- Remove redundant search bar -->
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover mb-0" id="seriesTable">
                         <thead>
                             <tr>
-                                <th>Template Name</th>
-                                <th>Status</th>
-                                <th>User</th>
-                                <th>Date</th>
-                                <th>Actions</th>
+                                <th>Patient ID</th>
+                                <th>Patient Name</th>
+                                <th>Scan Date</th>
+                                <th>Processing Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for activity in recent_activities %}
+                            {% for series in recent_series %}
                             <tr>
-                                <td>{{ activity.template_name }}</td>
                                 <td>
-                                    <span class="badge bg-{{ activity.status_color }}">
-                                        {{ activity.status }}
-                                    </span>
+                                    <a href="{% url 'admin:dicomapp_dicomseriesprocessingmodel_changelist' %}?patient_id={{ series.patient_id }}" class="text-primary text-decoration-none">
+                                        {{ series.patient_id }}
+                                        <i class="ri-external-link-line small ms-1"></i>
+                                    </a>
                                 </td>
-                                <td>{{ activity.user }}</td>
-                                <td>{{ activity.date }}</td>
+                                <td>{{ series.patient_name }}</td>
+                                <td>{{ series.scan_date|date:"M d, Y" }}</td>
                                 <td>
-                                    <div class="btn-group">
-                                        <button class="btn btn-sm btn-light">
-                                            <i class="ri-eye-line"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-light">
-                                            <i class="ri-edit-line"></i>
-                                        </button>
-                                    </div>
+                                    {% if series.processing_status == 'SERIES_SEPARATED' %}
+                                        <span class="badge bg-primary">{{ series.processing_status }}</span>
+                                    {% elif series.processing_status == 'DEIDENTIFIED' %}
+                                        <span class="badge bg-success">{{ series.processing_status }}</span>
+                                    {% elif series.processing_status == 'RTSTRUCT_EXPORTED' %}
+                                        <span class="badge bg-success">{{ series.processing_status }}</span>
+                                    {% elif series.processing_status == 'ERROR' %}
+                                        <span class="badge bg-danger">{{ series.processing_status }}</span>
+                                    {% elif series.processing_status == 'DEIDENTIFICATION_FAILED' %}
+                                        <span class="badge bg-danger">{{ series.processing_status }}</span>
+                                    {% elif series.processing_status == 'RTSTRUCT_EXPORT_FAILED' %}
+                                        <span class="badge bg-danger">{{ series.processing_status }}</span>
+                                    {% elif series.processing_status == 'TEMPLATE_NOT_MATCHED' %}
+                                        <span class="badge bg-warning text-dark">{{ series.processing_status }}</span>
+                                    {% elif series.processing_status == 'MULTIPLE_TEMPLATES_MATCHED' %}
+                                        <span class="badge bg-warning text-dark">{{ series.processing_status }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ series.processing_status }}</span>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center py-4">
+                                <td colspan="4" class="text-center py-4">
                                     <i class="ri-inbox-line d-block text-muted mb-2" style="font-size: 2rem;"></i>
                                     No recent activities found
                                 </td>
@@ -323,7 +340,58 @@
             </div>
         </div>
     </div>
+</div>
 
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Filter Series</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="filterForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Patient ID</label>
+                            <input type="text" class="form-control" id="filterPatientId">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Patient Name</label>
+                            <input type="text" class="form-control" id="filterPatientName">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Processing Status</label>
+                            <select class="form-select" id="filterStatus">
+                                <option value="">All</option>
+                                <option value="SERIES_SEPARATED">Series Separated</option>
+                                <option value="DEIDENTIFIED">Deidentified</option>
+                                <option value="RTSTRUCT_EXPORTED">RTStruct Exported</option>
+                                <option value="ERROR">Error</option>
+                                <option value="TEMPLATE_NOT_MATCHED">Template Not Matched</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Date Range</label>
+                            <select class="form-select" id="filterDateRange">
+                                <option value="">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="year">This Year</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="applyFilter">Apply Filters</button>
+                <button type="button" class="btn btn-outline-secondary" id="resetFilter">Reset</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Custom Styles -->
@@ -508,13 +576,24 @@
         min-width: 0;
         /* Allow text container to shrink */
     }
+
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 </style>
 
 <!-- Initialize DataTables -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- Initialize DataTables -->
+<!-- Custom Scripts for the Dashboard -->
 <script>
     // Define showConfirmation globally
     function showConfirmation(action) {
@@ -537,34 +616,64 @@
         modal.show();
     }
 
-    $(document).ready(function () {
+    $(document).ready(function() {
         // Initialize DataTable
-        const table = $('.table').DataTable({
+        var table = $('#seriesTable').DataTable({
+            processing: true,
+            serverSide: false,
             responsive: true,
-            pageLength: 5,
-            order: [[3, 'desc']],
-            dom: '<"row"<"col-md-6"l><"col-md-6"f>>rtip',
+            pageLength: 10,
+            order: [[2, 'desc']], // Sort by scan date descending
+            dom: "<'row'<'col-sm-12'f>>" +  // Only show search box
+                 "<'row'<'col-sm-12'tr>>" + // Table
+                 "<'row'<'col-sm-12'p>>",   // Only pagination
             language: {
-                search: "",
-                searchPlaceholder: "Search...",
-                lengthMenu: "Show _MENU_ entries",
-                info: "Showing _START_ to _END_ of _TOTAL_ entries",
-                infoEmpty: "Showing 0 to 0 of 0 entries",
-                infoFiltered: "(filtered from _MAX_ total entries)"
+                search: "_INPUT_",
+                searchPlaceholder: "Search by Patient ID, Name, or Status...",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "<i class='ri-arrow-right-s-line'></i>",
+                    previous: "<i class='ri-arrow-left-s-line'></i>"
+                }
             }
         });
 
+        // Remove the length menu and info
+        $('.dataTables_length').remove();
+        $('.dataTables_info').remove();
+
         // Refresh button handler
-        $('#refreshTable').click(function () {
-            table.ajax.reload();
+        $('#refreshTable').on('click', function() {
+            const button = $(this);
+            const originalHtml = button.html();
+            button.html('<i class="ri-loader-4-line me-1 spin"></i> Refreshing...');
+            button.prop('disabled', true);
+            
+            // Reload the current page
+            window.location.reload();
         });
 
-        // Handle modal transitions
-        const modals = document.querySelectorAll('.modal');
-        modals.forEach(modal => {
-            modal.addEventListener('hidden.bs.modal', function () {
-                document.body.classList.add('modal-open');
-            });
+        // Apply filter
+        $('#applyFilter').on('click', function() {
+            const patientId = $('#filterPatientId').val();
+            const patientName = $('#filterPatientName').val();
+            const status = $('#filterStatus').val();
+            
+            // Apply filters
+            table
+                .columns(0).search(patientId)
+                .columns(1).search(patientName)
+                .columns(3).search(status)
+                .draw();
+
+            $('#filterModal').modal('hide');
+        });
+
+        // Reset filters
+        $('#resetFilter').on('click', function() {
+            $('#filterForm')[0].reset();
+            table.search('').columns().search('').draw();
         });
     });
 </script>

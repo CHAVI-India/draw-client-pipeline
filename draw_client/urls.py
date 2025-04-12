@@ -22,5 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("accounts/", include('allauth.urls')),
     path('docs/', include('docs.urls')),
+    path('dicomapp/', include('dicomapp.urls')),
     # path('api_client/', include('api_client.urls')),
 ]
