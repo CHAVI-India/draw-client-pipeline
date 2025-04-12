@@ -1,6 +1,9 @@
 #!/bin/bash
 
-
+# Create the staticfiles directory if it doesn't exist and set ownership to appuser
+mkdir -p staticfiles
+mkdir -p static
+chown -R appuser:appuser staticfiles
 
 # Apply database migrations
 python manage.py migrate
