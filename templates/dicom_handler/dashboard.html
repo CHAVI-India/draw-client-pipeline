@@ -159,7 +159,7 @@
                                     </a>
                                 </td>
                                 <td>{{ series.patient_name|default:'N/A' }}</td>
-                                <td>{{ series.scan_date|date:"M d, Y"|default:'N/A' }}</td>
+                                <td>{{ series.scan_date|date:"d,m,y"|default:'N/A' }}</td>
                                 <td>
                                     {% if series.processing_status %}
                                         {% if series.processing_status == 'SERIES_SEPARATED' %}
@@ -188,10 +188,10 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center py-4">
-                                    <i class="ri-inbox-line d-block text-muted mb-2" style="font-size: 2rem;"></i>
-                                    No recent activities found
-                                </td>
+                                <td class="text-center"></td>
+                                <td class="text-center"></td>
+                                <td class="text-center"></td>
+                                <td class="text-center"></td>
                             </tr>
                             {% endfor %}
                         </tbody>
