@@ -1,0 +1,800 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block content %}
+<div class="container">
+
+    <!-- <p><strong>Description:</strong> {{ description }}</p> -->
+    <!-- Display Template Details -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <!-- Regular Form -->
+            <form method="POST" action="{% url 'create-yml' %}">
+                {% csrf_token %}
+                <!-- Hidden fields for template details -->
+                <input type="hidden" name="templateName" value="{{ template_name }}">
+                <input type="hidden" name="description" value="{{ description }}">
+
+                <div class="row">
+                    <h4>Step 2: Select Models</h4>
+                    <p><strong>Template Name:</strong> {{ template_name }}</p>
+                    <!-- Table Container -->
+                    <div class="col-md-8">
+                        <div class="table-container">
+                            <table id="mapinfo-table" class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="selectAll"> All</th>
+                                        <th style="display: none;">Model Id</th>
+                                        <th style="display: none;">Model Name</th>
+                                        <th style="display: none;">Map ID</th>
+                                        <th>Structure Name</th>
+                                        <th>Modality</th>
+                                        <th>Validation DICE Score</th>
+                                        <th>Model Name </th>
+                                        <th>Structure Info</th>
+                                        <!-- <th>Trainer Name</th> -->
+                                        <!-- <th>Postprocess</th> -->
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for info in apidata %}
+                                    {% for map in info.modelmap %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="selected_models"
+                                                value="{{ info.model_id }}-{{ map.mapid }}" class="model-checkbox"
+                                                data-model-id="{{ info.model_id }}" data-map-id="{{ map.mapid }}"
+                                                data-model-name="{{ info.model_name }}"
+                                                data-structure-name="{{ map.map_tg263_primary_name }}">
+                                        </td>
+                                        <td style="display: none;">{{ info.model_id }}</td>
+                                        <td style="display: none;">{{ info.model_name }}</td>
+                                        <td style="display: none;">{{ map.mapid }}</td>
+                                        <td>{{ map.map_tg263_primary_name }}</td>
+                                        <td>{{ map.delineation_modality }}</td>
+                                        <td>{{ map.average_dice_score }}</td>
+                                        <td>{{ info.model_name }}</td>
+                                        <!-- Replace the existing View Details column -->
+                                        <td>
+                                            <a href="{{model_details_api}}{{map.id}}" target="_blank"
+                                                class="btn btn-sm btn-outline-primary d-inline-flex align-items-center"
+                                                style="font-size: 0.8rem; padding: 0.1rem 0.4rem; line-height: 1;">
+                                                <i class="fas fa-info-circle"></i>&nbsp;Details
+                                            </a>
+                                        </td>
+                                        <!-- <td><a href="{{model_details_api}}/{{map.id}}" target="_blank">View Details</a> -->
+                                        <!-- <td>{{ info.model_config|default:'' }}</td> -->
+                                        <!-- <td>{{ info.model_trainer_name|default:'' }}</td> -->
+                                        <!-- <td>{{ info.model_postprocess|default:'' }}</td> -->
+                                    </tr>
+                                    {% endfor %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Selected Models Display -->
+                    <div class="col-md-4">
+                        <div id="selectedModelsDisplay" class="card" style="display: none;">
+                            <div class="card-header">
+                                <h5 class="mb-0">Selected Models and Structures</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="selectedModelsList"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save me-2"></i>Create Template
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-lg ms-2" onclick="clearSelection()">
+                        <i class="fas fa-undo me-2"></i>Clear Selection
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+    <!-- Add this before closing container div -->
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmationModalLabel">
+                        <i class="fas fa-check-circle me-2"></i>Confirm Template Creation
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="confirmation-details">
+                        <div class="mb-3">
+                            <label class="fw-bold">Template Name:</label>
+                            <span id="templateNameConfirm"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Selected Structures:</label>
+                            <span id="selectedCountConfirm"></span>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Are you sure you want to create this template with the selected models?
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" id="confirmSubmit">
+                        <i class="fas fa-check me-2"></i>Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<!-- jQuery and DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        $.fn.dataTable.ext.errMode = 'none';
+        // Store selected models in a Set
+        let selectedModels = new Set();
+
+        // Store all model data
+        let allModelData = {};
+
+        // Initialize DataTable
+        let table = $('#mapinfo-table').DataTable({
+            "paging": true,
+            "searching": true,
+            "lengthChange": true,
+            "ordering": true,
+            "pageLength": 8,
+            "dom": '<"top"lf>rt<"bottom"ip>', // Custom layout
+            "language": {
+                "lengthMenu": "Show _MENU_ entries",
+                "search": "_INPUT_",
+                "searchPlaceholder": "Search...",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries"
+            },
+            "drawCallback": function (settings) {
+                restoreCheckboxStates();
+            },
+            "initComplete": function (settings, json) {
+                // Store all model data when table is initialized
+                $('#mapinfo-table tbody tr').each(function () {
+                    const checkbox = $(this).find('.model-checkbox');
+                    const value = checkbox.val();
+                    allModelData[value] = {
+                        modelId: $(this).find('td:eq(1)').text().trim(),
+                        modelName: $(this).find('td:eq(2)').text().trim(),
+                        mapId: $(this).find('td:eq(3)').text().trim(),
+                        structureName: $(this).find('td:eq(4)').text().trim(),
+                        config: $(this).find('td:eq(5)').text().trim(),
+                        trainerName: $(this).find('td:eq(6)').text().trim(),
+                        postprocess: $(this).find('td:eq(7)').text().trim()
+                    };
+                });
+            }
+        });
+
+        // Function to restore checkbox states
+        function restoreCheckboxStates() {
+            $('.model-checkbox').each(function () {
+                const value = $(this).val();
+                $(this).prop('checked', selectedModels.has(value));
+            });
+            updateSelectAllCheckbox();
+        }
+
+        // Select All functionality
+        // Select All functionality
+        $('#selectAll').on('click', function () {
+            const isChecked = $(this).prop('checked');
+
+            // Get all visible rows from DataTable
+            const visibleRows = table.rows({ 'search': 'applied' }).nodes();
+
+            // Update checkboxes and selectedModels set
+            $(visibleRows).find('.model-checkbox').each(function () {
+                const value = $(this).val();
+                if (isChecked) {
+                    selectedModels.add(value);
+                    $(this).prop('checked', true);
+
+                    // Store model data if not already stored
+                    if (!allModelData[value]) {
+                        const row = $(this).closest('tr');
+                        allModelData[value] = {
+                            modelId: row.find('td:eq(1)').text().trim(),
+                            modelName: row.find('td:eq(2)').text().trim(),
+                            mapId: row.find('td:eq(3)').text().trim(),
+                            structureName: row.find('td:eq(4)').text().trim(),
+                            config: row.find('td:eq(5)').text().trim(),
+                            trainerName: row.find('td:eq(6)').text().trim(),
+                            postprocess: row.find('td:eq(7)').text().trim()
+                        };
+                    }
+                } else {
+                    selectedModels.delete(value);
+                    $(this).prop('checked', false);
+                }
+            });
+
+            updateSelectedDisplay();
+        });
+
+        // Individual checkbox handler
+        $('#mapinfo-table').on('change', '.model-checkbox', function () {
+            const value = $(this).val();
+
+            if ($(this).is(':checked')) {
+                selectedModels.add(value);
+                // Store model data if not already stored
+                if (!allModelData[value]) {
+                    const row = $(this).closest('tr');
+                    allModelData[value] = {
+                        modelId: row.find('td:eq(1)').text().trim(),
+                        modelName: row.find('td:eq(2)').text().trim(),
+                        mapId: row.find('td:eq(3)').text().trim(),
+                        structureName: row.find('td:eq(4)').text().trim(),
+                        config: row.find('td:eq(5)').text().trim(),
+                        trainerName: row.find('td:eq(6)').text().trim(),
+                        postprocess: row.find('td:eq(7)').text().trim()
+                    };
+                }
+            } else {
+                selectedModels.delete(value);
+            }
+
+            updateSelectAllCheckbox();
+            updateSelectedDisplay();
+        });
+
+        // Function to update "Select All" checkbox
+        function updateSelectAllCheckbox() {
+            const visibleCheckboxes = $('.model-checkbox:visible');
+            const allChecked = visibleCheckboxes.length > 0 &&
+                visibleCheckboxes.filter(':checked').length === visibleCheckboxes.length;
+            $('#selectAll').prop('checked', allChecked);
+        }
+
+        // Update selected models display
+        function updateSelectedDisplay() {
+            const displayDiv = $('#selectedModelsDisplay');
+            const listDiv = $('#selectedModelsList');
+
+            if (selectedModels.size > 0) {
+                displayDiv.show();
+                listDiv.empty();
+
+                // Add count of selected models
+                listDiv.append(`
+                    <div class="selected-count mb-3">
+                        <span class="badge bg-primary">
+                            <i class="fas fa-check-circle me-1"></i>
+                            Selected: ${selectedModels.size}
+                        </span>
+                    </div>
+                `);
+
+                // Display all selected models using stored data
+                selectedModels.forEach(value => {
+                    const modelData = allModelData[value];
+                    if (modelData) {
+                        listDiv.append(`
+                            <div class="selected-model-item">
+                                <div class="model-name">
+                                    <strong>${modelData.modelName}</strong>
+                                </div>
+                                <div class="model-details">
+                                    <span class="badge bg-secondary">ID: ${modelData.modelId}</span>
+                                    <span class="badge bg-info">Map ID: ${modelData.mapId}</span>
+                                </div>
+                                <div class="structure-name text-muted">
+                                    <small><i class="fas fa-sitemap me-1"></i>${modelData.structureName}</small>
+                                </div>
+                            </div>
+                        `);
+                    }
+                });
+
+                // Print to console for debugging
+                console.log('Selected Models:', Array.from(selectedModels));
+            } else {
+                displayDiv.hide();
+            }
+        }
+
+        // Clear selection function
+        window.clearSelection = function () {
+            selectedModels.clear();
+            $('.model-checkbox, #selectAll').prop('checked', false);
+            updateSelectedDisplay();
+        }
+
+        // Form submission handler
+        $('form').on('submit', function (e) {
+            e.preventDefault();
+
+            if (selectedModels.size === 0) {
+                alert('Please select at least one model');
+                return false;
+            }
+
+            // Update confirmation modal with details
+            $('#templateNameConfirm').text($('input[name="templateName"]').val());
+            $('#selectedCountConfirm').text(selectedModels.size + ' structures');
+
+            // Show confirmation modal
+            $('#confirmationModal').modal('show');
+        });
+
+        // Handle confirmation submit
+        $('#confirmSubmit').on('click', function () {
+            const form = $('form');
+
+            // Add selected models to form data
+            selectedModels.forEach(value => {
+                const modelData = allModelData[value];
+                if (modelData) {
+                    form.append(`
+                <input type="hidden" name="selected_model_ids" value="${modelData.modelId}">
+                <input type="hidden" name="selected_map_ids" value="${modelData.mapId}">
+            `);
+                }
+            });
+
+            // Hide modal
+            $('#confirmationModal').modal('hide');
+
+            // Submit the form
+            form[0].submit();
+        });
+
+        // Initial display update
+        updateSelectedDisplay();
+    });
+</script>
+<style>
+    /* Modal Styling */
+    .modal-content {
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 1rem 1.5rem;
+    }
+
+    .modal-title {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .confirmation-details {
+        background-color: #f8f9fa;
+        border-radius: 6px;
+        padding: 1rem;
+    }
+
+    .confirmation-details label {
+        color: #495057;
+        min-width: 120px;
+        display: inline-block;
+    }
+
+    .confirmation-details span {
+        color: #2c3e50;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #dee2e6;
+        padding: 1rem 1.5rem;
+    }
+
+    .modal-footer .btn {
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+    }
+
+    .alert {
+        margin-bottom: 0;
+    }
+
+    .table-container {
+        margin: 10px 0 0 0;
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .selected-model-item {
+        padding: 15px;
+        border-bottom: 1px solid #dee2e6;
+        margin-bottom: 10px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .selected-model-item:hover {
+        background-color: #e9ecef;
+        transform: translateX(5px);
+    }
+
+    .selected-model-item:last-child {
+        border-bottom: none;
+    }
+
+    .model-name {
+        font-size: 1.1em;
+        margin-bottom: 5px;
+    }
+
+    .model-details {
+        margin-bottom: 5px;
+    }
+
+    .model-details .badge {
+        margin-right: 5px;
+    }
+
+    .structure-name {
+        font-size: 0.9em;
+    }
+
+    #selectedModelsDisplay {
+        position: sticky;
+        top: 20px;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .selected-count {
+        text-align: center;
+    }
+
+    .selected-count .badge {
+        font-size: 1em;
+        padding: 8px 12px;
+    }
+
+    .form-actions {
+        position: sticky;
+        bottom: 20px;
+        background-color: white;
+        padding: 15px 0;
+        border-top: 1px solid #dee2e6;
+        z-index: 1000;
+    }
+
+    /* DataTables Customization */
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        margin-bottom: 5px;
+    }
+
+    .dataTables_wrapper .dataTables_info,
+    .dataTables_wrapper .dataTables_paginate {
+        margin-top: 15px;
+    }
+
+    /* Modern DataTable Styling */
+    .dataTables_wrapper {
+        padding: 20px 0 0 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* Table Styling */
+    #mapinfo-table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1rem 0;
+        background-color: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    #mapinfo-table thead th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        padding: 12px 15px;
+        border: none;
+        color: #495057;
+    }
+
+    #mapinfo-table tbody td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #dee2e6;
+        color: #212529;
+    }
+
+    #mapinfo-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    #mapinfo-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    /* Search and Length Menu Styling */
+    .dataTables_filter {
+        float: right;
+        margin-bottom: 20px;
+    }
+
+    .dataTables_filter input {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 8px 12px;
+        margin-left: 8px;
+        width: 200px;
+        outline: none;
+    }
+
+    .dataTables_filter input:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
+    }
+
+    .dataTables_length {
+        float: left;
+        margin-bottom: 20px;
+    }
+
+    .dataTables_length select {
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 6px 24px 6px 12px;
+        margin: 0 8px;
+    }
+
+    /* Pagination Styling */
+    .dataTables_paginate {
+        float: right;
+        margin-top: 20px;
+    }
+
+    /* Pagination Styling */
+    .dataTables_paginate .paginate_button {
+        padding: 6px 12px;
+        margin-left: 5px;
+        cursor: pointer;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        color: #9333ea !important;
+        /* Primary color */
+        background: white !important;
+    }
+
+    .dataTables_paginate .paginate_button:hover {
+        background: #f3e8ff !important;
+        /* Light purple background on hover */
+        border-color: #9333ea;
+        color: #9333ea !important;
+    }
+
+    .dataTables_paginate .paginate_button.current {
+        background: #9333ea !important;
+        /* Primary color background */
+        border-color: #9333ea;
+        color: white !important;
+    }
+
+    .dataTables_paginate .paginate_button.current:hover {
+        background: #7e22ce !important;
+        /* Darker shade on hover */
+        border-color: #7e22ce;
+        color: white !important;
+    }
+
+    .dataTables_paginate .paginate_button.disabled {
+        color: #6c757d !important;
+        cursor: not-allowed;
+        border-color: #dee2e6;
+    }
+
+    .dataTables_paginate .paginate_button.disabled:hover {
+        background: white !important;
+        color: #6c757d !important;
+    }
+
+    /* Info Styling */
+    .dataTables_info {
+        float: left;
+        margin-top: 20px;
+        color: #6c757d;
+    }
+
+    /* Checkbox Styling */
+    #selectAll,
+    .model-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    /* Clear floats */
+    .dataTables_wrapper::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+
+    /* Add to your existing styles */
+    #mapinfo-table td {
+        padding: 0.3rem 0.5rem !important;
+        /* Reduce vertical padding */
+        vertical-align: middle;
+        /* Center content vertically */
+    }
+
+    #mapinfo-table th {
+        padding: 0.5rem !important;
+        /* Reduce header padding */
+    }
+
+    /* For the button within the table */
+    #mapinfo-table .btn-sm {
+        font-size: 0.8rem;
+        padding: 0.1rem 0.4rem;
+        line-height: 1;
+    }
+
+    /* Update your existing DataTable styles */
+    #mapinfo-table tbody td {
+        padding: 0.3rem 0.5rem;
+        /* Reduced from 12px 15px */
+        border-bottom: 1px solid #dee2e6;
+        color: #212529;
+        vertical-align: middle;
+    }
+
+    #mapinfo-table thead th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        padding: 0.5rem;
+        /* Reduced padding */
+        border: none;
+        color: #495057;
+    }
+
+    /* Update your existing DataTable styles */
+    #mapinfo-table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    #mapinfo-table thead th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        padding: 8px !important;
+        border: none;
+        color: #495057;
+        height: 20px;
+        vertical-align: middle !important;
+    }
+
+    #mapinfo-table tbody td {
+        padding: 8px !important;
+        border-bottom: 1px solid #dee2e6;
+        color: #212529;
+        height: 20px;
+        /* Fixed height for all rows */
+        vertical-align: middle !important;
+    }
+
+    /* Button styling */
+    #mapinfo-table .btn-sm {
+        font-size: 0.8rem;
+        padding: 2px 8px;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: 24px;
+    }
+
+    #mapinfo-table .btn-sm i {
+        margin-right: 4px;
+    }
+
+    /* Checkbox alignment */
+    #mapinfo-table input[type="checkbox"] {
+        margin: 0;
+        vertical-align: middle;
+    }
+
+    /* Remove any extra margins/padding */
+    #mapinfo-table td>* {
+        margin: 0;
+    }
+
+
+    /* Responsive adjustments */
+    @media screen and (max-width: 767px) {
+
+        .dataTables_filter,
+        .dataTables_length,
+        .dataTables_paginate,
+        .dataTables_info {
+            float: none;
+            text-align: center;
+        }
+
+        .dataTables_filter input {
+            width: 100%;
+            margin-left: 0;
+            margin-top: 5px;
+        }
+    }
+
+    /* Update the #selectedModelsDisplay styles */
+    #selectedModelsDisplay {
+        position: sticky;
+        top: 20px;
+        height: calc(100% - 20px);
+        /* Match parent height */
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Add styles for the card body to enable scrolling */
+    #selectedModelsDisplay .card-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 15px;
+    }
+
+    /* Add this to ensure the row takes full height */
+    .row {
+        min-height: 600px;
+        /* Set a minimum height or adjust as needed */
+    }
+
+    /* Update table container styles */
+    .table-container {
+        margin: 10px 0 0 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    /* Add this to ensure consistent heights */
+    .col-md-8,
+    .col-md-4 {
+        display: flex;
+        flex-direction: column;
+    }
+</style>
+{% endblock content %}

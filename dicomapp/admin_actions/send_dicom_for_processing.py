@@ -45,21 +45,13 @@ def delete_yml_in_folder(folder_path: str) -> bool:
 
 def send_dicom_for_processing_action(modeladmin, request, queryset: QuerySet) -> None:
     """
-    Admin action to send DICOM files for processing. This function:
-    1. Validates the processing status of selected series : The valid statues are:
-        - SERIES_SEPARATED ( here the series have been seperated but the file was not processed further)
-        - TEMPLATE_NOT_MATCHED (autosegmentation template was not matched)
-        - MULTIPLE_TEMPLATES_MATCHED (multiple autosegmentation templates were matched)
-        - MULTIPLE_TEMPLATES_FOUND (multiple autosegmentation templates were found)
-        - NO_TEMPLATE_FOUND (no autosegmentation template was found)
-        - READY_FOR_DEIDENTIFICATION (the series is ready for deidentification but has become stuck.)
-        - RTSTRUCT_EXPORTED (the rtstruct file has been exported. This special condition to allow manual processing of a successfully processed series).
-        - ERROR (an error occurred)
+    Admin action to send DICOM files for processing. This function will take the series folder from the archive path of the DicomSeriesProcessingModel instance and send it for processing.
         
-    2. Verifies series folder existence
-    3. Cleans up existing yaml files
-    4. Copies new template yaml files
-    5. Triggers the processing chain of celery tasks
+    1. Verifies series folder existence
+    2. Cleans up existing yaml files
+    3. Copies new template yaml files
+    4. Checks if the series_state is UNPROCESSED. If so deletes the series_folder in the unprocessed folder taking the path from the series_current_directory path. 
+    4. Triggers the processing chain of celery tasks
 
     Args:
         modeladmin: The ModelAdmin instance
@@ -68,16 +60,6 @@ def send_dicom_for_processing_action(modeladmin, request, queryset: QuerySet) ->
     """
     # Define valid processing statuses
     logger.info(f"Starting send_dicom_for_processing_action")
-    valid_statuses = [
-        'SERIES_SEPARATED',
-        'TEMPLATE_NOT_MATCHED',
-        'MULTIPLE_TEMPLATES_MATCHED',
-        'MULTIPLE_TEMPLATES_FOUND',
-        'NO_TEMPLATE_FOUND',
-        'READY_FOR_DEIDENTIFICATION',
-        'RTSTRUCT_EXPORTED', 
-        'ERROR'
-    ]
 
     successful_series = []
     failed_series = []
@@ -85,24 +67,16 @@ def send_dicom_for_processing_action(modeladmin, request, queryset: QuerySet) ->
 
     for series in queryset:
         try:
-            # Check processing status
-            if not series.processing_status or series.processing_status not in valid_statuses:
-                error_messages.append(f"Series {series.id}: Invalid processing status {series.processing_status}")
-                failed_series.append(series.id)
-                continue
-
-            logger.info(f"Series {series.id} has valid processing status {series.processing_status}")
-
             # Verify series folder exists
-            if not series.series_current_directory or not os.path.exists(series.series_current_directory):
-                error_messages.append(f"Series {series.id}: Series folder not found at {series.series_current_directory}")
+            if not series.series_archive_directory or not os.path.exists(series.series_archive_directory):
+                error_messages.append(f"Series {series.id}: Series folder not found at {series.series_archive_directory}")
                 failed_series.append(series.id)
                 continue
 
-            logger.info(f"Series {series.id} has valid series folder {series.series_current_directory}")
+            logger.info(f"Series {series.id} has valid series folder {series.series_archive_directory}")
 
             # Delete existing yaml files
-            if not delete_yml_in_folder(series.series_current_directory):
+            if not delete_yml_in_folder(series.series_archive_directory):
                 error_messages.append(f"Series {series.id}: Failed to delete existing yaml files")
                 failed_series.append(series.id)
                 continue
@@ -126,15 +100,38 @@ def send_dicom_for_processing_action(modeladmin, request, queryset: QuerySet) ->
             logger.info(f"Series {series.id} has template file {template_file_path}")
 
             # Copy the template file to the series folder
-            shutil.copy(template_file_path, series.series_current_directory)
+            shutil.copy(template_file_path, series.series_archive_directory)
 
             logger.info(f"Series {series.id} has copied template yaml file")
 
+            # Check if the series_state is UNPROCESSED. If so deletes the series_folder in the unprocessed folder taking the path from the series_current_directory path. 
+            if series.series_state == SeriesState.UNPROCESSED:
+                try:
+                    shutil.rmtree(series.series_current_directory)
+                    logger.info(f"Series {series.id} has deleted the unprocessed series folder {series.series_current_directory}")
+                except Exception as e:
+                    logger.error(f"Series {series.id} has failed to delete the unprocessed series folder {series.series_current_directory}: {str(e)}")
+                    error_messages.append(f"Series {series.id}: Failed to delete series folder {series.series_current_directory}")
+                    # Continue processing even if deletion fails
+                    logger.info(f"Series {series.id} continuing processing despite folder deletion failure")
+
             # Change the values of the DicomSeriesProcessing model
-            series.processing_status = 'READY_FOR_DEIDENTIFICATION'
-            series.status = 'PROCESSING'
+            series.processing_status = ProcessingStatusChoices.READY_FOR_DEIDENTIFICATION
+            series.series_state = SeriesState.PROCESSING
             series.save()
             logger.info(f"Series {series.id} has updated processing status to TEMPLATE_FILE_COPIED")
+
+            # Copy the series folder to the folder for deidentification
+            deidentification_folder_path = f"{settings.BASE_DIR}/folders/folder_for_deidentification/{series.id}"
+            os.makedirs(deidentification_folder_path, exist_ok=True)
+
+            folder_path_for_deidentification = shutil.copytree(series.series_archive_directory, deidentification_folder_path, dirs_exist_ok=True)
+            logger.info(f"Series {series.id} has copied the series folder to the folder for deidentification {folder_path_for_deidentification}")
+
+            # Update the DicomSeriesProcessing model with the new folder path
+            series.series_current_directory = folder_path_for_deidentification
+            series.save()
+            logger.info(f"Series {series.id} has updated series_current_directory to {folder_path_for_deidentification}")
 
             # Prepare task input
             task_input = {

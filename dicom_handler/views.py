@@ -7,6 +7,7 @@ import pandas as pd
 from django.http import JsonResponse  # Keep this import only once
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
 import json  # Keep this import only once
 from dicom_handler.dicomutils.create_yml import *
 from django.urls import reverse
@@ -17,6 +18,9 @@ from django.views.decorators.csrf import csrf_protect
 from collections import defaultdict
 from api_client.models import *
 from api_client.api_utils.proxy_config import get_session_with_proxy
+from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 
 # yaml saving path
@@ -25,6 +29,12 @@ os.makedirs(templatefolderpath, exist_ok=True)
         
 
 def index(request):
+    # Get recent series data for the table
+    recent_series = DicomSeriesProcessingModel.objects.all().order_by('-created_at')
+    
+    # Debug: Print count of series found
+    logger.info(f"Number of series records found: {recent_series.count()}")
+    
     context = {
         # Total Templates
         'total_templates': ModelYamlInfo.objects.count(),
@@ -56,15 +66,19 @@ def index(request):
             series_state='UNPROCESSED'
         ).count(),
         
-        # # Recent Activities
-        # 'recent_activities': ActivityLog.objects.select_related('user').order_by('-date')[:10],
+        # Recent Series for the activity table
+        'recent_series': recent_series,
         
         # # System Notifications
         # 'notifications': Notification.objects.order_by('-created_at')[:5],
     }
     
-    return render(request, 'dashboard.html', context=context)
+    # Debug: Print final context
+    logger.info(f"Context prepared - recent_series count: {len(context['recent_series'])}")
+    
+    return render(request, 'dicom_handler/dashboard.html', context=context)
 
+@login_required
 def check_template(request):
     if request.method == 'POST':
         template_name = request.POST.get('templatename')
@@ -80,7 +94,7 @@ def check_template(request):
         
         if template_exists:
             print(f"Template '{template_name}' already exists!")
-            return render(request, 'check_template.html', {
+            return render(request, 'dicom_handler/check_template.html', {
                 'template_name': template_name,
                 'description': description,
                 'template_exists': True
@@ -92,9 +106,10 @@ def check_template(request):
         return redirect('create-yml')
     
     # For GET requests, just render the empty form
-    return render(request, 'check_template.html')
+    return render(request, 'dicom_handler/check_template.html')
 
 
+@login_required
 def create_yml(request):
     try:
         # Create a session with proxy settings
@@ -114,7 +129,7 @@ def create_yml(request):
 
             if not selected_model_ids:
                 messages.error(request, 'Please select at least one model')
-                return render(request, 'create_yml.html', {
+                return render(request, 'dicom_handler/create_yml.html', {
                     'apidata': raw_data,
                     'template_name': template_name,
                     'description': description
@@ -165,7 +180,7 @@ def create_yml(request):
             return redirect('autosegmentation-template')
         
         # For GET request
-        return render(request, 'create_yml.html', {
+        return render(request, 'dicom_handler/create_yml.html', {
             'apidata': raw_data,
             'model_details_api': os.getenv('MODEL_API_URL'),
             'template_name': request.session.get('template_name'),
@@ -174,7 +189,7 @@ def create_yml(request):
 
     except requests.RequestException as e:
         messages.error(request, f'Failed to fetch API data: {str(e)}')
-        return render(request, 'create_yml.html', {
+        return render(request, 'dicom_handler/create_yml.html', {
             'template_name': request.session.get('template_name'),
             'description': request.session.get('description')
         })
@@ -182,7 +197,7 @@ def create_yml(request):
         # Add more detailed error logging
         print("Error in create_yml:", str(e))
         messages.error(request, f'An error occurred: {str(e)}')
-        return render(request, 'create_yml.html', {
+        return render(request, 'dicom_handler/create_yml.html', {
             'apidata': raw_data if 'raw_data' in locals() else None,
             'template_name': request.session.get('template_name'),
             'description': request.session.get('description')
@@ -219,7 +234,7 @@ def autosegmentation_template(request):
             'grouped_models': grouped_models,
         }
 
-        return render(request, 'yaml_view.html', context)
+        return render(request, 'dicom_handler/yaml_view.html', context)
 
     except ModelYamlInfo.DoesNotExist:
         messages.error(request, 'No templates found.')

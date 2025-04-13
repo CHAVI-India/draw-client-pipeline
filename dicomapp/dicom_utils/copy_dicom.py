@@ -146,7 +146,7 @@ def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
                     logger.info(f"Created/Updated database entry for {item}")
 
                     # Always copy the directory to the target directory so that even if modifications are made the copy function copies the source directory.
-                    shutil.copytree(source_dir, target_dir)
+                    shutil.copytree(source_dir, target_dir, dirs_exist_ok=True)
                     result['target_paths'].append(target_dir)  # Already a string
                     result['copy_dicom_task_id'].append(str(dicom_dir.id))  # Convert UUID to string
                     logger.info(f"Successfully copied {item} to {target_dir}")                    

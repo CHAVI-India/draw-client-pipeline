@@ -12,18 +12,9 @@ db.sqlite3
 media
 
 # Project specific folders
-folder_unprocessed_dicom/
-folder_for_deidentification/
-folder_dicom_processing/
-folder_for_dicom_upload/
-folder_for_dicom_import/
-folder_deidentified_rtstruct/
-folder_identified_rtstruct/
-folder_post_deidentification/
-folder_unprocessed_dicom/
-folder_temp/
-folder_archive/
-static/
+logs/
+folders/
+
 # Backup files # 
 *.bak 
 
@@ -149,7 +140,7 @@ Control.system-ca-bundle
 GitHub.sublime-settings 
 
 # Visual Studio Code # 
-.vscode/* 
+.vscode/
 !.vscode/settings.json 
 !.vscode/tasks.json 
 !.vscode/launch.json 
@@ -163,3 +154,6 @@ uploaddicom/
 yaml-templates/*
 !/yaml-templates/
 db.sqlite3-journal
+logs/debug.log.1
+logs/debug.log.1
+logs/debug.log.1

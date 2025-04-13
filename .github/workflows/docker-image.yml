@@ -12,6 +12,8 @@ name: Publish Docker image
 on:
   push:
     branches: ['release']
+    tags:
+      - 'v*'  # Matches tags like v1.0.0, v2.1.0, etc.
 
 jobs:
   push_to_registry:
@@ -37,6 +39,14 @@ jobs:
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: chaviapp/drawclient
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=ref,event=tag
+            type=sha,format=short
+          flavor: |
+            latest=false
+            prefix=
+            suffix=
 
       - name: Build and push Docker image
         id: push

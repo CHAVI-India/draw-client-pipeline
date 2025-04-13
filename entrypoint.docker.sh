@@ -1,12 +1,15 @@
 #!/bin/bash
 
+# Create staticfiles directory if it doesn't exist and set permissions
+mkdir -p /app/staticfiles
+chown -R appuser:appuser /app/staticfiles
 
+# Collect static files with proper permissions
+python manage.py collectstatic --noinput
+chown -R appuser:appuser /app/staticfiles
 
 # Apply database migrations
 python manage.py migrate
-
-# Collect static files
-python manage.py collectstatic --noinput
 
 # Create superuser if it doesn't exist
 python manage.py createsuperuser --noinput --username $DJANGO_SUPERUSER_USERNAME --email $DJANGO_SUPERUSER_EMAIL

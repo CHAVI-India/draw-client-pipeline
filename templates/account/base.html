@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<style>
+    :root {
+        --primary-color: #9333ea;
+        --secondary-color: #4f46e5;
+        --accent-color: #f0f9ff;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --success-color: #059669;
+        --warning-color: #eab308;
+        --error-color: #dc2626;
+    }
+
+    /* Django Allauth Form Styling */
+    .login input[type="text"], 
+    .login input[type="email"], 
+    .login input[type="password"],
+    .signup input[type="text"], 
+    .signup input[type="email"], 
+    .signup input[type="password"],
+    .password_reset input[type="email"] {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: var(--text-primary);
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .login input[type="text"]:focus, 
+    .login input[type="email"]:focus, 
+    .login input[type="password"]:focus,
+    .signup input[type="text"]:focus, 
+    .signup input[type="email"]:focus, 
+    .signup input[type="password"]:focus,
+    .password_reset input[type="email"]:focus {
+        color: var(--text-primary);
+        background-color: #fff;
+        border-color: var(--primary-color);
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(147, 51, 234, 0.25);
+    }
+
+    .login input[type="checkbox"], 
+    .signup input[type="checkbox"] {
+        width: 1em;
+        height: 1em;
+        margin-top: 0.25em;
+        vertical-align: top;
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 0.25em;
+        appearance: none;
+        margin-right: 0.5em;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .login input[type="checkbox"]:checked, 
+    .signup input[type="checkbox"]:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .login input[type="checkbox"]:checked::after,
+    .signup input[type="checkbox"]:checked::after {
+        content: "";
+        position: absolute;
+        left: 4px;
+        top: 1px;
+        width: 5px;
+        height: 9px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    .login label, .signup label, .password_reset label {
+        display: inline-block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+
+    button[type="submit"] {
+        transition: all 0.3s ease;
+    }
+
+    button[type="submit"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .errorlist {
+        list-style: none;
+        color: var(--error-color);
+        padding-left: 0;
+        margin-top: 0.25rem;
+        font-size: 0.875rem;
+    }
+
+    .card {
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        border: none;
+        padding: 0.5rem 1.25rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--secondary-color);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    }
+
+    .btn-outline-primary {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        padding: 0.5rem 1.25rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: var(--primary-color);
+        color: white;
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body">
+            {% block inner_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -22,7 +22,7 @@ class DicomSeriesProcessingAdmin(ModelAdmin):
     readonly_fields = ('id', 'copy_dicom_task_id', 'patient_id', 'patient_name',
                       'gender', 'scan_date', 'modality', 'protocol_name', 'study_instance_uid',
                       'series_instance_uid', 'series_description', 'series_import_directory',
-                      'series_current_directory', 'processing_status', 'series_state',
+                      'series_archive_directory', 'series_current_directory', 'processing_status', 'series_state',
                       'created_at', 'updated_at')
     search_fields = ('patient_id', 'patient_name', 'modality', 'protocol_name', 'processing_status')
     list_filter = ('processing_status', 'series_state', 'modality','protocol_name','scan_date', 'created_at')
