@@ -39,6 +39,9 @@ COPY --chown=appuser:appuser . .
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1 
 
+# Collect static files during build
+RUN python manage.py collectstatic --noinput
+
 # Switch to non-root user
 USER appuser
  
