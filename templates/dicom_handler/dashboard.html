@@ -4,8 +4,8 @@
 {% load static %}
 
 <!-- Add DataTables CSS -->
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css">
 
 <!-- Dashboard Header -->
 <div class="welcome-section mb-4">
@@ -591,11 +591,13 @@
     }
 </style>
 
+{% endblock %}
+
+{% block extra_scripts %}
 <!-- Initialize DataTables -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
 
 <!-- Custom Scripts for the Dashboard -->
 <script>
@@ -621,64 +623,80 @@
     }
 
     $(document).ready(function() {
+        console.log('Initializing DataTable...');
+        
         // Initialize DataTable
-        var table = $('#seriesTable').DataTable({
-            processing: true,
-            serverSide: false,
-            responsive: true,
-            pageLength: 10,
-            order: [[2, 'desc']], // Sort by scan date descending
-            dom: "<'row'<'col-sm-12'f>>" +  // Only show search box
-                 "<'row'<'col-sm-12'tr>>" + // Table
-                 "<'row'<'col-sm-12'p>>",   // Only pagination
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search by Patient ID, Name, or Status...",
-                paginate: {
-                    first: "First",
-                    last: "Last",
-                    next: "<i class='ri-arrow-right-s-line'></i>",
-                    previous: "<i class='ri-arrow-left-s-line'></i>"
+        try {
+            var table = $('#seriesTable').DataTable({
+                destroy: true, // In case table was already initialized
+                processing: true,
+                serverSide: false,
+                responsive: true,
+                pageLength: 10,
+                order: [[2, 'desc']], // Sort by scan date descending
+                dom: "<'row'<'col-sm-12'f>>" +  // Only show search box
+                     "<'row'<'col-sm-12'tr>>" + // Table
+                     "<'row'<'col-sm-12'p>>",   // Only pagination
+                columnDefs: [
+                    {
+                        targets: '_all',
+                        defaultContent: ''
+                    }
+                ],
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search by Patient ID, Name, or Status...",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "<i class='ri-arrow-right-s-line'></i>",
+                        previous: "<i class='ri-arrow-left-s-line'></i>"
+                    },
+                    emptyTable: "<div class='text-center py-4'><i class='ri-inbox-line d-block text-muted mb-2' style='font-size: 2rem;'></i>No recent activities found</div>"
                 }
-            }
-        });
+            });
 
-        // Remove the length menu and info
-        $('.dataTables_length').remove();
-        $('.dataTables_info').remove();
+            console.log('DataTable initialized successfully');
 
-        // Refresh button handler
-        $('#refreshTable').on('click', function() {
-            const button = $(this);
-            const originalHtml = button.html();
-            button.html('<i class="ri-loader-4-line me-1 spin"></i> Refreshing...');
-            button.prop('disabled', true);
-            
-            // Reload the current page
-            window.location.reload();
-        });
+            // Remove the length menu and info
+            $('.dataTables_length').remove();
+            $('.dataTables_info').remove();
 
-        // Apply filter
-        $('#applyFilter').on('click', function() {
-            const patientId = $('#filterPatientId').val();
-            const patientName = $('#filterPatientName').val();
-            const status = $('#filterStatus').val();
-            
-            // Apply filters
-            table
-                .columns(0).search(patientId)
-                .columns(1).search(patientName)
-                .columns(3).search(status)
-                .draw();
+            // Refresh button handler
+            $('#refreshTable').on('click', function() {
+                const button = $(this);
+                const originalHtml = button.html();
+                button.html('<i class="ri-loader-4-line me-1 spin"></i> Refreshing...');
+                button.prop('disabled', true);
+                
+                // Reload the current page
+                window.location.reload();
+            });
 
-            $('#filterModal').modal('hide');
-        });
+            // Apply filter
+            $('#applyFilter').on('click', function() {
+                const patientId = $('#filterPatientId').val();
+                const patientName = $('#filterPatientName').val();
+                const status = $('#filterStatus').val();
+                
+                // Apply filters
+                table
+                    .columns(0).search(patientId)
+                    .columns(1).search(patientName)
+                    .columns(3).search(status)
+                    .draw();
 
-        // Reset filters
-        $('#resetFilter').on('click', function() {
-            $('#filterForm')[0].reset();
-            table.search('').columns().search('').draw();
-        });
+                $('#filterModal').modal('hide');
+            });
+
+            // Reset filters
+            $('#resetFilter').on('click', function() {
+                $('#filterForm')[0].reset();
+                table.search('').columns().search('').draw();
+            });
+        } catch (error) {
+            console.error('Error initializing DataTable:', error);
+        }
     });
 </script>
 {% endblock %}

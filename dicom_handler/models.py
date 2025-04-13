@@ -1,9 +1,11 @@
 from django.db import models
 import os
+import logging
 from django.core.exceptions import ValidationError
 from urllib.parse import urlparse
 from pathlib import Path
 from django.utils import timezone
+import yaml
 
 
 class DicomPathConfig(models.Model):
@@ -98,6 +100,59 @@ class ModelYamlInfo(models.Model):
 
     def __str__(self):
         return f"{self.yaml_name} | {self.protocol}" 
+    
+    def get_yaml_content(self):
+        """
+        Returns the content of the YAML file as a string.
+        If the file doesn't exist or can't be read, returns an error message.
+        If the file exists, tries to parse it as YAML for validation and returns it formatted.
+        """
+        if not self.yaml_path:
+            return "No YAML file path specified."
+            
+        try:
+            with open(self.yaml_path, 'r') as f:
+                content = f.read()
+            
+            # Try to parse the YAML to validate it
+            try:
+                yaml_data = yaml.safe_load(content)
+                # Return the YAML formatted for better readability
+                return yaml.dump(yaml_data, default_flow_style=False, sort_keys=False, indent=2)
+            except yaml.YAMLError as e:
+                # Return the content even if it's not valid YAML
+                # Add a warning at the top
+                return f"Warning: The file contains invalid YAML syntax: {str(e)}\n\n{content}"
+            
+        except FileNotFoundError:
+            return f"YAML file not found at: {self.yaml_path}"
+        except PermissionError:
+            return f"Permission denied when trying to read: {self.yaml_path}"
+        except Exception as e:
+            return f"Error reading YAML file: {str(e)}"
+    
+    def delete(self, *args, **kwargs):
+        """
+        Override the delete method to also delete the corresponding YAML file.
+        """
+        logger = logging.getLogger('dicom_handler_logs')
+        
+        # Check if YAML file exists and delete it
+        if self.yaml_path and os.path.exists(self.yaml_path):
+            try:
+                os.remove(self.yaml_path)
+                logger.info(f"Successfully deleted YAML file: {self.yaml_path}")
+            except (PermissionError, OSError) as e:
+                # Log the error but proceed with database deletion
+                logger.error(f"Failed to delete YAML file {self.yaml_path}: {str(e)}")
+        else:
+            if self.yaml_path:
+                logger.warning(f"YAML file not found for deletion: {self.yaml_path}")
+            
+        # Call the original delete method to delete the database entry
+        result = super().delete(*args, **kwargs)
+        logger.info(f"Deleted ModelYamlInfo database entry with ID: {self.id}")
+        return result
     
     class Meta:
         managed = True

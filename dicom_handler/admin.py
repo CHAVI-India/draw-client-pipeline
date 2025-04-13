@@ -16,6 +16,7 @@ from django.contrib.auth.models import User, Group
 from unfold.admin import ModelAdmin, TabularInline
 from unfold.decorators import action
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
+from django.utils.html import format_html
 
 from django_celery_beat.models import (
     ClockedSchedule,
@@ -150,11 +151,27 @@ class ModelYamlInfoAdmin(ModelAdmin):
         'yaml_description',
         'created_at',
         'modified_at',
+        'display_yaml_content',
     ]
     search_fields = ('yaml_name','protocol','yaml_description')
     search_help_text = "Search by YAML name, protocol, or description"
     list_filter = ('yaml_name', 'protocol','created_at',)
     list_per_page = 10
+    
+    fieldsets = (
+        ('Template Information', {
+            'fields': ('yaml_name', 'protocol', 'yaml_description', 'yaml_path', 'file_hash')
+        }),
+        ('YAML Content', {
+            'fields': ('display_yaml_content',),
+            'classes': ('collapse',),
+            'description': 'Contents of the YAML file. Click to expand/collapse.'
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'modified_at'),
+            'classes': ('collapse',)
+        }),
+    )
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('ruleset')
@@ -162,6 +179,86 @@ class ModelYamlInfoAdmin(ModelAdmin):
     @admin.display(description='Rule Set')
     def get_rule_set_name(self, obj):
         return obj.ruleset.rule_set_name if hasattr(obj, 'ruleset') else '-'
+        
+    def get_deleted_objects(self, objs, request):
+        """
+        Hook for customizing the delete process.
+        We override this to add a custom confirmation message about YAML file deletion.
+        """
+        # Call the parent method to get the standard data
+        deleted_objects, model_count, perms_needed, protected = super().get_deleted_objects(objs, request)
+        
+        # Add a warning message about YAML file deletion
+        for obj in objs:
+            if obj.yaml_path and os.path.exists(obj.yaml_path):
+                # Add warning to the deleted_objects list
+                deleted_objects.append(f"YAML file that will also be deleted: {obj.yaml_path}")
+        
+        return deleted_objects, model_count, perms_needed, protected
+        
+    @admin.display(description='YAML File Content')
+    def display_yaml_content(self, obj):
+        content = obj.get_yaml_content()
+        if not content:
+            return "No content available"
+            
+        # Check if the content is an error message
+        if content.startswith(("YAML file not found", "Permission denied", "Error reading YAML", "No YAML file")):
+            return format_html('<div style="color: red; padding: 10px; background-color: #fee; border-radius: 5px;">{}</div>', content)
+            
+        # Handle warning for invalid YAML
+        if content.startswith("Warning:"):
+            parts = content.split("\n\n", 1)
+            warning = parts[0]
+            yaml_content = parts[1] if len(parts) > 1 else ""
+            return format_html(
+                '<div style="color: #856404; background-color: #fff3cd; padding: 10px; margin-bottom: 10px; border-radius: 5px;">{}</div>'
+                '<pre style="background-color: #2d2d2d; color: #f8f8f2; padding: 20px; border-radius: 5px; overflow: auto; max-height: 600px; font-family: Consolas, Monaco, \'Courier New\', monospace; font-size: 14px; line-height: 1.8; letter-spacing: 0.3px;">{}</pre>',
+                warning, yaml_content
+            )
+            
+        # Normal display for valid YAML with improved styling
+        styled_content = '<pre style="background-color: #2d2d2d; color: #f8f8f2; padding: 20px; border-radius: 5px; overflow: auto; max-height: 600px; font-family: Consolas, Monaco, \'Courier New\', monospace; font-size: 14px; line-height: 1.8; letter-spacing: 0.3px;">{}</pre>'
+        return format_html(styled_content, content)
+
+    def delete_model(self, request, obj):
+        """
+        Override delete_model to add a user message about the file deletion.
+        """
+        file_path = obj.yaml_path
+        file_exists = file_path and os.path.exists(file_path)
+        
+        # Call the delete method which will handle both DB and file deletion
+        obj.delete()
+        
+        # Add a message for the user
+        if file_exists:
+            messages.success(request, f"The template and its YAML file '{file_path}' have been deleted.")
+        else:
+            messages.success(request, f"The template has been deleted. No YAML file was found at '{file_path}'.")
+    
+    def delete_queryset(self, request, queryset):
+        """
+        Override delete_queryset to handle bulk deletions and add messages.
+        """
+        # Track files for messaging
+        deleted_files = []
+        missing_files = []
+        
+        # Delete each object individually to trigger our custom delete logic
+        for obj in queryset:
+            file_path = obj.yaml_path
+            if file_path and os.path.exists(file_path):
+                deleted_files.append(file_path)
+            else:
+                missing_files.append(file_path)
+            obj.delete()
+        
+        # Add appropriate messages
+        if deleted_files:
+            messages.success(request, f"Deleted {len(deleted_files)} templates and their YAML files.")
+        if missing_files:
+            messages.warning(request, f"Deleted {len(missing_files)} templates, but their YAML files were not found.")
 
 admin.site.register(ModelYamlInfo, ModelYamlInfoAdmin)
 

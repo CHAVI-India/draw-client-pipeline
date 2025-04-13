@@ -18,6 +18,9 @@ from django.views.decorators.csrf import csrf_protect
 from collections import defaultdict
 from api_client.models import *
 from api_client.api_utils.proxy_config import get_session_with_proxy
+from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 
 # yaml saving path
@@ -30,7 +33,7 @@ def index(request):
     recent_series = DicomSeriesProcessingModel.objects.all().order_by('-created_at')
     
     # Debug: Print count of series found
-    print(f"Number of series records found: {recent_series.count()}")
+    logger.info(f"Number of series records found: {recent_series.count()}")
     
     context = {
         # Total Templates
@@ -69,6 +72,9 @@ def index(request):
         # # System Notifications
         # 'notifications': Notification.objects.order_by('-created_at')[:5],
     }
+    
+    # Debug: Print final context
+    logger.info(f"Context prepared - recent_series count: {len(context['recent_series'])}")
     
     return render(request, 'dicom_handler/dashboard.html', context=context)
 
