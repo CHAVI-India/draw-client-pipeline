@@ -24,6 +24,7 @@ folder_unprocessed_dicom/
 folder_temp/
 folder_archive/
 folders/
+dicom/
 
 # Backup files # 
 *.bak 
