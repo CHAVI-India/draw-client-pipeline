@@ -33,8 +33,6 @@ services:
       - .env      
     volumes:
       - app_data:/app
-      - ./logs:/app/logs
-      - ./static:/app/static
       - ./staticfiles:/app/staticfiles
       - ./dicom:/app/folders
       - ./yaml-templates:/app/yaml-templates
@@ -53,9 +51,7 @@ services:
     command: ["./entrypoint.docker.sh", "celery"]
     volumes:
       - app_data:/app
-      - ./static:/app/static
       - ./staticfiles:/app/staticfiles
-      - ./logs:/app/logs
       - ./dicom:/app/folders      
       - ./yaml-templates:/app/yaml-templates
       - "dicomdata:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
@@ -81,9 +77,7 @@ services:
     command: ["./entrypoint.docker.sh", "celery-beat"]
     volumes:
       - app_data:/app
-      - ./static:/app/static
       - ./staticfiles:/app/staticfiles
-      - ./logs:/app/logs     
       - ./dicom:/app/folders
       - ./yaml-templates:/app/yaml-templates
       - "dicomdata:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
