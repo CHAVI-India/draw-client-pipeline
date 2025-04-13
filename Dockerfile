@@ -23,6 +23,7 @@ FROM python:3
 RUN useradd -m -r appuser && \
     mkdir /app && \
     mkdir -p /app/staticfiles && \
+    mkdir -p /app/static && \
     chown -R appuser:appuser /app
  
 # Copy the Python dependencies from the builder stage
@@ -32,7 +33,10 @@ COPY --from=builder /usr/local/bin/ /usr/local/bin/
 # Set the working directory
 WORKDIR /app
  
-# Copy application code
+# Copy static files first
+COPY --chown=appuser:appuser static/ /app/static/
+
+# Copy remaining application code
 COPY --chown=appuser:appuser . .
 
 # Set environment variables to optimize Python
