@@ -22,7 +22,6 @@ FROM python:3
 # Create user and required directories
 RUN useradd -m -r appuser && \
     mkdir /app && \
-    mkdir -p /app/staticfiles && \
     mkdir -p /app/static && \
     chown -R appuser:appuser /app
  
@@ -42,9 +41,6 @@ COPY --chown=appuser:appuser . .
 # Set environment variables to optimize Python
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1 
-
-# Collect static files during build
-RUN python manage.py collectstatic --noinput
 
 # Switch to non-root user
 USER appuser
