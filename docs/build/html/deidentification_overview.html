@@ -1,0 +1,177 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deidentification Overview &mdash; DRAW Client 1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=f2a433a1"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Processing Status Choices" href="processsing_status_choices.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            DRAW Client
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation the DRAW Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Steps</a></li>
+<li class="toctree-l1"><a class="reference internal" href="datastore_configuration.html">Configuration of the Datastore path</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_api_tokens.html">Get API tokens from the DRAW Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating_autosegmentation_templates.html">Creating Autosegmentation Templates</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configure_rules.html">Configure Rules</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup_periodic_tasks.html">Setup Periodic Tasks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how_to_manual_segmentation.html">How to initiate a manual segmentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interface_guide.html">DICOM Process Interface Guidance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="processsing_status_choices.html">Processing Status Choices</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Deidentification Overview</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DRAW Client</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Deidentification Overview</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/deidentification_overview.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="deidentification-overview">
+<h1>Deidentification Overview<a class="headerlink" href="#deidentification-overview" title="Link to this heading"></a></h1>
+<p>DICOM data is deidentified in the application using the following steps:</p>
+<p>All files in the designated folder are read one by one using Pydicom. We read the following tag information:</p>
+<ol class="arabic simple">
+<li><p>Patient Name</p></li>
+<li><p>Patient ID</p></li>
+<li><p>Patient Birth Date</p></li>
+<li><p>Study description</p></li>
+<li><p>Study Instance UID</p></li>
+<li><p>Series Instance UID</p></li>
+<li><p>Frame of Reference UID</p></li>
+<li><p>All SOP Instance UIDs</p></li>
+<li><p>Study Date</p></li>
+<li><p>Series Date</p></li>
+</ol>
+<p>These are stored in the database for later use and data replacement. If the entry for the patient is available then the code checks if the Study, Series and Instance information is also available in the database. If it is avaialble then these data are not replaced. If they do not exist, the the data will be created. For each of these tage the code will generate a new value.</p>
+<p>The patient ID is generated using the the following method:</p>
+<ol class="arabic simple">
+<li><p>We get the current date and time.</p></li>
+<li><p>We generate a new 6 digit random number.</p></li>
+<li><p>The unique ID is a combination of the current year, month, day, hour, minute, second, microsecond and the random number.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>UIDs generated by DICOM are supposed to be globally unique.This assumption is used in the code. If the two patients have the same UUID then the code will not be able to identify the correct data to replace.</p>
+</div>
+<p>Date processing is handled by the following method:</p>
+<ol class="arabic simple">
+<li><p>We get the date object from the DICOM file.</p></li>
+<li><p>We generate a random date offset between -60 and +60 days and add it to the original date whilst ensuring that this remains a valid date.</p></li>
+<li><p>The actual date is replaced by the offset value.</p></li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The code only processes dicom modalities: CT, MR, and PET. Other modalities are not processed. Except for the automatic segmentation template other files in the folder will be discarded during the deidentification process.</p>
+</div>
+<p>After the database entries have been created, the code will replace the data in the DICOM files. The code will replace the following data:</p>
+<ol class="arabic simple">
+<li><p>Media Storage SOP Instance UID :</p></li>
+<li><p>SOP Instance UID</p></li>
+<li><p>Study Instance UID</p></li>
+<li><p>Series Instance UID</p></li>
+<li><p>Frame of Reference UID</p></li>
+<li><p>Patient Birth Date</p></li>
+<li><p>Study Date</p></li>
+<li><p>Series Date</p></li>
+<li><p>Instance Creation Date</p></li>
+<li><p>Acquisition Date</p></li>
+<li><p>Content Date</p></li>
+<li><p>Patient ID</p></li>
+<li><p>Referring Physician Name</p></li>
+<li><p>Study Description</p></li>
+<li><p>Series Description</p></li>
+</ol>
+<p>After this all private tags in the DICOM files are also removed.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The code does not modify the pixel data in the file as it is important for accurate segmentation and radiotherapy planning.</p>
+</div>
+<p>The new dicom file is saved before it is exported to the remote server in a different directory. The old files are deleted after the deidentification process is complete.</p>
+<p>Note the process ensures that even if the same DICOM series is processed multiple times, the data will be deidentified each time allowing the same series to be segmented multiple times.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="processsing_status_choices.html" class="btn btn-neutral float-left" title="Processing Status Choices" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Tata Medical Center, Kolkata.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

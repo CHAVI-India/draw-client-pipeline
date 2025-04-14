@@ -70,3 +70,12 @@ You can click on the link called "View Templates" in the top to see all the temp
    :alt: View Templates
    :width: 800
    :align: center
+
+After you have created the template, you can view the contents of the template by clicking on the link in the admin page. A field called Yaml file content will show content of the template that you have created. This can be useful if you wish to show the template to other users in the department as well as for future reference.
+
+.. image:: images/view_template_yaml.png
+   :alt: View Template Yaml
+   :width: 800
+   :align: center
+
+
