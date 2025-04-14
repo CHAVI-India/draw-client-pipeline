@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Interface Guidance &mdash; DRAW Client 1.0 documentation</title>
+  <title>DICOM Process Interface Guidance &mdash; DRAW Client 1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
 
@@ -52,35 +52,11 @@
 <li class="toctree-l1"><a class="reference internal" href="configure_rules.html">Configure Rules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup_periodic_tasks.html">Setup Periodic Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how_to_manual_segmentation.html">How to initiate a manual segmentation</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Interface Guidance</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#client-configuration">Client Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#dicom-processing">DICOM Processing</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#dicom-data-copied-from-datastore">Dicom Data copied from Datastore</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#dicom-series-for-processing">Dicom Series for Processing</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#processing-logs">Processing Logs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#upload-dicom-zip-files">Upload DICOM Zip Files</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#deidentification-overview">Deidentification Overview</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#patient">Patient</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#dicom-study">Dicom Study</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#dicom-series">Dicom Series</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#dicom-instance">Dicom Instance</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#rt-structure-file">RT Structure File</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#remote-transfers">Remote Transfers</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#api-data-processing-status">API Data Processing Status</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#autosegmentation-templates">Autosegmentation Templates</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#view-autosegmentation-templates">View Autosegmentation Templates</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#task-status">Task Status</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#view-task-status">View Task Status</a></li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DICOM Process Interface Guidance</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dicom-data-copied-from-datastore">Dicom Data copied from Datastore</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dicom-series-for-processing">Dicom Series for Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#processing-logs">Processing Logs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upload-dicom-zip-files">Upload DICOM Zip Files</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="processsing_status_choices.html">Processing Status Choices</a></li>
@@ -100,7 +76,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Interface Guidance</li>
+      <li class="breadcrumb-item active">DICOM Process Interface Guidance</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/interface_guide.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -110,80 +86,69 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="interface-guidance">
-<h1>Interface Guidance<a class="headerlink" href="#interface-guidance" title="Link to this heading"></a></h1>
-<p>The administrative interface which is accessible using the Admin Dashboard link is organized into the following sections:</p>
-<section id="client-configuration">
-<h2>Client Configuration<a class="headerlink" href="#client-configuration" title="Link to this heading"></a></h2>
-<p>This section provides the interface to configure the DRAW client on your local machines. Details are provided in the configuration section (See the page <a class="reference internal" href="configuration.html"><span class="doc">Configuration Steps</span></a>)</p>
-</section>
-<section id="dicom-processing">
-<h2>DICOM Processing<a class="headerlink" href="#dicom-processing" title="Link to this heading"></a></h2>
-<p>This section gives you an overview of the DICOM data being processed and includes:</p>
+  <section id="dicom-process-interface-guidance">
+<h1>DICOM Process Interface Guidance<a class="headerlink" href="#dicom-process-interface-guidance" title="Link to this heading"></a></h1>
+<p>The following sections are available in the DICOM Process section:</p>
 <section id="dicom-data-copied-from-datastore">
-<h3>Dicom Data copied from Datastore<a class="headerlink" href="#dicom-data-copied-from-datastore" title="Link to this heading"></a></h3>
+<h2>Dicom Data copied from Datastore<a class="headerlink" href="#dicom-data-copied-from-datastore" title="Link to this heading"></a></h2>
 <p>View and manage DICOM data folders that have been copied from the datastore. This copy will be done using the automatically configured task schedule created by you when you configured the client. Note that this will show you the paths where the DICOM data will be copied from as well as the folder where they have been copied too. As you will note that all folders are organized inside a subfolder called folders for easier access.</p>
+<a class="reference internal image-reference" href="_images/dicom_data_copied.png"><img alt="Dicom Data Copied" class="align-center" src="_images/dicom_data_copied.png" style="width: 800px;" />
+</a>
 </section>
 <section id="dicom-series-for-processing">
-<h3>Dicom Series for Processing<a class="headerlink" href="#dicom-series-for-processing" title="Link to this heading"></a></h3>
+<h2>Dicom Series for Processing<a class="headerlink" href="#dicom-series-for-processing" title="Link to this heading"></a></h2>
 <p>After the DICOM data has been copied it is separated into series. Additionally the system attempts to match autosegmentation templates to the series based on the Rulesets you have created during client configuration. If this is successful then the series will be de-identified. This table also shows all the series where the template matching failed and are unprocessed. In this section you can also choose to send a DICOM series for segmentation after manual section of an autosegmentation template.</p>
+<a class="reference internal image-reference" href="_images/dicom_series_for_processing.png"><img alt="Dicom Series for Processing" class="align-center" src="_images/dicom_series_for_processing.png" style="width: 800px;" />
+</a>
+<p>You can filter the list displayed by clicking on the dropdown menu in the top left corner and selecting the processing status of the series.</p>
+<a class="reference internal image-reference" href="_images/dicom_series_for_processing_filter.png"><img alt="Dicom Series for Processing Filter" class="align-center" src="_images/dicom_series_for_processing_filter.png" style="width: 800px;" />
+</a>
+<p>You can also search for a specific series by clicking on the search bar and entering the patient ID, name etc.</p>
+<a class="reference internal image-reference" href="_images/dicom_series_for_processing_search.png"><img alt="Dicom Series for Processing Search" class="align-center" src="_images/dicom_series_for_processing_search.png" style="width: 800px;" />
+</a>
+<p>Please refer to the document called <a class="reference internal" href="processsing_status_choices.html"><span class="doc">Processing Status Choices</span></a> for more details on the processing status choices.</p>
+<p>Additionally, you can also send series for manual processing from this page. To do this we need to ensure that an automatic segmentation template is associated with the series. Please review the image below:</p>
+<ol class="arabic simple">
+<li><p>First we need to click the dropdown menu under the column called Template File to select the desired autosegmentation template. If you wish to create the template you can click on the button with a + sign to create a new template. Note that the buttons beside the dropdown menu may not be visible for all user roles.</p></li>
+</ol>
+<a class="reference internal image-reference" href="_images/dicom_series_for_processing_template_selection.png"><img alt="Selecting template for manual processing" class="align-center" src="_images/dicom_series_for_processing_template_selection.png" style="width: 800px;" />
+</a>
+<ol class="arabic simple">
+<li><p>Once you have selected the template, click on the save button on the bottom right corner of the page. This will save the data for the series.</p></li>
+</ol>
+<a class="reference internal image-reference" href="_images/dicom_series_for_processing_save.png"><img alt="Saving template for manual processing" class="align-center" src="_images/dicom_series_for_processing_save.png" style="width: 800px;" />
+</a>
+<ol class="arabic simple">
+<li><p>After that click the checkbox beside the series that you wish to send for manual processing. Remember to select this carefully otherwise you may send the wrong series for manual processing.</p></li>
+</ol>
+<a class="reference internal image-reference" href="_images/dicom_series_for_processing_checkbox.png"><img alt="Selecting series for manual processing" class="align-center" src="_images/dicom_series_for_processing_checkbox.png" style="width: 800px;" />
+</a>
+<ol class="arabic simple">
+<li><p>Once you have selected the series, you will see a bar appear at the bottom of the page with a dropdown menu. There select the option “Send Dicom for processing action” to send the series for manual processing. You will see a message at the top once the series has started processing. After successful processing that status will also be changed.</p></li>
+</ol>
+<a class="reference internal image-reference" href="_images/dicom_series_for_processing_send.png"><img alt="Sending series for manual processing" class="align-center" src="_images/dicom_series_for_processing_send.png" style="width: 800px;" />
+</a>
 </section>
 <section id="processing-logs">
-<h3>Processing Logs<a class="headerlink" href="#processing-logs" title="Link to this heading"></a></h3>
-<p>Access detailed logs of DICOM processing activities with timestamp and any error messages for troubleshooting</p>
+<h2>Processing Logs<a class="headerlink" href="#processing-logs" title="Link to this heading"></a></h2>
+<p>In this page you can view the logs of the processing activities for the series. This allows you get a birds eye view of the processing activities for the series. The search bar allows you to search for a specific series by patient ID, name etc.</p>
+<a class="reference internal image-reference" href="_images/dicom_series_for_processing_logs.png"><img alt="Processing Logs" class="align-center" src="_images/dicom_series_for_processing_logs.png" style="width: 800px;" />
+</a>
+<p>You can also filter the logs by the processing status by clicking on the dropdown menu in the top left corner and selecting the processing status.</p>
+<a class="reference internal image-reference" href="_images/dicom_series_for_processing_logs_filter.png"><img alt="Processing Logs Filter" class="align-center" src="_images/dicom_series_for_processing_logs_filter.png" style="width: 800px;" />
+</a>
 </section>
 <section id="upload-dicom-zip-files">
-<h3>Upload DICOM Zip Files<a class="headerlink" href="#upload-dicom-zip-files" title="Link to this heading"></a></h3>
-<p>Upload DICOM data in compressed format for processing. One or multiple patients can be uploaded using this method.</p>
-</section>
-</section>
-<section id="deidentification-overview">
-<h2>Deidentification Overview<a class="headerlink" href="#deidentification-overview" title="Link to this heading"></a></h2>
-<p>This section provides access to deidentified DICOM data and includes:</p>
-<section id="patient">
-<h3>Patient<a class="headerlink" href="#patient" title="Link to this heading"></a></h3>
-<p>View the deidentified patient information. Note that the API client will have access to deidentified data and therefore any troubleshooting purposes, you may need to see the deidentified patient data.</p>
-</section>
-<section id="dicom-study">
-<h3>Dicom Study<a class="headerlink" href="#dicom-study" title="Link to this heading"></a></h3>
-<p>View deidentified study-level DICOM data.</p>
-</section>
-<section id="dicom-series">
-<h3>Dicom Series<a class="headerlink" href="#dicom-series" title="Link to this heading"></a></h3>
-<p>View deidentified series-level DICOM information.</p>
-</section>
-<section id="dicom-instance">
-<h3>Dicom Instance<a class="headerlink" href="#dicom-instance" title="Link to this heading"></a></h3>
-<p>View individual deidentified DICOM instances. Each instance is the file in the DICOM dataset.</p>
-</section>
-<section id="rt-structure-file">
-<h3>RT Structure File<a class="headerlink" href="#rt-structure-file" title="Link to this heading"></a></h3>
-<p>Manage deidentified RT structure files.</p>
-</section>
-</section>
-<section id="remote-transfers">
-<h2>Remote Transfers<a class="headerlink" href="#remote-transfers" title="Link to this heading"></a></h2>
-<p>This section manages data transfers and includes:</p>
-<section id="api-data-processing-status">
-<h3>API Data Processing Status<a class="headerlink" href="#api-data-processing-status" title="Link to this heading"></a></h3>
-<p>Monitor the status of data transfers to and from the API. This table will automatically update the data from the server at regular intervals. After the RTStruct has been segmented and retrieved it will update the status also.</p>
-</section>
-</section>
-<section id="autosegmentation-templates">
-<h2>Autosegmentation Templates<a class="headerlink" href="#autosegmentation-templates" title="Link to this heading"></a></h2>
-<p>This section allows you to view autosegmentation templates in the system.</p>
-<section id="view-autosegmentation-templates">
-<h3>View Autosegmentation Templates<a class="headerlink" href="#view-autosegmentation-templates" title="Link to this heading"></a></h3>
-<p>Access and manage existing autosegmentation templates. You can delete the autosegmentation templates from here.</p>
-</section>
-</section>
-<section id="task-status">
-<h2>Task Status<a class="headerlink" href="#task-status" title="Link to this heading"></a></h2>
-<p>This section provides information about tasks being executed by the system.</p>
-<section id="view-task-status">
-<h3>View Task Status<a class="headerlink" href="#view-task-status" title="Link to this heading"></a></h3>
-<p>Monitor the status and results of scheduled tasks.</p>
-</section>
+<h2>Upload DICOM Zip Files<a class="headerlink" href="#upload-dicom-zip-files" title="Link to this heading"></a></h2>
+<p>Upload DICOM data in compressed format for processing. One or multiple patients can be uploaded using this method. Please note that after you have uploaded the zip file, you will need to process it also.</p>
+<a class="reference internal image-reference" href="_images/dicom_upload_zip.png"><img alt="Upload DICOM Zip" class="align-center" src="_images/dicom_upload_zip.png" style="width: 800px;" />
+</a>
+<p>Note that the zip file will be unzipped after you select the action called Extract selected DICOM zip files to subfolders in the datastore.</p>
+<a class="reference internal image-reference" href="_images/dicom_upload_zip_extract.png"><img alt="Extract DICOM Zip" class="align-center" src="_images/dicom_upload_zip_extract.png" style="width: 800px;" />
+</a>
+<p>Please note that the files will be processed after they have been unzipped to the datastore folder by the task schedule created by you when you configured the client. Hence you may need to wait for the task schedule to run before you can process the files. By default the task schedule will ensure that a new folder is processed at least 10 minutes after it was last modified. As the folder newly created will be modified at the time of the unzipping process, the files will not be processed 10 minutes after the unzipping process or when the task schedule next runs which ever is later.</p>
+<a class="reference internal image-reference" href="_images/dicom_upload_zip_extract_task_schedule.png"><img alt="Extract DICOM Zip Task Schedule" class="align-center" src="_images/dicom_upload_zip_extract_task_schedule.png" style="width: 800px;" />
+</a>
 </section>
 </section>
 

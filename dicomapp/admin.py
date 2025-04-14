@@ -32,11 +32,12 @@ class DicomSeriesProcessingAdmin(ModelAdmin):
 
 @admin.register(DicomSeriesProcessingLogModel)
 class DicomSeriesProcessingLogAdmin(ModelAdmin):
-    list_display = ('id', 'task_id', 'dicom_series_processing_id', 'processing_status', 
-                   'created_at', 'updated_at')
+    list_display = ('dicom_series_processing_id__patient_id', 'dicom_series_processing_id__patient_name', 'processing_status', 
+                    'dicom_series_processing_id__series_instance_uid', 'dicom_series_processing_id__scan_date',
+                   'created_at')
     readonly_fields = ('id', 'task_id', 'dicom_series_processing_id', 'processing_status',
                       'processing_status_message', 'created_at', 'updated_at')
-    search_fields = ('task_id', 'processing_status')
+    search_fields = ('task_id', 'processing_status', 'dicom_series_processing_id__patient_id', 'dicom_series_processing_id__patient_name')
     list_filter = ('processing_status',)
     ordering = ('-created_at',)
 

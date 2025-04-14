@@ -25,6 +25,7 @@ The DRAW client performs the following major tasks:
    :maxdepth: 2
    :caption: Contents:
    
+   draw_architecture
    installation
    configuration
    datastore_configuration
@@ -35,4 +36,4 @@ The DRAW client performs the following major tasks:
    how_to_manual_segmentation
    interface_guide
    processsing_status_choices
-
+   deidentification_overview
