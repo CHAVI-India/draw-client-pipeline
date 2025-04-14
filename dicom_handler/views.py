@@ -164,13 +164,18 @@ def create_yml(request):
             df = pd.DataFrame(selected_data)
             
             # Prepare YAML file with safe name
-            yaml_name = f"{template_name}.yml"
+            yaml_name = sanitize_filename(f"{template_name}.yml")
             
             # Create YAML file using the safe function from create_yml.py
             create_yaml_from_pandas_df(df, templatefolderpath, yaml_name)
             
             # Get normalized path for storage
             safe_yaml_path = os.path.normpath(os.path.join(templatefolderpath, yaml_name))
+
+            # Ensure the path is within the allowed directory
+            if not safe_yaml_path.startswith(templatefolderpath):
+                raise ValueError("Invalid YAML path: potential path traversal attempt")
+
             created_file_hash = calculate_hash(safe_yaml_path)
 
             # Save to database
