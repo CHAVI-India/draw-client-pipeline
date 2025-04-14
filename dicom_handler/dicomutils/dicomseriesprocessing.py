@@ -30,7 +30,7 @@ def calculate_hash(file_path):
         ]
         
         # Check if the normalized path is within any of the safe directories
-        is_safe_path = any(normalized_path.startswith(safe_dir) for safe_dir in safe_base_directories)
+        is_safe_path = any(os.path.commonpath([normalized_path, safe_dir]) == safe_dir for safe_dir in safe_base_directories)
         
         if not is_safe_path:
             error_msg = f"Security error: Path '{file_path}' is outside of allowed directories"
@@ -69,7 +69,7 @@ def get_all_files(directory_path):
         ]
         
         # Check if the normalized path is within any of the safe directories
-        is_safe_path = any(normalized_path.startswith(safe_dir) for safe_dir in safe_base_directories)
+        is_safe_path = any(os.path.commonpath([normalized_path, safe_dir]) == safe_dir for safe_dir in safe_base_directories)
         
         if not is_safe_path:
             error_msg = f"Security error: Path '{directory_path}' is outside of allowed directories"
@@ -94,7 +94,7 @@ def get_all_files(directory_path):
                 file_path = os.path.join(root, file)
                 # Ensure file path is also safe
                 normalized_file_path = os.path.normpath(os.path.abspath(file_path))
-                if any(normalized_file_path.startswith(safe_dir) for safe_dir in safe_base_directories):
+                if any(os.path.commonpath([normalized_file_path, safe_dir]) == safe_dir for safe_dir in safe_base_directories):
                     all_files.append(normalized_file_path)
                     logger.debug(f"Added file: {normalized_file_path}")
                 else:
@@ -121,7 +121,7 @@ def update_dicom_tags(dicom_path, tags_to_check):
         ]
         
         # Check if the normalized path is within any of the safe directories
-        is_safe_path = any(normalized_path.startswith(safe_dir) for safe_dir in safe_base_directories)
+        is_safe_path = any(os.path.commonpath([normalized_path, safe_dir]) == safe_dir for safe_dir in safe_base_directories)
         
         if not is_safe_path:
             error_msg = f"Security error: Path '{dicom_path}' is outside of allowed directories"

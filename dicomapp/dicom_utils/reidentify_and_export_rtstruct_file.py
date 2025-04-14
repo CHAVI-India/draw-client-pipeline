@@ -17,6 +17,7 @@ def mask_phi(text):
     Masks Protected Health Information (PHI) in log messages.
     
     For UIDs: Preserves first 4 and last 4 characters, masks middle with ****
+    For dates: Replaces with [DATE REDACTED]
     For names/IDs: Masks completely with [PHI REDACTED]
     """
     if not text or not isinstance(text, str):
@@ -25,6 +26,10 @@ def mask_phi(text):
     # For UIDs (long numeric/dot strings)
     if re.match(r'^[\d\.]+$', text) and len(text) > 10:
         return f"{text[:4]}****{text[-4:]}"
+    
+    # For dates in format YYYYMMDD or YYYY-MM-DD or similar
+    if re.match(r'^(19|20)\d\d[-/]?[01]\d[-/]?[0-3]\d$', text):
+        return "[DATE REDACTED]"
     
     # For patient names, IDs, etc.
     return "[PHI REDACTED]"
