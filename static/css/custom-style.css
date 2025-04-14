@@ -1,0 +1,37 @@
+/* Custom styling for DRAW-Client application */
+
+/* Add any custom styles here that are not covered by Bootstrap or other libraries */
+
+/* Example: Custom badge colors */
+.badge-purple {
+  background-color: #9333ea;
+  color: white;
+}
+
+/* Example: Custom transitions */
+.hover-translate {
+  transition: transform 0.3s ease;
+}
+
+.hover-translate:hover {
+  transform: translateY(-3px);
+}
+
+/* Example: Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #9333ea;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7e22ce;
+}

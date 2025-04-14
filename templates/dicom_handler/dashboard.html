@@ -4,8 +4,8 @@
 {% load static %}
 
 <!-- Add DataTables CSS -->
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap5.min.css">
+<link rel="stylesheet" type="text/css" href="{% static 'css/vendor/dataTables.bootstrap5.min.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/vendor/responsive.bootstrap5.min.css' %}">
 
 <!-- Dashboard Header -->
 <div class="welcome-section mb-4">
@@ -595,9 +595,7 @@
 
 {% block extra_scripts %}
 <!-- Initialize DataTables -->
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
+<script src="{% static 'js/vendor/dataTables.responsive.min.js' %}"></script>
 
 <!-- Custom Scripts for the Dashboard -->
 <script>
