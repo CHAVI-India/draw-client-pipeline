@@ -19,14 +19,20 @@ from collections import defaultdict
 from api_client.models import *
 from api_client.api_utils.proxy_config import get_session_with_proxy
 from django.utils import timezone
+import os
+import re
 
 logger = logging.getLogger(__name__)
 
 
 # yaml saving path
-templatefolderpath = os.path.join(settings.BASE_DIR, "yaml-templates")
+templatefolderpath = os.path.normpath(os.path.join(settings.BASE_DIR, "yaml-templates"))
 os.makedirs(templatefolderpath, exist_ok=True)
         
+# Function to sanitize filenames
+def sanitize_filename(filename):
+    # Remove any path components and keep only alphanumeric, underscore, hyphen and period
+    return re.sub(r'[^\w\-\.]', '_', os.path.basename(filename))
 
 def index(request):
     # Get recent series data for the table
@@ -84,9 +90,8 @@ def check_template(request):
         template_name = request.POST.get('templatename')
         description = request.POST.get('description')
         
-        # Print to console for debugging
-        # print("Template Name:", template_name)
-        # print("Description:", description)
+        # Sanitize template name
+        template_name = sanitize_filename(template_name)
         
         # Check if template name already exists
         template_name_yml = template_name + ".yml"
@@ -127,6 +132,9 @@ def create_yml(request):
             selected_model_ids = request.POST.getlist('selected_model_ids')
             selected_map_ids = request.POST.getlist('selected_map_ids')
 
+            # Sanitize template name to prevent path traversal
+            template_name = sanitize_filename(template_name)
+
             if not selected_model_ids:
                 messages.error(request, 'Please select at least one model')
                 return render(request, 'dicom_handler/create_yml.html', {
@@ -152,24 +160,23 @@ def create_yml(request):
                                     'model_postprocess': info.get('model_postprocess', '')
                                 })
 
-            # Print for debugging
-            # print("Selected Data --- :", selected_data)
-
             # Create DataFrame
             df = pd.DataFrame(selected_data)
             
-            # Prepare YAML file
+            # Prepare YAML file with safe name
             yaml_name = f"{template_name}.yml"
-            yaml_path = os.path.join(templatefolderpath, yaml_name)
-
-            # Create YAML file
+            
+            # Create YAML file using the safe function from create_yml.py
             create_yaml_from_pandas_df(df, templatefolderpath, yaml_name)
-            created_file_hash = calculate_hash(yaml_path)
+            
+            # Get normalized path for storage
+            safe_yaml_path = os.path.normpath(os.path.join(templatefolderpath, yaml_name))
+            created_file_hash = calculate_hash(safe_yaml_path)
 
             # Save to database
             ModelYamlInfo.objects.create(
                 yaml_name=yaml_name,
-                yaml_path=yaml_path,
+                yaml_path=safe_yaml_path,
                 protocol=yaml_name,
                 file_hash=created_file_hash,
                 yaml_description=description
@@ -215,8 +222,15 @@ def autosegmentation_template(request):
         yaml_path = latest_template.yaml_path
         if not yaml_path:
             raise ValueError("YAML path is not set in the database")
+        
+        # Normalize and validate the path is within templatefolderpath
+        normalized_yaml_path = os.path.normpath(os.path.abspath(yaml_path))
+        normalized_template_path = os.path.normpath(os.path.abspath(templatefolderpath))
+        
+        if not normalized_yaml_path.startswith(normalized_template_path):
+            raise ValueError("Invalid YAML path: potential path traversal attempt")
             
-        with open(yaml_path, 'r') as file:
+        with open(normalized_yaml_path, 'r') as file:
             yaml_data = yaml.safe_load(file)
 
         # Extract models data

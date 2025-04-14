@@ -1,4 +1,3 @@
-
 import pandas as pd
 import yaml
 import os
@@ -78,12 +77,20 @@ def create_yaml_from_pandas_df(data, save_yaml_path, yaml_name):
             raise
 
         # Save to file if path is provided
-        save_yaml_path = os.path.join(save_yaml_path, yaml_name)
         if save_yaml_path is not None:
             try:
-                with open(save_yaml_path, 'w') as f:
+                # Normalize the path to prevent path traversal attacks
+                normalized_base_path = os.path.abspath(save_yaml_path)
+                safe_yaml_name = os.path.basename(yaml_name)  # Extract just the filename
+                full_save_path = os.path.normpath(os.path.join(normalized_base_path, safe_yaml_name))
+                
+                # Verify the normalized path is still within the intended directory
+                if not full_save_path.startswith(normalized_base_path):
+                    raise ValueError(f"Potential directory traversal attack detected: {yaml_name}")
+                
+                with open(full_save_path, 'w') as f:
                     yaml.dump(yaml_dict, f, sort_keys=False, default_flow_style=False)
-                logger.info(f"Successfully saved YAML file to {save_yaml_path}")
+                logger.info(f"Successfully saved YAML file to {full_save_path}")
             except Exception as e:
                 logger.error(f"Error saving YAML file: {str(e)}")
                 raise
