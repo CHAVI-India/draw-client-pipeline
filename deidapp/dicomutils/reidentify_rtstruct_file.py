@@ -3,12 +3,30 @@ import uuid
 import pydicom
 import pandas as pd
 import logging
+import re
 from datetime import date
 from django.conf import settings
 from deidapp.models import DicomSeries, DicomInstance, RTStructFile
 
 # Configure logger
 logger = logging.getLogger('deidapp')
+
+def mask_phi(text):
+    """
+    Masks Protected Health Information (PHI) in log messages.
+    
+    For UIDs: Preserves first 4 and last 4 characters, masks middle with ****
+    For names/IDs: Masks completely with [PHI REDACTED]
+    """
+    if not text or not isinstance(text, str):
+        return text
+        
+    # For UIDs (long numeric/dot strings)
+    if re.match(r'^[\d\.]+$', text) and len(text) > 10:
+        return f"{text[:4]}****{text[-4:]}"
+    
+    # For patient names, IDs, etc.
+    return "[PHI REDACTED]"
 
 def reidentify_rtstruct_files(source_dir=None, target_dir=None):
     """
@@ -72,13 +90,13 @@ def reidentify_rtstruct_files(source_dir=None, target_dir=None):
                 def get_referenced_series_uid(ds, elem):
                     nonlocal found_series_instance_uid
                     if elem.tag == (0x0020, 0x000E):
-                        logger.debug(f"Found Referenced Series Instance UID: {elem.value}")
+                        logger.debug(f"Found Referenced Series Instance UID: {mask_phi(elem.value)}")
                         found_series_instance_uid = elem.value
                 
                 ds.walk(get_referenced_series_uid)
                 
                 deidentified_series_instance_uid = found_series_instance_uid
-                logger.info(f"Deidentified Series Instance UID: {deidentified_series_instance_uid}")
+                logger.info(f"Deidentified Series Instance UID: {mask_phi(deidentified_series_instance_uid)}")
 
                 if deidentified_series_instance_uid is None:
                     logger.warning(f"Could not find Referenced Series Instance UID in: {file_path}")
@@ -98,7 +116,7 @@ def reidentify_rtstruct_files(source_dir=None, target_dir=None):
                 
                 series = matching_series.first()
                 logger.info(f"Series: {series}")
-                logger.info(f"Selected series with UID: {series.series_instance_uid}")
+                logger.info(f"Selected series with UID: {mask_phi(series.series_instance_uid)}")
 
                 # Step 4 & 5: Get required values from DicomStudy and Patient models
                 study = series.study
@@ -108,15 +126,15 @@ def reidentify_rtstruct_files(source_dir=None, target_dir=None):
 
                 # Step 5: Replace basic DICOM tags with original values
                 ds.StudyInstanceUID = study.study_instance_uid
-                logger.info(f"Study Instance UID: {ds.StudyInstanceUID}")
+                logger.info(f"Study Instance UID: {mask_phi(ds.StudyInstanceUID)}")
                 ds.PatientID = patient.patient_id
-                logger.info(f"Patient ID: {ds.PatientID}")
+                logger.info(f"Patient ID: {mask_phi(ds.PatientID)}")
                 ds.PatientName = patient.patient_name
-                logger.info(f"Patient Name: {ds.PatientName}")
+                logger.info(f"Patient Name: {mask_phi(ds.PatientName)}")
                 ds.StudyDescription = study.study_description
-                logger.info(f"Study Description: {ds.StudyDescription}")
+                logger.info(f"Study Description: {mask_phi(ds.StudyDescription)}")
                 ds.PatientBirthDate = patient.patient_birth_date.strftime('%Y%m%d')
-                logger.info(f"Patient Birth Date: {ds.PatientBirthDate}")
+                logger.info(f"Patient Birth Date: {mask_phi(ds.PatientBirthDate)}")
                 ds.ReferringPhysicianName = "DRAW"
                 ds.AccessionNumber = "202514789"                    
 
@@ -146,7 +164,8 @@ def reidentify_rtstruct_files(source_dir=None, target_dir=None):
                 df = pd.DataFrame(df_data)
                 logger.debug("Reference DataFrame created")
                 if logger.isEnabledFor(logging.DEBUG):
-                    logger.debug(f"DataFrame content:\n{df}")
+                    # Don't log the actual DataFrame content as it contains PHI
+                    logger.debug(f"DataFrame created with {len(df)} rows")
 
                 # Step 7: Replace all UIDs using callbacks
                 replacement_count = 0
@@ -189,7 +208,7 @@ def reidentify_rtstruct_files(source_dir=None, target_dir=None):
                         'processing_status': 'SUCCESS'
                     }
                 )
-                logger.info(f"Updated database record for RTStructFile: {rtstruct_file.series_instance_uid}")
+                logger.info(f"Updated database record for RTStructFile: {mask_phi(rtstruct_file.series_instance_uid)}")
                 processed_count += 1
 
             except Exception as e:

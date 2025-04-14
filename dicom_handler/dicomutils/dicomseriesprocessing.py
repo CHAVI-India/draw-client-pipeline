@@ -10,6 +10,8 @@ from datetime import datetime
 from django.utils import timezone
 from dicom_handler.models import  ModelYamlInfo, Rule, RuleSet
 import logging
+from django.conf import settings
+import pathlib
 
 # Get logger
 logger = logging.getLogger('__name__')
@@ -18,8 +20,30 @@ logger = logging.getLogger('__name__')
 def calculate_hash(file_path):
     logger.debug(f"Calculating hash for file: {file_path}")
     try:
+        # Normalize and validate the path to prevent path traversal attacks
+        normalized_path = os.path.normpath(os.path.abspath(file_path))
+        
+        # Define the safe base directories - using BASE_DIR as a safe root
+        safe_base_directories = [
+            os.path.normpath(os.path.abspath(settings.BASE_DIR)),
+            # Add any other explicitly allowed directories here
+        ]
+        
+        # Check if the normalized path is within any of the safe directories
+        is_safe_path = any(normalized_path.startswith(safe_dir) for safe_dir in safe_base_directories)
+        
+        if not is_safe_path:
+            error_msg = f"Security error: Path '{file_path}' is outside of allowed directories"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+            
+        if not os.path.exists(normalized_path):
+            error_msg = f"File not found: '{normalized_path}'"
+            logger.error(error_msg)
+            raise FileNotFoundError(error_msg)
+            
         hash_md5 = hashlib.sha512()
-        with open(file_path, "rb") as f:
+        with open(normalized_path, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
                 hash_md5.update(chunk)
         hash_value = hash_md5.hexdigest()
@@ -34,26 +58,48 @@ def calculate_hash(file_path):
 def get_all_files(directory_path):
     logger.debug(f"Starting file search in directory: {directory_path}")
     
-    if not os.path.exists(directory_path):
-        logger.error(f"Directory does not exist: {directory_path}")
-        return []
-       
-    if not os.path.isdir(directory_path):
-        logger.error(f"Path is not a directory: {directory_path}")
-        return []
-   
-    all_files = []
-    
     try:
-        for root, dirs, files in os.walk(directory_path):
+        # Normalize and validate the path to prevent path traversal attacks
+        normalized_path = os.path.normpath(os.path.abspath(directory_path))
+        
+        # Define the safe base directories
+        safe_base_directories = [
+            os.path.normpath(os.path.abspath(settings.BASE_DIR)),
+            # Add any other explicitly allowed directories here
+        ]
+        
+        # Check if the normalized path is within any of the safe directories
+        is_safe_path = any(normalized_path.startswith(safe_dir) for safe_dir in safe_base_directories)
+        
+        if not is_safe_path:
+            error_msg = f"Security error: Path '{directory_path}' is outside of allowed directories"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+    
+        if not os.path.exists(normalized_path):
+            logger.error(f"Directory does not exist: {normalized_path}")
+            return []
+           
+        if not os.path.isdir(normalized_path):
+            logger.error(f"Path is not a directory: {normalized_path}")
+            return []
+       
+        all_files = []
+        
+        for root, dirs, files in os.walk(normalized_path):
             logger.debug(f"Scanning directory: {root}")
             logger.debug(f"Found {len(files)} files")
             
             for file in files:
                 file_path = os.path.join(root, file)
-                all_files.append(file_path)
-                logger.debug(f"Added file: {file_path}")
-        
+                # Ensure file path is also safe
+                normalized_file_path = os.path.normpath(os.path.abspath(file_path))
+                if any(normalized_file_path.startswith(safe_dir) for safe_dir in safe_base_directories):
+                    all_files.append(normalized_file_path)
+                    logger.debug(f"Added file: {normalized_file_path}")
+                else:
+                    logger.warning(f"Skipping file outside safe directory: {file_path}")
+            
         logger.info(f"Total files found: {len(all_files)}")
         return all_files
     
@@ -65,7 +111,24 @@ def get_all_files(directory_path):
 def update_dicom_tags(dicom_path, tags_to_check):
     logger.debug(f"Updating DICOM tags for file: {dicom_path}")
     try:
-        dicom_data = pydicom.dcmread(dicom_path)
+        # Normalize and validate the path to prevent path traversal attacks
+        normalized_path = os.path.normpath(os.path.abspath(dicom_path))
+        
+        # Define the safe base directories
+        safe_base_directories = [
+            os.path.normpath(os.path.abspath(settings.BASE_DIR)),
+            # Add any other explicitly allowed directories here
+        ]
+        
+        # Check if the normalized path is within any of the safe directories
+        is_safe_path = any(normalized_path.startswith(safe_dir) for safe_dir in safe_base_directories)
+        
+        if not is_safe_path:
+            error_msg = f"Security error: Path '{dicom_path}' is outside of allowed directories"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+            
+        dicom_data = pydicom.dcmread(normalized_path)
 
         for tag in tags_to_check:
             logger.debug(f"Checking tag: {tag}")

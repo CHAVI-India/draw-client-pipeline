@@ -3,6 +3,7 @@ import uuid
 import pydicom
 import pandas as pd
 import logging
+import re
 from datetime import date, datetime
 from django.conf import settings
 from deidapp.models import *
@@ -10,6 +11,23 @@ from dicomapp.models import *
 import shutil
 # Configure logger
 logger = logging.getLogger('deidapp')
+
+def mask_phi(text):
+    """
+    Masks Protected Health Information (PHI) in log messages.
+    
+    For UIDs: Preserves first 4 and last 4 characters, masks middle with ****
+    For names/IDs: Masks completely with [PHI REDACTED]
+    """
+    if not text or not isinstance(text, str):
+        return text
+        
+    # For UIDs (long numeric/dot strings)
+    if re.match(r'^[\d\.]+$', text) and len(text) > 10:
+        return f"{text[:4]}****{text[-4:]}"
+    
+    # For patient names, IDs, etc.
+    return "[PHI REDACTED]"
 
 def reidentify_rtstruct_file_and_export_to_datastore(dict):
     """
@@ -149,7 +167,7 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
                 logger.warning(f"Could not find Referenced Series Instance UID in: {file_path}")
                 continue
 
-            logger.info(f"Found Referenced Series Instance UID: {referenced_series_uid}")
+            logger.info(f"Found Referenced Series Instance UID: {mask_phi(referenced_series_uid)}")
 
             # Get all series with matching series instance UID
             matching_series = DicomSeries.objects.filter(
@@ -165,7 +183,7 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
             
             series = matching_series.first()
             logger.info(f"Series: {series}")
-            logger.info(f"Selected series with UID: {series.series_instance_uid}")
+            logger.info(f"Selected series with UID: {mask_phi(series.series_instance_uid)}")
 
             # Step 4 & 5: Get required values from DicomStudy and Patient models
             study = series.study
@@ -175,15 +193,15 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
 
             # Step 5: Replace basic DICOM tags with original values
             ds.StudyInstanceUID = study.study_instance_uid
-            logger.info(f"Study Instance UID: {ds.StudyInstanceUID}")
+            logger.info(f"Study Instance UID: {mask_phi(ds.StudyInstanceUID)}")
             ds.PatientID = patient.patient_id
-            logger.info(f"Patient ID: {ds.PatientID}")
+            logger.info(f"Patient ID: {mask_phi(ds.PatientID)}")
             ds.PatientName = patient.patient_name
-            logger.info(f"Patient Name: {ds.PatientName}")
+            logger.info(f"Patient Name: {mask_phi(ds.PatientName)}")
             ds.StudyDescription = study.study_description
-            logger.info(f"Study Description: {ds.StudyDescription}")
+            logger.info(f"Study Description: {mask_phi(ds.StudyDescription)}")
             ds.PatientBirthDate = patient.patient_birth_date.strftime('%Y%m%d')
-            logger.info(f"Patient Birth Date: {ds.PatientBirthDate}")
+            logger.info(f"Patient Birth Date: {mask_phi(ds.PatientBirthDate)}")
             ds.ReferringPhysicianName = "DRAW"
             ds.AccessionNumber = "202514789"                    
 
@@ -213,7 +231,8 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
             df = pd.DataFrame(df_data)
             logger.debug("Reference DataFrame created")
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug(f"DataFrame content:\n{df}")
+                # Don't log the actual DataFrame content as it contains PHI
+                logger.debug(f"DataFrame created with {len(df)} rows")
 
             # Step 7: Replace all UIDs using callbacks
             replacement_count = 0
@@ -256,7 +275,7 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
                     'processing_status': 'SUCCESS'
                 }
             )
-            logger.info(f"Updated database record for RTStructFile: {rtstruct_file.series_instance_uid}")
+            logger.info(f"Updated database record for RTStructFile: {mask_phi(rtstruct_file.series_instance_uid)}")
 
             # From the DicomSeries object we will get the dicom_series_processing_id
 
@@ -283,7 +302,7 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
                 logger.info(f"Created new DicomSeriesProcessingLogModel: {dicom_series_processing_id}")
                 logger.info(f"Completed updating the DicomSeriesProcessingModel and DicomSeriesProcessingLogModel objects")
             except Exception as e:
-                logger.warning(f"Dicom Series Processing Model not updated for series: {series.series_instance_uid} because of error: {str(e)}", exc_info=True)
+                logger.warning(f"Dicom Series Processing Model not updated for series: {mask_phi(series.series_instance_uid)} because of error: {str(e)}", exc_info=True)
                 # continue to the next file.
                 continue    
             # Delete the deidentified RTSTRUCT file
@@ -398,7 +417,7 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
             rtstruct_file_ids.append(rtstruct_file.series_instance_uid)
             logger.info(f"Processed paths added to the list: {processed_paths}")
             logger.info(f"Original paths added to the list: {original_paths}")
-            logger.info(f"RTStructFile IDs added to the list: {rtstruct_file_ids}")
+            logger.info(f"RTStructFile IDs added to the list: {[mask_phi(id) for id in rtstruct_file_ids]}")
 
             processed_count += 1
 
@@ -423,7 +442,8 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
             
         logger.info(f"Completed processing of {file_path}")
 
-    logger.info(f"Finished processing all files. Processed: {processed_count}, Errors: {error_count}, Processed paths: {processed_paths}, Original paths: {original_paths}, RTStructFile IDs: {rtstruct_file_ids}, Failed paths: {failed_paths}, Error messages: {error_messages}")
+    logger.info(f"Finished processing all files. Processed: {processed_count}, Errors: {error_count}")
+    logger.debug(f"Processed paths: {processed_paths}, Original paths: {original_paths}, RTStructFile IDs: {[mask_phi(id) for id in rtstruct_file_ids]}, Failed paths: {failed_paths}")
     return {
         'processed_count': processed_count,
         'error_count': error_count,
