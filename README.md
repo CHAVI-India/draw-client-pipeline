@@ -60,14 +60,13 @@ cd draw-client
 > **IMPORTANT**: The datastore folder is the location where your DICOM files are stored and where the DRAW client will look for new files to process. This folder must exist and be accessible to Docker. The DRAW client will monitor this folder for new DICOM files and will also save the processed RTStruct files back to this location. Note that this can be a network storage folder where the DICOM data are saved before importing to the TPS. A periodic task will fetch new images from the directory and process them for autosegmentation.
 
 
-2. Ensure that you have the correct folder path for the **datastore folder**. See the commented section in the docker-compose.yml file below. Ensure that the folder exists. Additionally if in Windows then change all \ to a / in the folder path. 
+2. Ensure that you have the correct folder path for the **datastore folder** in the volumes section. See the commented section in the docker-compose.yml file below. Ensure that the folder exists. Additionally if in Windows then change all \ to a / in the folder path. 
 
 The other folders are as follows:
 
 | Host Folder Name | Docker Folder Name | Purpose |
 | ---- | ----- | ---- |
-| logs | /app/logs | This folder will have all the logs of the application |
-| static | /app/static | This folder stores the static files |
+| staticfiles | /app/staticfiles | This folder stores the static files |
 | dicom | /app/folders | This folder stores the dicom data that is being processed |
 | yaml-templates | /app/yaml-templates | This folder has all the autosegmentation templates created for the DRAW client |
 
