@@ -10,19 +10,19 @@ logger = getLogger(__name__)
 
 def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
     """
-    This task will copy folders from the datastore path to the target path. 
-    1. It will go through each folder in the datastore path.
-    2. It will get the folder path and store it in the field called source_directory.
-    3. It will get the creation date and modification date of the directory and store these in the fields called source_directory_creation_date and source_directory_modification_date.
-    4. It will calculate the size of the directory and store it in the field called source_directory_size.
-    5. It will copy the directory to the target path if the following conditions are met:
+    This task will recursively scan folders from the datastore path and copy all directories containing files to the target path. 
+    1. It will recursively find all directories containing files in the datastore path.
+    2. For each directory containing files, it will:
+       a. Get the full path and store it in the field called source_directory.
+       b. Get the creation date and modification date and store these in the fields.
+       c. Calculate the size of the directory and store it.
+    3. It will copy the directory to the target path if the following conditions are met:
         a. The directory has been modified since the past 1 week 
         b. The directory has been modified not less than the past 10 minutes from the current time
         c. The directory's modification time is different from what's stored in the database
 
-    6. It will save the task_id of the celery task in the field called task_id.
+    4. It will save the task_id of the celery task in the field called task_id.
     It will run as a part of the celery task. 
-    As it will be triggering a task so the return statement for the next task will include a dictionary with the status, task_id and the list of target paths which will be directory paths of the folders created inside the target directory.  
 
     Args:
         datastore_path (str): The path to the datastore directory.
@@ -80,44 +80,92 @@ def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
             logger.warning(f"Pull start time {pull_start_time} is in the future, adjusting to current time")
             pull_start_time = current_time - timedelta(minutes=20)
             logger.info(f"Pull start time: {pull_start_time} (timezone: {pull_start_time.tzinfo})")
-        # Iterate through directories in datastore_path
-        for item in os.listdir(datastore_path):
-            source_dir = os.path.join(datastore_path, item)
+        
+        logger.info(f"Starting directory scan in {datastore_path}")
+        
+        # Function to find all directories containing files directly (not counting files in subdirectories)
+        def find_directories_with_direct_files(base_path):
+            dirs_with_files = []
             
-            # Skip if not a directory
-            if not os.path.isdir(source_dir):
-                logger.debug(f"Skipping {item} as it's not a directory")
-                continue
+            # First get all directories using os.walk()
+            all_dirs = []
+            for root, dirs, _ in os.walk(base_path):
+                # Skip the base directory itself
+                if root == base_path:
+                    continue
+                all_dirs.append(root)
+            
+            logger.info(f"Found {len(all_dirs)} total directories")
+            
+            # Then check each directory to see if it contains files directly
+            for dir_path in all_dirs:
+                has_files = False
+                files_count = 0
+                # Check for files directly in this directory (not in subdirectories)
+                for item in os.listdir(dir_path):
+                    item_path = os.path.join(dir_path, item)
+                    if os.path.isfile(item_path):
+                        has_files = True
+                        files_count += 1
                 
+                if has_files:
+                    dirs_with_files.append(dir_path)
+                    logger.info(f"Directory {dir_path} has {files_count} files directly")
+                else:
+                    logger.debug(f"Directory {dir_path} has no direct files, skipping")
+            
+            logger.info(f"Found {len(dirs_with_files)} directories with direct files")
+            return dirs_with_files
+                
+        # Find all directories with direct files
+        directories_with_files = find_directories_with_direct_files(datastore_path)
+        
+        if not directories_with_files:
+            logger.warning(f"No directories with files found in {datastore_path}")
+            return {
+                'status': 'success',
+                'task_id': task_id,
+                'target_paths': [],
+                'copy_dicom_task_id': [],
+                'message': 'No directories with files found'
+            }
+            
+        logger.info(f"Processing {len(directories_with_files)} directories")
+        
+        # Process each directory containing files
+        for source_dir in directories_with_files:
+            # Extract directory name for the target path (use the last part of the path)
+            dir_name = os.path.basename(source_dir)
+            
             # Get directory stats
             stats = os.stat(source_dir)
             # Convert timestamps to timezone-aware datetimes
             creation_time = timezone.make_aware(datetime.fromtimestamp(stats.st_ctime))
             modification_time = timezone.make_aware(datetime.fromtimestamp(stats.st_mtime))
-            logger.info(f"Directory {item} modification time: {modification_time} (timezone: {modification_time.tzinfo})")
+            logger.info(f"Directory {source_dir} modification time: {modification_time} (timezone: {modification_time.tzinfo})")
             
-            # Calculate directory size
+            # Calculate size of only the files directly in this directory (not in subdirectories)
             total_size = 0
-            for dirpath, dirnames, filenames in os.walk(source_dir):
-                for f in filenames:
-                    fp = os.path.join(dirpath, f)
-                    total_size += os.path.getsize(fp)
+            for f in os.listdir(source_dir):
+                file_path = os.path.join(source_dir, f)
+                if os.path.isfile(file_path):
+                    total_size += os.path.getsize(file_path)
             
-            logger.info(f"Directory {item}: Size={total_size}, Modified={modification_time}")
+            logger.info(f"Directory {source_dir}: Size={total_size}, Modified={modification_time}")
             
             # Check if directory exists in database and compare modification times
             try:
                 existing_entry = CopyDicomTaskModel.objects.get(source_directory=source_dir)
                 # check if the copy_completed field is True. If so skip the directory.
                 if existing_entry.copy_completed:
-                    logger.debug(f"Skipping {item} as it has been already copied")
+                    logger.debug(f"Skipping {source_dir} as it has been already copied")
                     continue
                 else:
                     db_modification_time = existing_entry.source_directory_modification_date
                     
                 # Skip if modification time hasn't changed
                 if db_modification_time and db_modification_time == modification_time:
-                    logger.debug(f"Skipping {item} as modification time hasn't changed")
+                    logger.debug(f"Skipping {source_dir} as modification time hasn't changed")
                     continue
             except CopyDicomTaskModel.DoesNotExist:
                 # Directory not in database, will be processed
@@ -127,8 +175,8 @@ def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
             if (modification_time >= pull_start_time and 
                 modification_time < ten_minutes_ago):
                 
-                # Create target directory
-                target_dir = os.path.join(target_path, item)
+                # Create target directory with same name as source
+                target_dir = os.path.join(target_path, dir_name)
                 
                 try:
                     # Store directory information in database
@@ -143,19 +191,30 @@ def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
                             'copy_completed': True
                         }
                     )
-                    logger.info(f"Created/Updated database entry for {item}")
+                    logger.info(f"Created/Updated database entry for {source_dir}")
 
-                    # Always copy the directory to the target directory so that even if modifications are made the copy function copies the source directory.
-                    shutil.copytree(source_dir, target_dir, dirs_exist_ok=True)
+                    # Create target directory if it doesn't exist
+                    os.makedirs(target_dir, exist_ok=True)
+                    
+                    # Copy only the files directly in this directory (not subdirectories)
+                    files_copied = 0
+                    for item in os.listdir(source_dir):
+                        source_item = os.path.join(source_dir, item)
+                        # Only copy files, not subdirectories
+                        if os.path.isfile(source_item):
+                            target_file = os.path.join(target_dir, item)
+                            shutil.copy2(source_item, target_file)
+                            files_copied += 1
+                    
                     result['target_paths'].append(target_dir)  # Already a string
                     result['copy_dicom_task_id'].append(str(dicom_dir.id))  # Convert UUID to string
-                    logger.info(f"Successfully copied {item} to {target_dir}")                    
+                    logger.info(f"Successfully copied {files_copied} files from {source_dir} to {target_dir}")
                     
                 except Exception as e:
-                    logger.error(f"Error copying directory {item}: {str(e)}")
+                    logger.error(f"Error copying directory {source_dir}: {str(e)}")
                     result['status'] = 'partial_failure'
             else:
-                logger.debug(f"Skipping {item} due to modification time constraints")
+                logger.debug(f"Skipping {source_dir} due to modification time constraints")
         
         logger.info(f"DICOM copy process completed with status {result}")
         return result

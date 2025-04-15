@@ -43,7 +43,9 @@ COPY --chown=appuser:appuser . .
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1 
 
-# NOTE: Not switching to non-root user here anymore
+# Switch to non-root user
+USER appuser
+
 # We do that in the entrypoint script after setting up symlinks
 
 # Expose the application port

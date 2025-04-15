@@ -1,34 +1,8 @@
 #!/bin/bash
 
-# Create logs directory if it doesn't exist
-mkdir -p /app/logs
-
-# Remove any existing log files that might be causing permission issues
-rm -f /app/logs/*.log
-
-# Define log files that should go to stdout
-STDOUT_LOGS=("app.log" "django.log" "debug.log" "info.log" "celery.log" "celery_beat.log")
-# Define log files that should go to stderr
-STDERR_LOGS=("error.log" "critical.log")
-
-# Create symlinks for stdout logs
-for log_file in "${STDOUT_LOGS[@]}"; do
-    ln -sf /dev/stdout "/app/logs/$log_file"
-    echo "Linked $log_file to stdout"
-done
-
-# Create symlinks for stderr logs
-for log_file in "${STDERR_LOGS[@]}"; do
-    ln -sf /dev/stderr "/app/logs/$log_file"
-    echo "Linked $log_file to stderr"
-done
-
-# Ensure proper ownership and permissions of logs directory
-chmod -R 777 /app/logs
-chown -R appuser:appuser /app/logs
-
 # Create staticfiles directory if it doesn't exist
 mkdir -p /app/staticfiles
+
 chown -R appuser:appuser /app/staticfiles
 
 # Run Django commands as appuser
