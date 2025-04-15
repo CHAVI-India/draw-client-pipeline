@@ -23,6 +23,7 @@ FROM python:3
 RUN useradd -m -r appuser && \
     mkdir /app && \
     mkdir -p /app/static && \
+    mkdir -p /app/logs && \
     chown -R appuser:appuser /app
  
 # Copy the Python dependencies from the builder stage
@@ -42,9 +43,9 @@ COPY --chown=appuser:appuser . .
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1 
 
-# Switch to non-root user
-USER appuser
- 
+# NOTE: Not switching to non-root user here anymore
+# We do that in the entrypoint script after setting up symlinks
+
 # Expose the application port
 EXPOSE 8000 
 
