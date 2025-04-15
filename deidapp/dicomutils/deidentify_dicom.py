@@ -13,7 +13,7 @@ import logging
 import sys
 
 # Setup logging
-logger = logging.getLogger('deidapp')
+logger = logging.getLogger(__name__)
 
 # Add Celery's logger
 celery_logger = logging.getLogger('celery.task')

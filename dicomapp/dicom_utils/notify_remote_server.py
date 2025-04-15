@@ -3,7 +3,7 @@ from django.db import transaction
 from api_client.models import DicomTransfer, SystemSettings
 from api_client.api_utils.dicom_export import DicomExporter
 
-logger = logging.getLogger('api_client')
+logger = logging.getLogger(__name__)
 
 def notify_completed_transfers():
     """
