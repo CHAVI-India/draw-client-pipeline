@@ -3,7 +3,9 @@
 # Create logs directory if it doesn't exist
 mkdir -p /app/logs
 
-# Set up symlinks for log files to Docker stdout/stderr
+# Remove any existing log files that might be causing permission issues
+rm -f /app/logs/*.log
+
 # Define log files that should go to stdout
 STDOUT_LOGS=("app.log" "django.log" "debug.log" "info.log" "celery.log" "celery_beat.log")
 # Define log files that should go to stderr
@@ -21,7 +23,8 @@ for log_file in "${STDERR_LOGS[@]}"; do
     echo "Linked $log_file to stderr"
 done
 
-# Ensure proper ownership of all files
+# Ensure proper ownership and permissions of logs directory
+chmod -R 777 /app/logs
 chown -R appuser:appuser /app/logs
 
 # Create staticfiles directory if it doesn't exist
