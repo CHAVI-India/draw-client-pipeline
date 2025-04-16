@@ -8,6 +8,52 @@ from django.conf import settings
 from django.utils import timezone
 logger = getLogger(__name__)
 
+# Function to find all directories containing files directly (not counting files in subdirectories)
+def find_directories_with_direct_files(base_path):
+
+    # Use Pathlib to list of all files and folders in the base path
+    path_object = Path(base_path)
+    # Get all files and folders in the base path
+    items = path_object.glob('*')
+    # Sort the items by modification time
+    sorted_items = sorted(items, key=lambda item: item.stat().st_mtime)
+    # Only keep the sorted items which are modified after the pull start time
+    sorted_items = [item for item in sorted_items if item.stat().st_mtime >= pull_start_time]
+    # Return the directory within the sorted_items only.
+    all_dirs = [str(item) for item in sorted_items if item.is_dir()]
+    logger.info(f"Found {len(all_dirs)} total directories")
+
+    #dirs_with_files = []
+    # First get all directories using os.walk()
+    #all_dirs = []
+    #for root, dirs, _ in os.walk(base_path):
+        # Skip the base directory itself
+        # if root == base_path:
+        #     continue
+        # all_dirs.append(root)
+    
+    dirs_with_files = []
+    # Then check each directory to see if it contains files directly
+    for dir_path in all_dirs:
+        has_files = False
+        files_count = 0
+        # Check for files directly in this directory (not in subdirectories)
+        for item in os.listdir(dir_path):
+            item_path = os.path.join(dir_path, item)
+            if os.path.isfile(item_path):
+                has_files = True
+                files_count += 1
+        
+        if has_files:
+            dirs_with_files.append(dir_path)
+            logger.info(f"Directory {dir_path} has {files_count} files directly")
+        else:
+            logger.debug(f"Directory {dir_path} has no direct files, skipping")
+    
+    logger.info(f"Found {len(dirs_with_files)} directories with direct files")
+    return dirs_with_files
+
+
 def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
     """
     This task will recursively scan folders from the datastore path and copy all directories containing files to the target path. 
@@ -83,40 +129,6 @@ def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
         
         logger.info(f"Starting directory scan in {datastore_path}")
         
-        # Function to find all directories containing files directly (not counting files in subdirectories)
-        def find_directories_with_direct_files(base_path):
-            dirs_with_files = []
-            
-            # First get all directories using os.walk()
-            all_dirs = []
-            for root, dirs, _ in os.walk(base_path):
-                # Skip the base directory itself
-                if root == base_path:
-                    continue
-                all_dirs.append(root)
-            
-            logger.info(f"Found {len(all_dirs)} total directories")
-            
-            # Then check each directory to see if it contains files directly
-            for dir_path in all_dirs:
-                has_files = False
-                files_count = 0
-                # Check for files directly in this directory (not in subdirectories)
-                for item in os.listdir(dir_path):
-                    item_path = os.path.join(dir_path, item)
-                    if os.path.isfile(item_path):
-                        has_files = True
-                        files_count += 1
-                
-                if has_files:
-                    dirs_with_files.append(dir_path)
-                    logger.info(f"Directory {dir_path} has {files_count} files directly")
-                else:
-                    logger.debug(f"Directory {dir_path} has no direct files, skipping")
-            
-            logger.info(f"Found {len(dirs_with_files)} directories with direct files")
-            return dirs_with_files
-                
         # Find all directories with direct files
         directories_with_files = find_directories_with_direct_files(datastore_path)
         
@@ -144,14 +156,6 @@ def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
             modification_time = timezone.make_aware(datetime.fromtimestamp(stats.st_mtime))
             logger.info(f"Directory {source_dir} modification time: {modification_time} (timezone: {modification_time.tzinfo})")
             
-            # Calculate size of only the files directly in this directory (not in subdirectories)
-            total_size = 0
-            for f in os.listdir(source_dir):
-                file_path = os.path.join(source_dir, f)
-                if os.path.isfile(file_path):
-                    total_size += os.path.getsize(file_path)
-            
-            logger.info(f"Directory {source_dir}: Size={total_size}, Modified={modification_time}")
             
             # Check if directory exists in database and compare modification times
             try:
@@ -175,6 +179,15 @@ def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
             if (modification_time >= pull_start_time and 
                 modification_time < ten_minutes_ago):
                 
+                # Calculate size of only the files directly in this directory (not in subdirectories)
+                total_size = 0
+                for f in os.listdir(source_dir):
+                    file_path = os.path.join(source_dir, f)
+                    if os.path.isfile(file_path):
+                        total_size += os.path.getsize(file_path)
+                
+                logger.info(f"Directory {source_dir}: Size={total_size}, Modified={modification_time}")
+
                 # Create target directory with same name as source
                 target_dir = os.path.join(target_path, dir_name)
                 
@@ -217,6 +230,10 @@ def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
                 logger.debug(f"Skipping {source_dir} due to modification time constraints")
         
         logger.info(f"DICOM copy process completed with status {result}")
+
+        # Update the dicom_path_config with the current time
+        dicom_path_config.date_time_to_start_pulling_data = timezone.now()
+        dicom_path_config.save()
         return result
         
     except Exception as e:
