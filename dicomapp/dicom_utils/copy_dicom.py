@@ -21,17 +21,14 @@ def find_directories_with_direct_files(base_path, pull_start_time):
         # If pull_start_time is already a timestamp, use it directly
         pull_start_timestamp = pull_start_time
 
-    # Use Pathlib to list of all files and folders in the base path
+    # Use Pathlib to list all directories in the base path
     path_object = Path(base_path)
-    # Get all files and folders in the base path
-    items = path_object.glob('**/*')
-    # Sort the items by modification time
-    sorted_items = sorted(items, key=lambda item: item.stat().st_mtime)
-    # Only keep the sorted items which are modified after the pull start time
-    sorted_items = [item for item in sorted_items if item.stat().st_mtime >= pull_start_timestamp]
-    
-    # Get all directories that have been modified after pull_start_time
-    all_dirs = [str(item) for item in sorted_items if item.is_dir()]
+    # Get all directories recursively
+    dir_items = [item for item in path_object.glob('**/') if item.is_dir()]
+    # Sort the directories by modification time
+    sorted_dirs = sorted(dir_items, key=lambda item: item.stat().st_mtime)
+    # Only keep the directories which are modified after the pull start time
+    all_dirs = [str(item) for item in sorted_dirs if item.stat().st_mtime >= pull_start_timestamp]
     logger.info(f"Found {len(all_dirs)} total directories")
 
     # Remove the root directory from the list
