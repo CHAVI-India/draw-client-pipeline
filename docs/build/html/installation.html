@@ -20,7 +20,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Configuration Steps" href="configuration.html" />
-    <link rel="prev" title="Deep learning based Radiotherapy Autosegmentation Workflow (DRAW) - Client Documentation" href="index.html" /> 
+    <link rel="prev" title="DRAW Architecture" href="draw_architecture.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,6 +44,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="draw_architecture.html">DRAW Architecture</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation the DRAW Client</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
@@ -62,8 +63,9 @@
 <li class="toctree-l1"><a class="reference internal" href="configure_rules.html">Configure Rules</a></li>
 <li class="toctree-l1"><a class="reference internal" href="setup_periodic_tasks.html">Setup Periodic Tasks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how_to_manual_segmentation.html">How to initiate a manual segmentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="interface_guide.html">Interface Guidance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="interface_guide.html">DICOM Process Interface Guidance</a></li>
 <li class="toctree-l1"><a class="reference internal" href="processsing_status_choices.html">Processing Status Choices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="deidentification_overview.html">Deidentification Overview</a></li>
 </ul>
 
         </div>
@@ -130,12 +132,12 @@ While the repository hosts the complete source code, for the docker based instal
 </ol>
 </li>
 </ol>
-<p>Please play close attention to the name of the file called .env.docker. The dot in the beginning of the file name is important. It may be hidden in the file explorer.</p>
+<p>Please play close attention to the name of the file called .env. The dot in the beginning of the file name is important. It may be hidden in the file explorer.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The Datastore folder path is a key element that needs to be understood properly. For Radiotherapy autosegmentation, we have designed the system to automatically download DICOM files from a chose directory (either local or remote) and then process the files. For most centers this will be shared network drive where the DICOM files are send after the images are acquired before they are imported into the Treatment Planning System (TPS). However in some situations, this folder may be on the local machines, and the user may be sending the images to the local machine, after the scan is acquired. In such cases, we need to configure a system that will allow the local machine to act as a DICOM server able to accept DICOM files for the DRAW client to process.</p>
 </div>
-<p>This folder path needs to be configured properly in the docker-compose.yml file. (please see the commented lines under the volumes section of the service called ‘django-web’). If it is a remote folder it is important that this folder is shared as a network drive to the local machine.</p>
+<p>This folder path needs to be configured properly in the docker-compose.yml file. (please see the commented lines under the volumes section at the bottom of the file). If it is a remote folder it is important that this folder is shared as a network drive to the local machine (see the docker compose example files for the configuration).</p>
 <p>Additionaly, we recommend that you choose a strong password for the postgres database.</p>
 <p>For reference here are the text for the three files</p>
 </section>
@@ -168,7 +170,7 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RABBITMQ_DEFAULT_PASS=guest</span>
 
 <span class="w">  </span><span class="nt">django-web</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaviapp/drawclient:v2.0.2</span><span class="w"> </span><span class="c1">#Replace with the version of the image you want to use</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaviapp/drawclient:v6.0.0</span><span class="w"> </span><span class="c1">#Replace with the version of the image you want to use</span>
 <span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">django-docker</span>
 <span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">db</span><span class="p">:</span>
@@ -180,7 +182,7 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./staticfiles:/app/staticfiles</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./dicom:/app/folders</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./yaml-templates:/app/yaml-templates</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;dicomdata:/app/datastore&quot;</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;dicomdata:/app/datastore&quot;</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;./entrypoint.docker.sh&quot;</span><span class="p p-Indicator">]</span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DOCKER_CONTAINER=true</span>
@@ -190,7 +192,7 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">        </span><span class="nt">hard</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">65536</span>
 
 <span class="w">  </span><span class="nt">celery</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaviapp/drawclient:v2.0.2</span><span class="w"> </span><span class="c1">#Replace with the version of the image you want to use</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaviapp/drawclient:v6.0.0</span><span class="w"> </span><span class="c1">#Replace with the version of the image you want to use</span>
 <span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">celery-docker</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;./entrypoint.docker.sh&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;celery&quot;</span><span class="p p-Indicator">]</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
@@ -198,7 +200,7 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./staticfiles:/app/staticfiles</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./dicom:/app/folders</span><span class="w">      </span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./yaml-templates:/app/yaml-templates</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;dicomdata:/app/datastore&quot;</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;dicomdata:/app/datastore&quot;</span><span class="w"> </span>
 <span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env</span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
@@ -216,7 +218,7 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">        </span><span class="nt">hard</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">65536</span>
 
 <span class="w">  </span><span class="nt">celery-beat</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaviapp/drawclient:v2.0.2</span><span class="w"> </span><span class="c1">#Replace with the version of the image you want to use</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaviapp/drawclient:v6.0.0</span><span class="w"> </span><span class="c1">#Replace with the version of the image you want to use</span>
 <span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">celery-beat-docker</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;./entrypoint.docker.sh&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;celery-beat&quot;</span><span class="p p-Indicator">]</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
@@ -224,7 +226,7 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./staticfiles:/app/staticfiles</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./dicom:/app/folders</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./yaml-templates:/app/yaml-templates</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;dicomdata:/app/datastore&quot;</span><span class="w"> </span><span class="c1"># Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;dicomdata:/app/datastore&quot;</span><span class="w"> </span>
 <span class="w">    </span><span class="nt">env_file</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.env</span>
 <span class="w">    </span><span class="nt">environment</span><span class="p">:</span>
@@ -251,6 +253,8 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./staticfiles:/staticfiles:ro</span>
 <span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">django-web</span>
+
+<span class="c1"># Use this section if you are using shared network storage</span>
 <span class="nt">volumes</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">postgres_data</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">app_data</span><span class="p">:</span>
@@ -259,11 +263,22 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cifs</span>
 <span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;username=${NETWORK_USER},domain=${NETWORK_DOMAIN},password=${NETWORK_PASSWORD},rw&quot;</span>
 <span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NETWORK_PATH}</span><span class="w">  </span>
+
+<span class="c1"># Use this section if you are using local storage. In the example below the D:/dicomdata is the path to the datastore on the local computer.</span>
+<span class="c1"># volumes:</span>
+<span class="c1">#   postgres_data:</span>
+<span class="c1">#   app_data:</span>
+<span class="c1">#   dicomdata:</span>
+<span class="c1">#     driver: local</span>
+<span class="c1">#     driver_opts:</span>
+<span class="c1">#       o: bind</span>
+<span class="c1">#       type: none</span>
+<span class="c1">#       device: &quot;D:/dicomdata&quot;      </span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>There are 3 places in the docker-compose.yml file where the datastore path needs to be configured. Please make sure that you update all of them.</p>
+<p>The volume section at the bottom of the docker-compose.yml file needs to be configured. Please make sure that you update all of them.</p>
 </div>
 <p>Please note the following configuration items:</p>
 <ol class="arabic simple">
@@ -274,6 +289,29 @@ While the repository hosts the complete source code, for the docker based instal
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>We will inform you which is the correct version of the image to be used. Please make sure that you use the correct version of the image.</p>
+</div>
+<p>An example volume section for local storage is provided below:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">app_data</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">postgres_data</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">dicomdata</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span>
+<span class="w">      </span><span class="nt">driver_opts</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bind</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">none</span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/your/directory</span>
+</pre></div>
+</div>
+<p>An example volume section for shared network storage is provided below:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">volumes</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">app_data</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">postgres_data</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">dicomdata</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cifs</span>
+<span class="w">      </span><span class="nt">driver_opts</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;username=${NETWORK_USER},domain=${NETWORK_DOMAIN},password=${NETWORK_PASSWORD},rw&quot;</span>
+<span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NETWORK_PATH}</span>
+</pre></div>
 </div>
 </section>
 <section id="the-env-file">
@@ -308,8 +346,8 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="nv">POSTGRES_PASSWORD</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>postgres
 <span class="nv">POSTGRES_DB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>draw-client
 
-<span class="c1"># API URLs</span>
-<span class="nv">API_URL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>https://draw.recode-with-r.com/api/models/
+<span class="c1"># API URLs ensure that these do not have trailing slashes</span>
+<span class="nv">API_URL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>https://draw.recode-with-r.com/api/models
 <span class="nv">MODEL_API_URL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>https://draw.recode-with-r.com/models
 
 <span class="c1"># Celery</span>
@@ -333,8 +371,7 @@ While the repository hosts the complete source code, for the docker based instal
 </pre></div>
 </div>
 <p>There are two sections which have been commmented out as they may not be required  for all cases:
-The first is the proxy configuration which is used to access the internet from the container. The second is the section for the celery worker which is used to run the celery worker in the container.
-The second is the CIFS storage configuration which is used to access the network shared folder from the container.</p>
+The first is the proxy configuration which is used to access the internet from the container. The second is the CIFS storage configuration which is used to access the network shared folder from the container.</p>
 </section>
 <section id="the-nginx-conf-file">
 <h2>The nginx.conf file<a class="headerlink" href="#the-nginx-conf-file" title="Link to this heading"></a></h2>
@@ -414,7 +451,7 @@ http<span class="w"> </span><span class="o">{</span>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="Deep learning based Radiotherapy Autosegmentation Workflow (DRAW) - Client Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="draw_architecture.html" class="btn btn-neutral float-left" title="DRAW Architecture" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="configuration.html" class="btn btn-neutral float-right" title="Configuration Steps" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

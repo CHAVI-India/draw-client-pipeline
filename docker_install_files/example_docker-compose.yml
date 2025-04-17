@@ -24,7 +24,7 @@ services:
       - RABBITMQ_DEFAULT_PASS=guest
 
   django-web:
-    image: chaviapp/drawclient:v2.0.2 #Replace with the version of the image you want to use
+    image: chaviapp/drawclient:v6.0.0 #Replace with the version of the image you want to use
     container_name: django-docker
     depends_on:
       db:
@@ -36,7 +36,7 @@ services:
       - ./staticfiles:/app/staticfiles
       - ./dicom:/app/folders
       - ./yaml-templates:/app/yaml-templates
-      - "dicomdata:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
+      - "dicomdata:/app/datastore"
     command: ["./entrypoint.docker.sh"]
     environment:
       - DOCKER_CONTAINER=true
@@ -46,7 +46,7 @@ services:
         hard: 65536
 
   celery:
-    image: chaviapp/drawclient:v2.0.2 #Replace with the version of the image you want to use
+    image: chaviapp/drawclient:v6.0.0 #Replace with the version of the image you want to use
     container_name: celery-docker
     command: ["./entrypoint.docker.sh", "celery"]
     volumes:
@@ -54,7 +54,7 @@ services:
       - ./staticfiles:/app/staticfiles
       - ./dicom:/app/folders      
       - ./yaml-templates:/app/yaml-templates
-      - "dicomdata:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
+      - "dicomdata:/app/datastore" 
     env_file:
       - .env
     environment:
@@ -72,7 +72,7 @@ services:
         hard: 65536
 
   celery-beat:
-    image: chaviapp/drawclient:v2.0.2 #Replace with the version of the image you want to use
+    image: chaviapp/drawclient:v6.0.0 #Replace with the version of the image you want to use
     container_name: celery-beat-docker
     command: ["./entrypoint.docker.sh", "celery-beat"]
     volumes:
@@ -80,7 +80,7 @@ services:
       - ./staticfiles:/app/staticfiles
       - ./dicom:/app/folders
       - ./yaml-templates:/app/yaml-templates
-      - "dicomdata:/app/datastore" # Modify this line to match the path of the datastore for the machine. Keep the /app/datastore path as it is as it will map to a specific directory inside the container.
+      - "dicomdata:/app/datastore" 
     env_file:
       - .env
     environment:
@@ -107,6 +107,8 @@ services:
       - ./staticfiles:/staticfiles:ro
     depends_on:
       - django-web
+
+# Use this section if you are using shared network storage
 volumes:
   postgres_data:
   app_data:
@@ -115,3 +117,14 @@ volumes:
       type: cifs
       o: "username=${NETWORK_USER},domain=${NETWORK_DOMAIN},password=${NETWORK_PASSWORD},rw"
       device: ${NETWORK_PATH}  
+
+# Use this section if you are using local storage. In the example below the D:/dicomdata is the path to the datastore on the local computer.
+# volumes:
+#   postgres_data:
+#   app_data:
+#   dicomdata:
+#     driver: local
+#     driver_opts:
+#       o: bind
+#       type: none
+#       device: "D:/dicomdata"      

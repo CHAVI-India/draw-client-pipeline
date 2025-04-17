@@ -159,7 +159,7 @@
                                     </a>
                                 </td>
                                 <td>{{ series.patient_name|default:'N/A' }}</td>
-                                <td>{{ series.scan_date|date:"d,m,y"|default:'N/A' }}</td>
+                                <td>{{ series.scan_date|date:"d/m/Y"|default:'N/A' }}</td>
                                 <td>
                                     {% if series.processing_status %}
                                         {% if series.processing_status == 'SERIES_SEPARATED' %}

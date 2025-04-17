@@ -79,7 +79,7 @@ admin.site.login = secure_admin_login(admin.site.login)
 admin.site.unregister(User)
 admin.site.unregister(Group)
 
-logger = logging.getLogger('dicom_handler_logs')
+logger = logging.getLogger(__name__)
 @admin.register(User)
 class UserAdmin(BaseUserAdmin, ModelAdmin):
     # Forms loaded from `unfold.forms`

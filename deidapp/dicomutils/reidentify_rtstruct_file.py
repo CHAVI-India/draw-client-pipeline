@@ -9,7 +9,7 @@ from django.conf import settings
 from deidapp.models import DicomSeries, DicomInstance, RTStructFile
 
 # Configure logger
-logger = logging.getLogger('deidapp')
+logger = logging.getLogger(__name__)
 
 def mask_phi(text):
     """

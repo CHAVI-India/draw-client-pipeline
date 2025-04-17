@@ -135,7 +135,7 @@ class ModelYamlInfo(models.Model):
         """
         Override the delete method to also delete the corresponding YAML file.
         """
-        logger = logging.getLogger('dicom_handler_logs')
+        logger = logging.getLogger(__name__)
         
         # Check if YAML file exists and delete it
         if self.yaml_path and os.path.exists(self.yaml_path):

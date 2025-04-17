@@ -14,7 +14,7 @@ from django.conf import settings
 import pathlib
 
 # Get logger
-logger = logging.getLogger('__name__')
+logger = logging.getLogger(__name__)
 
 ## Hash Calculation
 def calculate_hash(file_path):

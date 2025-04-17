@@ -13,7 +13,7 @@ import logging
 import sys
 
 # Setup logging
-logger = logging.getLogger('deidapp')
+logger = logging.getLogger(__name__)
 
 # Add Celery's logger
 celery_logger = logging.getLogger('celery.task')
@@ -202,7 +202,7 @@ class DicomDeidentifier:
                     deidentified_values = self.generate_deidentified_values(ds, date_offset)
 
                     # Create or get Patient with original values
-                    patient, _ = Patient.objects.get_or_create(
+                    patient, created = Patient.objects.get_or_create(
                         patient_id=ds.PatientID,
                         defaults={
                             'patient_name': getattr(ds, 'PatientName', None),
@@ -213,8 +213,13 @@ class DicomDeidentifier:
                         }
                     )
 
+                    # If this is an existing patient, update the deidentified birth date
+                    if not created and deidentified_values['PatientBirthDate']:
+                        patient.deidentified_patient_birth_date = self.parse_dicom_date(deidentified_values['PatientBirthDate'])
+                        patient.save()
+
                     # Create or get Study with original values
-                    study, _ = DicomStudy.objects.get_or_create(
+                    study, created = DicomStudy.objects.get_or_create(
                         study_instance_uid=ds.StudyInstanceUID,
                         defaults={
                             'patient': patient,
@@ -226,9 +231,14 @@ class DicomDeidentifier:
                             'deidentified_study_id': deidentified_values['StudyID']
                         }
                     )
+                    
+                    # If this is an existing study, update the deidentified study date
+                    if not created and deidentified_values['StudyDate']:
+                        study.deidentified_study_date = self.parse_dicom_date(deidentified_values['StudyDate'])
+                        study.save()
 
                     # Create or get Series with original values
-                    series, _ = DicomSeries.objects.get_or_create(
+                    series, created = DicomSeries.objects.get_or_create(
                         series_instance_uid=ds.SeriesInstanceUID,
                         defaults={
                             'study': study,
@@ -241,6 +251,11 @@ class DicomDeidentifier:
                             'deidentified_frame_of_reference_uid': deidentified_values['FrameOfReferenceUID']
                         }
                     )
+                    
+                    # If this is an existing series, update the deidentified series date
+                    if not created and deidentified_values['SeriesDate']:
+                        series.deidentified_series_date = self.parse_dicom_date(deidentified_values['SeriesDate'])
+                        series.save()
 
                     # Create or get Instance with original values
                     instance, _ = DicomInstance.objects.get_or_create(
@@ -343,12 +358,20 @@ class DicomDeidentifier:
                 values['PatientID'] = existing_patient.deidentified_patient_id
                 # Initialize study counter for this patient
                 self.study_counters[values['PatientID']] = 0
+                
+                # Reuse deidentified birth date if available
+                if existing_patient.deidentified_patient_birth_date:
+                    values['PatientBirthDate'] = existing_patient.deidentified_patient_birth_date.strftime('%Y%m%d') if existing_patient.deidentified_patient_birth_date else None
+                else:
+                    values['PatientBirthDate'] = self.modify_date(getattr(ds, 'PatientBirthDate', None), date_offset)
             elif original_patient_id in self.patient_id_map:
                 values['PatientID'] = self.patient_id_map[original_patient_id]
+                values['PatientBirthDate'] = self.modify_date(getattr(ds, 'PatientBirthDate', None), date_offset)
             else:
                 values['PatientID'] = self.generate_unique_id()
                 self.patient_id_map[original_patient_id] = values['PatientID']
                 self.study_counters[values['PatientID']] = 0
+                values['PatientBirthDate'] = self.modify_date(getattr(ds, 'PatientBirthDate', None), date_offset)
 
             # Get or generate Study UID first
             original_study_uid = ds.StudyInstanceUID
@@ -357,15 +380,23 @@ class DicomDeidentifier:
             if existing_study:
                 values['StudyInstanceUID'] = existing_study.deidentified_study_instance_uid
                 values['StudyID'] = existing_study.deidentified_study_id
+                
+                # Reuse deidentified study date if available
+                if existing_study.deidentified_study_date:
+                    values['StudyDate'] = existing_study.deidentified_study_date.strftime('%Y%m%d') if existing_study.deidentified_study_date else None
+                else:
+                    values['StudyDate'] = self.modify_date(getattr(ds, 'StudyDate', None), date_offset)
             elif original_study_uid in self.study_uid_map:
                 values['StudyInstanceUID'] = self.study_uid_map[original_study_uid]
                 values['StudyID'] = self.study_uid_map.get(f"StudyID_{original_study_uid}")
+                values['StudyDate'] = self.modify_date(getattr(ds, 'StudyDate', None), date_offset)
             else:
                 # Generate new study UID for new study
                 self.study_counters[values['PatientID']] += 1
                 values['StudyInstanceUID'] = f"{values['PatientID']}.{self.study_counters[values['PatientID']]}.0"
                 self.study_uid_map[original_study_uid] = values['StudyInstanceUID']
                 values['StudyID'] = getattr(ds, 'StudyID', str(self.study_counters[values['PatientID']]))
+                values['StudyDate'] = self.modify_date(getattr(ds, 'StudyDate', None), date_offset)
 
             # Handle Series UID
             original_series_uid = ds.SeriesInstanceUID
@@ -376,6 +407,12 @@ class DicomDeidentifier:
             if existing_series:
                 values['SeriesInstanceUID'] = existing_series.deidentified_series_instance_uid
                 logger.info(f"Using existing series from DB: {values['SeriesInstanceUID']}")
+                
+                # Reuse deidentified series date if available
+                if existing_series.deidentified_series_date:
+                    values['SeriesDate'] = existing_series.deidentified_series_date.strftime('%Y%m%d') if existing_series.deidentified_series_date else None
+                else:
+                    values['SeriesDate'] = self.modify_date(getattr(ds, 'SeriesDate', None), date_offset)
             else:
                 # Case 2: New series in existing study - find highest series number and increment
                 existing_study_series = DicomSeries.objects.filter(
@@ -404,6 +441,8 @@ class DicomDeidentifier:
                     # Case 3: First series in study
                     values['SeriesInstanceUID'] = f"{values['StudyInstanceUID']}.1"
                     logger.info(f"Generated first series UID: {values['SeriesInstanceUID']}")
+                    
+                values['SeriesDate'] = self.modify_date(getattr(ds, 'SeriesDate', None), date_offset)
 
             # Generate new SOP Instance UID (always unique per instance)
             values['SOPInstanceUID'] = self.generate_unique_id()
@@ -421,10 +460,7 @@ class DicomDeidentifier:
             else:
                 values['FrameOfReferenceUID'] = None
 
-            # Modify dates
-            values['PatientBirthDate'] = self.modify_date(getattr(ds, 'PatientBirthDate', None), date_offset)
-            values['StudyDate'] = self.modify_date(getattr(ds, 'StudyDate', None), date_offset)
-            values['SeriesDate'] = self.modify_date(getattr(ds, 'SeriesDate', None), date_offset)
+            # For other dates, apply offset (these aren't stored in the database)
             values['InstanceCreationDate'] = self.modify_date(getattr(ds, 'InstanceCreationDate', None), date_offset)
             values['AcquisitionDate'] = self.modify_date(getattr(ds, 'AcquisitionDate', None), date_offset)
             values['ContentDate'] = self.modify_date(getattr(ds, 'ContentDate', None), date_offset)

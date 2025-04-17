@@ -119,12 +119,12 @@ class SystemSettingsAdmin(ModelAdmin):
 @admin.register(DicomTransfer)
 class DicomTransferAdmin(ModelAdmin):
     list_display = [
-        'id', 'study_instance_uid', 'status','server_status', 'sent_datetime', 
+        'id', 'study_instance_uid', 'status','server_token','server_status', 'sent_datetime', 
         'rtstruct_received_datetime', 'rtstruct_checksum_verified'
     ]
     
     list_filter = ['status', 'rtstruct_checksum_verified']
-    search_fields = ['study_instance_uid', 'series_instance_uid', 'error_message', 'zip_checksum', 'rtstruct_checksum']
+    search_fields = ['study_instance_uid', 'series_instance_uid', 'error_message', 'zip_checksum', 'rtstruct_checksum', 'server_token']
     
     # Make all fields read-only since processing is automatic
     readonly_fields = [
