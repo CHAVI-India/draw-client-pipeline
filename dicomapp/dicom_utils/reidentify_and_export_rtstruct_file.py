@@ -207,6 +207,10 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
             logger.info(f"Study Description: {mask_phi(ds.StudyDescription)}")
             ds.PatientBirthDate = patient.patient_birth_date.strftime('%Y%m%d')
             logger.info(f"Patient Birth Date: {mask_phi(ds.PatientBirthDate)}")
+            ds.StudyDate = study.study_date.strftime('%Y%m%d')
+            logger.info(f"Study Date: {mask_phi(ds.StudyDate)}")
+            ds.SeriesDate = series.series_date.strftime('%Y%m%d')
+            logger.info(f"Series Date: {mask_phi(ds.SeriesDate)}")
             ds.ReferringPhysicianName = "DRAW"
             ds.AccessionNumber = "202514789"                    
 
