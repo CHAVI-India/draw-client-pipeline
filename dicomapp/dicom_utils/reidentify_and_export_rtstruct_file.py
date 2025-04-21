@@ -10,7 +10,7 @@ from deidapp.models import *
 from dicomapp.models import *
 import shutil
 # Configure logger
-logger = logging.getLogger('deidapp')
+logger = logging.getLogger(__name__)
 
 def mask_phi(text):
     """

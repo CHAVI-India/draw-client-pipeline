@@ -44,6 +44,7 @@ def index(request):
     context = {
         # Total Templates
         'total_templates': ModelYamlInfo.objects.count(),
+        'total_rulesets': RuleSet.objects.count(),
 
         # Today's Segmented
         'todays_series_segmented': DicomSeriesProcessingModel.objects.filter(
@@ -264,7 +265,10 @@ def autosegmentation_template(request):
         messages.error(request, str(e))
         return redirect('create-yml')
     
-    except Exception as e:
+    except Exception as e:                        rule_set_table = Rule.objects.all().values(
+                            "rule_set__id", "rule_set__rule_set_name", 
+                            "tag_name__tag_name", "tag_value"
+                        )
         print(f"Error in yaml view: {str(e)}")
         messages.error(request, f'Error loading template: {str(e)}')
         return redirect('create-yml')
