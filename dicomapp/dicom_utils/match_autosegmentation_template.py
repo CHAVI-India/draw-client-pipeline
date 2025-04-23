@@ -279,7 +279,7 @@ def match_autosegmentation_template(input_data: dict) -> dict:
                             
                             # Copy template and move folder
                             template_path = rule_set.model_yaml.yaml_path
-                            shutil.copy2(template_path, series_path)
+                            shutil.copyfile(template_path, series_path)
                             
                             dest_dir = os.path.join(deidentification_folder, os.path.basename(series_path))
                             if os.path.exists(dest_dir):

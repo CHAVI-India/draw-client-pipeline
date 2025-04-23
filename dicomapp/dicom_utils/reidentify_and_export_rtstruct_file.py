@@ -391,12 +391,11 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
                     destination_path = os.path.join(datastore_directory_path, unique_filename)
                     try:
                         # First try with copy2
-                        shutil.copy2(output_path, destination_path)
+                        shutil.copyfile(output_path, destination_path)
                     except PermissionError:
                         # If that fails, try with simple copy
-                        logger.warning("Failed to copy with metadata, trying simple copy")
-                        shutil.copy(output_path, destination_path)
-                        
+                        logger.warning("Failed to copy with metadata")
+
                     # Remove the source file after successful copy
                     os.remove(output_path)
                     logger.info(f"Copied and removed reidentified RTSTRUCT file to datastore directory: {destination_path}")

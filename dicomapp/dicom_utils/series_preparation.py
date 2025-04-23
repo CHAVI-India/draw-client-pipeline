@@ -283,7 +283,7 @@ def series_preparation(input_data: dict) -> dict:
                         # First copy to series-specific archive directory
                         archive_path = os.path.join(series_archive_directory, file_name)
                         
-                        shutil.copy2(file_path, archive_path, follow_symlinks=True)
+                        shutil.copyfile(file_path, archive_path, follow_symlinks=True)
 
                         logger.info(f"Successfully archived DICOM file: {file_name}")
                         # Then move to target directory
