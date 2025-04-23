@@ -232,6 +232,18 @@
                 <h5 class="card-title mb-0">System Status</h5>
             </div>
             <div class="card-body">
+                <div class="status-item d-flex align-items-center mb-2">
+                    <div class="status-icon bg-success bg-opacity-10 rounded-circle p-2">
+                        <i class="ri-file-list-3-line text-success"></i>
+                    </div>
+                    <div class="ms-3 flex-grow-1">
+                        <h6 class="mb-0">Total Rulesets</h6>
+                    </div>
+                    <span class="badge {% if total_rulesets == 0 or not total_rulesets %}bg-danger{% else %}bg-success{% endif %}">{{ total_rulesets|default:"0" }}</span>
+                </div>
+                {% if total_rulesets == 0 or not total_rulesets %}
+                <div class="text-danger small mb-3" style="margin-left: 52px;">Create Rulesets</div>
+                {% endif %}
                 <div class="status-item d-flex align-items-center mb-3">
                     <div class="status-icon bg-success bg-opacity-10 rounded-circle p-2">
                         <i class="ri-server-line text-success"></i>

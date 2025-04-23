@@ -134,12 +134,30 @@ def series_preparation(input_data: dict) -> dict:
                         file_path = os.path.join(root, file_name)
                         
                         try:
-                            # Try to read the file as DICOM
+                            # First try to read the dicom file without force = True
                             try:
                                 dcm = pydicom.dcmread(file_path)
-                            except Exception as e:
-                                # If it's not a valid DICOM file, just skip it without logging an error
-                                continue
+                            except Exception:
+                                # If initial read fails, try with force=True
+                                try:
+                                    dcm = pydicom.dcmread(file_path, force=True)
+                                    # Check if required tags are present after force read
+                                    if (hasattr(dcm, 'PatientID') and 
+                                        hasattr(dcm, 'StudyInstanceUID') and 
+                                        hasattr(dcm, 'SeriesInstanceUID') and 
+                                        hasattr(dcm, 'Modality')):
+                                        # Save the dataset since we had to use force=True. Ensure file format is DICOM.
+                                        # Remove the original file and replace it with the new one.
+                                        os.remove(file_path)
+                                        logger.info(f"Removed original file {file_name}")
+                                        dcm.save_as(file_path,enforce_file_format=True)
+                                        logger.info(f"Saved file {file_name} after force read")
+                                    else:
+                                        logger.warning(f"File {file_name} is missing required DICOM tags after force read, skipping")
+                                        continue
+                                except Exception as e:
+                                    # If both attempts fail, skip the file
+                                    continue
 
                             # Check the modality is CT / MR / PET / US. Allow only those files to be processed.
                             if dcm.Modality not in ['CT', 'MR', 'PET', 'US']:
@@ -264,9 +282,13 @@ def series_preparation(input_data: dict) -> dict:
                         target_path = os.path.join(series_data['series_current_directory'], file_name)
                         # First copy to series-specific archive directory
                         archive_path = os.path.join(series_archive_directory, file_name)
-                        shutil.copy2(file_path, archive_path, follow_symlinks=True)
+                        
+                        shutil.copyfile(file_path, archive_path, follow_symlinks=True)
+
+                        logger.info(f"Successfully archived DICOM file: {file_name}")
                         # Then move to target directory
                         shutil.move(file_path, target_path)
+
                         logger.info(f"Successfully archived and moved DICOM file: {file_name}")
                     except Exception as e:
                         logger.error(f"Error moving file {file_name}: {str(e)}")

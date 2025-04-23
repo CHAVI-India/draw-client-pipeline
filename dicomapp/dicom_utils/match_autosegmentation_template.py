@@ -215,45 +215,63 @@ def match_autosegmentation_template(input_data: dict) -> dict:
                 else:
                     # No YAML files found, try to match based on DICOM tags
                     try:
-                        # Read first DICOM file
-                        dicom_files = glob.glob(os.path.join(series_path, "*.dcm"))
+                        # Read first file irrespective of the file format
+                        dicom_files = glob.glob(os.path.join(series_path, "*"))
+                        logger.info(f"Found {len(dicom_files)} files in series {series_id}")
                         if not dicom_files:
                             raise ValueError("No DICOM files found in series")
-                            
-                        ds = pydicom.dcmread(dicom_files[0])
+
+                        # Read files one by one till the first valid dicom file is read.
+                        for file in dicom_files:
+                            try: 
+                                ds = pydicom.dcmread(file)
+                                logger.info(f"Successfully read DICOM file with UIDs: PatientID={ds.PatientID}, StudyInstanceUID={ds.StudyInstanceUID}, SeriesInstanceUID={ds.SeriesInstanceUID}")
+                                break
+                            except Exception as e:
+                                logger.warning(f"Error reading DICOM file {file}: {str(e)}")
+                                continue
                         
                         # Process DICOM tags
                         tag_list = []
                         for elem in ds:
+                            # Skip PixelData tag as it's not needed for template matching
+                            if elem.tag == (0x7FE0, 0x0010):  # PixelData tag
+                                continue
                             tag_dict = {
                                 'tag': str(elem.tag),
                                 'tag_name': elem.name.replace(" ", ""),
                                 'tag_value': str(elem.value)
                             }
                             tag_list.append(tag_dict)
-                        
+                        logger.info(f"Tag dictionary: {tag_list}")
                         # Create DataFrame and match rules
                         tag_df = pd.DataFrame(tag_list)
+                        logger.info(f"Tag DataFrame: {tag_df}")
                         tag_df["patient_id"] = ds.PatientID
-                        
+                        logger.info(f"Tag DataFrame with patient ID: {tag_df}")
                         rule_set_table = Rule.objects.all().values(
                             "rule_set__id", "rule_set__rule_set_name", 
                             "tag_name__tag_name", "tag_value"
                         )
+                        logger.info(f"Rule set table: {rule_set_table}")
                         rule_set_table_df = pd.DataFrame(list(rule_set_table))
+                        logger.info(f"Rule set table DataFrame: {rule_set_table_df}")
                         rule_set_table_df["count_rule"] = rule_set_table_df.groupby("rule_set__id")["rule_set__id"].transform("count")
+                        logger.info(f"Rule set table DataFrame with count_rule: {rule_set_table_df}")
                         rule_set_table_df.rename(columns={
                             "tag_name__tag_name": "tag_name", 
                             "tag_value": "tag_value"
                         }, inplace=True)
-                        
+                        logger.info(f"Rule set table DataFrame with renamed columns: {rule_set_table_df}")
                         join_df = pd.merge(tag_df, rule_set_table_df, on=['tag_name', 'tag_value']).dropna()
+                        logger.info(f"Join DataFrame: {join_df}")
                         match_rule = join_df.groupby(["rule_set__id", "patient_id", "count_rule"]).count().reset_index()
+                        logger.info(f"Match rule DataFrame: {match_rule}")
                         match_rule = match_rule[["rule_set__id", "patient_id", "count_rule", "rule_set__rule_set_name"]]
                         match_rule.rename(columns={"rule_set__rule_set_name": "match_rule"}, inplace=True)
-                        
+                        logger.info(f"Match rule DataFrame with renamed columns: {match_rule}")
                         filter_match_rule = match_rule.loc[(match_rule["count_rule"]) == (match_rule["match_rule"])]
-                        
+                        logger.info(f"Filter match rule DataFrame: {filter_match_rule}")
                         if len(filter_match_rule) == 1:
                             # Single rule match found
                             rule_set_id = filter_match_rule["rule_set__id"].unique()[0]
@@ -261,13 +279,13 @@ def match_autosegmentation_template(input_data: dict) -> dict:
                             
                             # Copy template and move folder
                             template_path = rule_set.model_yaml.yaml_path
-                            shutil.copy2(template_path, series_path)
+                            shutil.copyfile(template_path, series_path)
                             
                             dest_dir = os.path.join(deidentification_folder, os.path.basename(series_path))
                             if os.path.exists(dest_dir):
                                 shutil.rmtree(dest_dir)
                             shutil.move(series_path, dest_dir)
-                            
+                            logger.info(f"Successfully moved series {series_id} to {dest_dir}")
                             # Update database
                             series_model.template_file = rule_set.model_yaml
                             series_model.processing_status = ProcessingStatusChoices.READY_FOR_DEIDENTIFICATION
@@ -275,13 +293,15 @@ def match_autosegmentation_template(input_data: dict) -> dict:
                             series_model.series_current_directory = dest_dir
                             series_model.task_id = task_id
                             series_model.save()
-                            
+                            logger.info(f"Successfully updated database for series {series_id}")
+
                             DicomSeriesProcessingLogModel.objects.create(
                                 task_id=task_id,
                                 dicom_series_processing_id=series_model,
                                 processing_status=ProcessingStatusChoices.READY_FOR_DEIDENTIFICATION,
                                 processing_status_message=f"Template {rule_set.model_yaml.yaml_name} matched based on rules"
                             )
+                            logger.info(f"Successfully created log entry for series {series_id}")
                             
                             logger.info(f"Successfully matched template for series {series_id} based on ruleset {rule_set.rule_set_name}")
                             successful_series.append(series_id)
@@ -293,13 +313,13 @@ def match_autosegmentation_template(input_data: dict) -> dict:
                             if os.path.exists(dest_dir):
                                 shutil.rmtree(dest_dir)
                             shutil.move(series_path, dest_dir)
-                            
+                            logger.info(f"Successfully moved series {series_id} to {dest_dir}")
                             series_model.processing_status = ProcessingStatusChoices.MULTIPLE_TEMPLATES_MATCHED
                             series_model.series_state = SeriesState.UNPROCESSED
                             series_model.series_current_directory = dest_dir
                             series_model.task_id = task_id
                             series_model.save()
-                            
+                            logger.info(f"Successfully updated database for series {series_id}")
                             multiple_rules = ', '.join(filter_match_rule["match_rule"].unique().tolist())
                             DicomSeriesProcessingLogModel.objects.create(
                                 task_id=task_id,
@@ -307,6 +327,7 @@ def match_autosegmentation_template(input_data: dict) -> dict:
                                 processing_status=ProcessingStatusChoices.MULTIPLE_TEMPLATES_MATCHED,
                                 processing_status_message=f"Multiple rule sets matched: {multiple_rules}"
                             )
+                            logger.info(f"Successfully created log entry for series {series_id}")
                             
                             logger.warning(f"Multiple rule sets matched for series {series_id}")
                             failed_series.append(series_id)
@@ -318,19 +339,20 @@ def match_autosegmentation_template(input_data: dict) -> dict:
                             if os.path.exists(dest_dir):
                                 shutil.rmtree(dest_dir)
                             shutil.move(series_path, dest_dir)
-                            
+                            logger.info(f"Successfully moved series {series_id} to {dest_dir}")
                             series_model.processing_status = ProcessingStatusChoices.NO_TEMPLATE_FOUND
                             series_model.series_state = SeriesState.UNPROCESSED
                             series_model.series_current_directory = dest_dir
                             series_model.task_id = task_id
                             series_model.save()
-                            
+                            logger.info(f"Successfully updated database for series {series_id}")
                             DicomSeriesProcessingLogModel.objects.create(
                                 task_id=task_id,
                                 dicom_series_processing_id=series_model,
                                 processing_status=ProcessingStatusChoices.NO_TEMPLATE_FOUND,
                                 processing_status_message="No matching rule sets found"
                             )
+                            logger.info(f"Successfully created log entry for series {series_id}")
                             
                             logger.warning(f"No rule sets matched for series {series_id}")
                             failed_series.append(series_id)
@@ -346,7 +368,7 @@ def match_autosegmentation_template(input_data: dict) -> dict:
                         series_model.series_current_directory = dest_dir
                         series_model.task_id = task_id
                         series_model.save()
-                        
+                        logger.info(f"Successfully updated database for series {series_id}")
                         # Create log entry
                         DicomSeriesProcessingLogModel.objects.create(
                             task_id=task_id,
@@ -354,6 +376,7 @@ def match_autosegmentation_template(input_data: dict) -> dict:
                             processing_status=ProcessingStatusChoices.ERROR,
                             processing_status_message=error_msg
                         )
+                        logger.info(f"Successfully created log entry for series {series_id}")
                         
                         failed_series.append(series_id)
                         failed_series_paths.append(dest_dir)

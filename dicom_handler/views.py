@@ -44,6 +44,7 @@ def index(request):
     context = {
         # Total Templates
         'total_templates': ModelYamlInfo.objects.count(),
+        'total_rulesets': RuleSet.objects.count(),
 
         # Today's Segmented
         'todays_series_segmented': DicomSeriesProcessingModel.objects.filter(

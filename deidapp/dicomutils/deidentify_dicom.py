@@ -444,10 +444,6 @@ class DicomDeidentifier:
                     
                 values['SeriesDate'] = self.modify_date(getattr(ds, 'SeriesDate', None), date_offset)
 
-            # Generate new SOP Instance UID (always unique per instance)
-            values['SOPInstanceUID'] = self.generate_unique_id()
-            values['MediaStorageSOPInstanceUID'] = values['SOPInstanceUID']
-
             # Handle Frame of Reference UID
             if hasattr(ds, 'FrameOfReferenceUID'):
                 original_frame_uid = ds.FrameOfReferenceUID
@@ -459,6 +455,21 @@ class DicomDeidentifier:
                     self.frame_ref_uid_map[original_frame_uid] = values['FrameOfReferenceUID']
             else:
                 values['FrameOfReferenceUID'] = None
+
+            # Check if SOP Instance UID already exists in database
+            original_sop_uid = ds.SOPInstanceUID
+            existing_instance = DicomInstance.objects.filter(sop_instance_uid=original_sop_uid).first()
+            
+            if existing_instance and existing_instance.deidentified_sop_instance_uid:
+                # Reuse existing deidentified SOP Instance UID from database
+                values['SOPInstanceUID'] = existing_instance.deidentified_sop_instance_uid
+                logger.info(f"Reusing existing deidentified SOP Instance UID: {values['SOPInstanceUID']}")
+            else:
+                # Generate new SOP Instance UID (only for new instances)
+                values['SOPInstanceUID'] = self.generate_unique_id()
+                logger.info(f"Generated new deidentified SOP Instance UID: {values['SOPInstanceUID']}")
+            
+            values['MediaStorageSOPInstanceUID'] = values['SOPInstanceUID']
 
             # For other dates, apply offset (these aren't stored in the database)
             values['InstanceCreationDate'] = self.modify_date(getattr(ds, 'InstanceCreationDate', None), date_offset)
