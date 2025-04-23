@@ -226,7 +226,8 @@ def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
                             # Only copy files, not subdirectories
                             if os.path.isfile(source_item):
                                 target_file = os.path.join(target_dir, item)
-                                shutil.copy2(source_item, target_file)
+                                shutil.copyfile(source_item, target_file)
+                                logger.info(f"Copied file {source_item} to {target_file}")
                                 files_copied += 1
                         
                         result['target_paths'].append(target_dir)
