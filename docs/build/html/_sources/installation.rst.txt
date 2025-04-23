@@ -125,7 +125,7 @@ An example volume section for shared network storage is provided below:
 The .env file
 ---------------------
 
-Copy the file called .env.docker.example from the docker_example_files folder in the repository and paste its contents into the .env file that you created in step 2.
+Copy the file called example_env from the docker_example_files folder in the repository and paste its contents into the .env file that you created in step 2.
 
 Please note that the following environment variables are sensitive: 
 
@@ -142,7 +142,7 @@ You can generate a new secret key for the django application using the following
 
 
 
-.. literalinclude:: ../../docker_install_files/.env.docker.example
+.. literalinclude:: ../../docker_install_files/example_env
   :language: bash
 
 There are two sections which have been commmented out as they may not be required  for all cases:
