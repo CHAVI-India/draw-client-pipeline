@@ -329,12 +329,15 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
                 # If the directory does not exist, create it and then move the file
                 if not os.path.exists(datastore_directory_path):
                     try:
-                        os.makedirs(datastore_directory_path,exist_ok=True)
+                        os.makedirs(datastore_directory_path, exist_ok=True)
                         logger.info(f"Created datastore directory: {datastore_directory_path}")
 
-                        # Move the reidentified RTSTRUCT file to the datastore directory path
-                        shutil.move(output_path, os.path.join(datastore_directory_path, unique_filename))
-                        logger.info(f"Moved reidentified RTSTRUCT file to datastore directory: {os.path.join(datastore_directory_path, unique_filename)}")
+                        # Use copy2 instead of move for cross-device operations
+                        destination_path = os.path.join(datastore_directory_path, unique_filename)
+                        shutil.copy2(output_path, destination_path)
+                        # Remove the source file after successful copy
+                        os.remove(output_path)
+                        logger.info(f"Copied and removed reidentified RTSTRUCT file to datastore directory: {destination_path}")
 
                         # Update the DicomSeriesProcessingModel and DicomSeriesProcessingLogModel objects to RTSTRUCT_EXPORTED
                         dicom_series_processing_model.processing_status = 'RTSTRUCT_EXPORTED'
@@ -378,9 +381,12 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
                         continue
 
                 else:
-                    # Directory exists, move the reidentified RTSTRUCT file to the datastore directory path
-                    shutil.move(output_path, os.path.join(datastore_directory_path, unique_filename))
-                    logger.info(f"Moved reidentified RTSTRUCT file to datastore directory: {os.path.join(datastore_directory_path, unique_filename)}")
+                    # Directory exists, use copy2 instead of move for cross-device operations
+                    destination_path = os.path.join(datastore_directory_path, unique_filename)
+                    shutil.copy2(output_path, destination_path)
+                    # Remove the source file after successful copy
+                    os.remove(output_path)
+                    logger.info(f"Copied and removed reidentified RTSTRUCT file to datastore directory: {destination_path}")
 
                     # Update the DicomSeriesProcessingModel and DicomSeriesProcessingLogModel objects to RTSTRUCT_EXPORTED
                     dicom_series_processing_model.processing_status = 'RTSTRUCT_EXPORTED'
