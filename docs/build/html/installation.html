@@ -261,7 +261,7 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">  </span><span class="nt">dicomdata</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">driver_opts</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cifs</span>
-<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;username=${NETWORK_USER},domain=${NETWORK_DOMAIN},password=${NETWORK_PASSWORD},rw&quot;</span>
+<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;username=${NETWORK_USER},domain=${NETWORK_DOMAIN},password=${NETWORK_PASSWORD},rw,uid=1000,gid=1000,file_mode=0660,dir_mode=0770&quot;</span>
 <span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NETWORK_PATH}</span><span class="w">  </span>
 
 <span class="c1"># Use this section if you are using local storage. In the example below the D:/dicomdata is the path to the datastore on the local computer.</span>

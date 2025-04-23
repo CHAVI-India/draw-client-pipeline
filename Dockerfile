@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 FROM python:3
  
 # Create user and required directories
-RUN useradd -m -r appuser && \
+RUN useradd -m -u 1000 -g 1000 appuser && \
     mkdir /app && \
     mkdir -p /app/static && \
     mkdir -p /app/logs && \

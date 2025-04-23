@@ -115,7 +115,7 @@ volumes:
   dicomdata:
     driver_opts:
       type: cifs
-      o: "username=${NETWORK_USER},domain=${NETWORK_DOMAIN},password=${NETWORK_PASSWORD},rw"
+      o: "username=${NETWORK_USER},domain=${NETWORK_DOMAIN},password=${NETWORK_PASSWORD},rw,uid=1000,gid=1000,file_mode=0660,dir_mode=0770"
       device: ${NETWORK_PATH}  
 
 # Use this section if you are using local storage. In the example below the D:/dicomdata is the path to the datastore on the local computer.

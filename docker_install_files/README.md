@@ -7,7 +7,7 @@ Please copy the files or their content in your local computer and rename them as
 |----|-----|
 |example.docker-compose.yml | docker-compose.yml |
 |example_nginx.conf| nginx.conf|
-|.env.docker.example | .env|
+|example_env | .env|
 
 Please remember that the .env file will be hidden usually by your file explorer.
 
