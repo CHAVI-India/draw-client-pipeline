@@ -116,11 +116,20 @@ An example volume section for shared network storage is provided below:
       dicomdata:
          driver: cifs
          driver_opts:
-         o: "username=${NETWORK_USER},domain=${NETWORK_DOMAIN},password=${NETWORK_PASSWORD},rw"
+         o: "username=${NETWORK_USER},domain=${NETWORK_DOMAIN},password=${NETWORK_PASSWORD},rw,file_mode=0660,dir_mode=0770,uid=1000,gid=1000"
          device: ${NETWORK_PATH}
 
 ..  
 
+Note the following are the meanings of the the options used in the cifs driver_opts section:
+
+- rw: read-write access
+- file_mode=0660: set the file permissions to 660 which means that the file is readable and writable by the user and group.
+- dir_mode=0770: set the directory permissions to 770 which means that the directory is readable, writable and executable by the user and group.
+- uid=1000: set the user ID to 1000 - this is the user that is used to run the containers
+- gid=1000: set the group ID to 1000 - this is the group that is used to run the containers
+
+Note that the option ${NETWORK_DOMAIN} is optional and can be omitted if the network shared folder is not on a domain.
 
 The .env file
 ---------------------
