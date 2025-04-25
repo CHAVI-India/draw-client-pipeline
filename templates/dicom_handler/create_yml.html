@@ -29,11 +29,11 @@
                                         <th style="display: none;">Map ID</th>
                                         <th>Structure Name</th>
                                         <th>Modality</th>
-                                        <th>Validation DICE Score</th>
-                                        <th>Model Name </th>
+                                        <th>Validation Dice</th>
+                                        <th>Model Name</th>
+                                        <th>Description</th>
                                         <th>Structure Info</th>
-                                        <!-- <th>Trainer Name</th> -->
-                                        <!-- <th>Postprocess</th> -->
+
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -54,6 +54,7 @@
                                         <td>{{ map.delineation_modality }}</td>
                                         <td>{{ map.average_dice_score }}</td>
                                         <td>{{ info.model_name }}</td>
+                                        <td>{{ map.Description }}</td>
                                         <!-- Replace the existing View Details column -->
                                         <td>
                                             <a href="{{model_details_api}}/{{map.id}}" target="_blank"
@@ -87,7 +88,7 @@
                     </div>
                 </div>
 
-                <div class="form-actions mt-4">
+                <div class="form-actions mb-4">
                     <button type="submit" class="btn btn-primary btn-lg">
                         <i class="fas fa-save me-2"></i>Create Template
                     </button>
@@ -124,7 +125,7 @@
                     </div>
                     <div class="alert alert-info mt-3">
                         <i class="fas fa-info-circle me-2"></i>
-                        Are you sure you want to create this template with the selected models?
+                        Are you sure you want to create this template with the selected structures and models?
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -143,12 +144,12 @@
 </div>
 
 <!-- DataTables CSS -->
-<link rel="stylesheet" type="text/css" href="{% static 'css/vendor/jquery.dataTables.css' %}">
-<link rel="stylesheet" href="{% static 'css/vendor/all.min.css' %}">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <!-- jQuery and DataTables JS -->
-<script src="{% static 'js/vendor/jquery.min.js' %}"></script>
-<script src="{% static 'js/vendor/jquery.dataTables.min.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -203,7 +204,6 @@
             updateSelectAllCheckbox();
         }
 
-        // Select All functionality
         // Select All functionality
         $('#selectAll').on('click', function () {
             const isChecked = $(this).prop('checked');
@@ -301,15 +301,13 @@
                         listDiv.append(`
                             <div class="selected-model-item">
                                 <div class="model-name">
-                                    <strong>${modelData.modelName}</strong>
+                                    <strong>${modelData.structureName}</strong>
                                 </div>
                                 <div class="model-details">
-                                    <span class="badge bg-secondary">ID: ${modelData.modelId}</span>
-                                    <span class="badge bg-info">Map ID: ${modelData.mapId}</span>
+                                    <span class="badge bg-primary">Model: ${modelData.modelName}</span>
+                                    
                                 </div>
-                                <div class="structure-name text-muted">
-                                    <small><i class="fas fa-sitemap me-1"></i>${modelData.structureName}</small>
-                                </div>
+                               
                             </div>
                         `);
                     }
@@ -340,7 +338,7 @@
 
             // Update confirmation modal with details
             $('#templateNameConfirm').text($('input[name="templateName"]').val());
-            $('#selectedCountConfirm').text(selectedModels.size + ' structures');
+            $('#selectedCountConfirm').text(selectedModels.size + ' Structures');
 
             // Show confirmation modal
             $('#confirmationModal').modal('show');
@@ -495,6 +493,7 @@
         padding: 15px 0;
         border-top: 1px solid #dee2e6;
         z-index: 1000;
+        width: 75%;
     }
 
     /* DataTables Customization */
@@ -795,6 +794,17 @@
     .col-md-4 {
         display: flex;
         flex-direction: column;
+    }
+
+    .col-md-8 {
+        width: 75%;
+        /* Increase width of table column */
+        padding-right: 20px;
+    }
+
+    .col-md-4 {
+        width: 25%;
+        /* Decrease width of selected models panel */
     }
 </style>
 {% endblock content %}
