@@ -12,11 +12,12 @@ class CopyDicomTaskAdmin(ModelAdmin):
                       'source_directory_modification_date', 'source_directory_size',
                       'target_directory', 'task_id', 'created_at', 'updated_at')
     search_fields = ('source_directory', 'target_directory', 'task_id')
+    list_per_page = 10
     ordering = ('-created_at',)
 
 @admin.register(DicomSeriesProcessingModel)
 class DicomSeriesProcessingAdmin(ModelAdmin):
-    list_display = ('patient_id', 'patient_name', 'modality','series_description', 'protocol_name', 'processing_status', 'template_file',
+    list_display = ('patient_id', 'patient_name', 'modality','series_description', 'protocol_name','template_file', 'processing_status', 
                    'series_state','scan_date' ,'created_at')
     list_editable = ('template_file',)
     readonly_fields = ('id', 'copy_dicom_task_id', 'patient_id', 'patient_name',
@@ -26,6 +27,7 @@ class DicomSeriesProcessingAdmin(ModelAdmin):
                       'created_at', 'updated_at')
     search_fields = ('patient_id', 'patient_name', 'modality', 'protocol_name', 'processing_status')
     list_filter = ('processing_status', 'series_state', 'modality','protocol_name','scan_date', 'created_at')
+    list_per_page = 10
     ordering = ('-created_at',)
     
     actions = [send_dicom_for_processing_action]
@@ -39,6 +41,7 @@ class DicomSeriesProcessingLogAdmin(ModelAdmin):
                       'processing_status_message', 'created_at', 'updated_at')
     search_fields = ('task_id', 'processing_status', 'dicom_series_processing_id__patient_id', 'dicom_series_processing_id__patient_name')
     list_filter = ('processing_status',)
+    list_per_page = 10
     ordering = ('-created_at',)
 
 @admin.register(DicomFileUploadModel)
