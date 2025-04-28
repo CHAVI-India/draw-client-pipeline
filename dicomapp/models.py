@@ -80,6 +80,9 @@ class DicomSeriesProcessingModel(models.Model):
         verbose_name = "Dicom Series Processing"
         verbose_name_plural = "Dicom Series Processing"
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['patient_id', 'series_instance_uid','study_instance_uid'])
+        ]
 
 class DicomSeriesProcessingLogModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
