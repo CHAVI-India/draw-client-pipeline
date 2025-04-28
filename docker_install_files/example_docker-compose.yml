@@ -26,7 +26,7 @@ services:
       - RABBITMQ_DEFAULT_PASS=guest
 
   django-web:
-    image: chaviapp/drawclient:v18.0.0 #Replace with the version of the image you want to use
+    image: chaviapp/drawclient
     restart: unless-stopped
     container_name: django-docker
     depends_on:
@@ -49,7 +49,7 @@ services:
         hard: 65536
 
   celery:
-    image: chaviapp/drawclient:v18.0.0 #Replace with the version of the image you want to use
+    image: chaviapp/drawclient
     restart: unless-stopped
     container_name: celery-docker
     command: ["./entrypoint.docker.sh", "celery"]
@@ -76,7 +76,7 @@ services:
         hard: 65536
 
   celery-beat:
-    image: chaviapp/drawclient:v18.0.0 #Replace with the version of the image you want to use
+    image: chaviapp/drawclient  
     restart: unless-stopped
     container_name: celery-beat-docker
     command: ["./entrypoint.docker.sh", "celery-beat"]
