@@ -12,6 +12,11 @@ class Patient(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=[ 'deidentified_patient_id','patient_name','deidentified_patient_birth_date','deidentified_patient_name'])
+        ]
+
 class DicomStudy(models.Model):
     study_instance_uid = models.CharField(max_length=100,primary_key=True)
     patient = models.ForeignKey(Patient,on_delete=models.CASCADE)
@@ -23,6 +28,11 @@ class DicomStudy(models.Model):
     deidentified_study_id = models.CharField(max_length=100,null=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=[ 'deidentified_study_instance_uid','study_date','deidentified_study_date'])
+        ]
 
 class DicomSeries(models.Model):
     series_instance_uid = models.CharField(max_length=100,primary_key=True)
@@ -37,12 +47,22 @@ class DicomSeries(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=[ 'deidentified_series_instance_uid','series_date','deidentified_series_date','frame_of_reference_uid','deidentified_frame_of_reference_uid'])
+        ]
+
 class DicomInstance(models.Model):
     sop_instance_uid = models.CharField(max_length=100,primary_key=True)
     deidentified_sop_instance_uid = models.CharField(max_length=100,null=True,blank=True)
     series = models.ForeignKey(DicomSeries,on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=[ 'deidentified_sop_instance_uid'])
+        ]
 
 class RTStructFile(models.Model):
     series_instance_uid = models.CharField(max_length=100, primary_key=True)

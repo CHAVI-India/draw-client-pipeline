@@ -122,7 +122,7 @@ class DicomTransferAdmin(ModelAdmin):
         'id', 'study_instance_uid', 'status','server_token','server_status', 'sent_datetime', 
         'rtstruct_received_datetime', 'rtstruct_checksum_verified'
     ]
-    
+    list_per_page = 10
     list_filter = ['status', 'rtstruct_checksum_verified']
     search_fields = ['study_instance_uid', 'series_instance_uid', 'error_message', 'zip_checksum', 'rtstruct_checksum', 'server_token']
     

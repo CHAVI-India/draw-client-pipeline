@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:17
+    restart: unless-stopped    
     container_name: postgres-docker
     ports:
       - "5433:5432"
@@ -15,6 +16,7 @@ services:
       retries: 5
   rabbitmq:
     image: rabbitmq:3.12-management
+    restart: unless-stopped
     container_name: rabbitmq-docker
     ports:
       - "5675:5672"
@@ -24,7 +26,8 @@ services:
       - RABBITMQ_DEFAULT_PASS=guest
 
   django-web:
-    image: chaviapp/drawclient:v14.0.0 #Replace with the version of the image you want to use
+    image: chaviapp/drawclient
+    restart: unless-stopped
     container_name: django-docker
     depends_on:
       db:
@@ -46,7 +49,8 @@ services:
         hard: 65536
 
   celery:
-    image: chaviapp/drawclient:v14.0.0 #Replace with the version of the image you want to use
+    image: chaviapp/drawclient
+    restart: unless-stopped
     container_name: celery-docker
     command: ["./entrypoint.docker.sh", "celery"]
     volumes:
@@ -72,7 +76,8 @@ services:
         hard: 65536
 
   celery-beat:
-    image: chaviapp/drawclient:v14.0.0 #Replace with the version of the image you want to use
+    image: chaviapp/drawclient  
+    restart: unless-stopped
     container_name: celery-beat-docker
     command: ["./entrypoint.docker.sh", "celery-beat"]
     volumes:
@@ -99,6 +104,7 @@ services:
 
   frontend-proxy:
     image: nginx:latest
+    restart: unless-stopped
     container_name: nginx-docker
     ports:
       - "8001:80"

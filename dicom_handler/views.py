@@ -48,13 +48,13 @@ def index(request):
 
         # Today's Segmented
         'todays_series_segmented': DicomSeriesProcessingModel.objects.filter(
-            created_at__date=timezone.now().date(),
+            updated_at__date=timezone.now().date(),
             processing_status='RTSTRUCT_EXPORTED'
         ).count(),
 
         # Today's Unprocessed
         'todays_unprocessed_series': DicomSeriesProcessingModel.objects.filter(
-            created_at__date=timezone.now().date(),
+            updated_at__date=timezone.now().date(),
             series_state='UNPROCESSED'
         ).count(),
         

@@ -147,6 +147,7 @@ While the repository hosts the complete source code, for the docker based instal
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">services</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">db</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres:17</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span><span class="w">    </span>
 <span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">postgres-docker</span>
 <span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;5433:5432&quot;</span>
@@ -161,6 +162,7 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
 <span class="w">  </span><span class="nt">rabbitmq</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rabbitmq:3.12-management</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
 <span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">rabbitmq-docker</span>
 <span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;5675:5672&quot;</span>
@@ -170,7 +172,8 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RABBITMQ_DEFAULT_PASS=guest</span>
 
 <span class="w">  </span><span class="nt">django-web</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaviapp/drawclient:v14.0.0</span><span class="w"> </span><span class="c1">#Replace with the version of the image you want to use</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaviapp/drawclient</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
 <span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">django-docker</span>
 <span class="w">    </span><span class="nt">depends_on</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">db</span><span class="p">:</span>
@@ -192,7 +195,8 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">        </span><span class="nt">hard</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">65536</span>
 
 <span class="w">  </span><span class="nt">celery</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaviapp/drawclient:v14.0.0</span><span class="w"> </span><span class="c1">#Replace with the version of the image you want to use</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaviapp/drawclient</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
 <span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">celery-docker</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;./entrypoint.docker.sh&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;celery&quot;</span><span class="p p-Indicator">]</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
@@ -218,7 +222,8 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">        </span><span class="nt">hard</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">65536</span>
 
 <span class="w">  </span><span class="nt">celery-beat</span><span class="p">:</span>
-<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaviapp/drawclient:v14.0.0</span><span class="w"> </span><span class="c1">#Replace with the version of the image you want to use</span>
+<span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">chaviapp/drawclient</span><span class="w">  </span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
 <span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">celery-beat-docker</span>
 <span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;./entrypoint.docker.sh&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;celery-beat&quot;</span><span class="p p-Indicator">]</span>
 <span class="w">    </span><span class="nt">volumes</span><span class="p">:</span>
@@ -245,6 +250,7 @@ While the repository hosts the complete source code, for the docker based instal
 
 <span class="w">  </span><span class="nt">frontend-proxy</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx:latest</span>
+<span class="w">    </span><span class="nt">restart</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">unless-stopped</span>
 <span class="w">    </span><span class="nt">container_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">nginx-docker</span>
 <span class="w">    </span><span class="nt">ports</span><span class="p">:</span>
 <span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="s">&quot;8001:80&quot;</span>
@@ -309,10 +315,19 @@ While the repository hosts the complete source code, for the docker based instal
 <span class="w">   </span><span class="nt">dicomdata</span><span class="p">:</span>
 <span class="w">      </span><span class="nt">driver</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cifs</span>
 <span class="w">      </span><span class="nt">driver_opts</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;username=${NETWORK_USER},domain=${NETWORK_DOMAIN},password=${NETWORK_PASSWORD},rw&quot;</span>
+<span class="w">      </span><span class="nt">o</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;username=${NETWORK_USER},domain=${NETWORK_DOMAIN},password=${NETWORK_PASSWORD},rw,file_mode=0660,dir_mode=0770,uid=1000,gid=1000&quot;</span>
 <span class="w">      </span><span class="nt">device</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${NETWORK_PATH}</span>
 </pre></div>
 </div>
+<p>Note the following are the meanings of the the options used in the cifs driver_opts section:</p>
+<ul class="simple">
+<li><p>rw: read-write access</p></li>
+<li><p>file_mode=0660: set the file permissions to 660 which means that the file is readable and writable by the user and group.</p></li>
+<li><p>dir_mode=0770: set the directory permissions to 770 which means that the directory is readable, writable and executable by the user and group.</p></li>
+<li><p>uid=1000: set the user ID to 1000 - this is the user that is used to run the containers</p></li>
+<li><p>gid=1000: set the group ID to 1000 - this is the group that is used to run the containers</p></li>
+</ul>
+<p>Note that the option ${NETWORK_DOMAIN} is optional and can be omitted if the network shared folder is not on a domain.</p>
 </section>
 <section id="the-env-file">
 <h2>The .env file<a class="headerlink" href="#the-env-file" title="Link to this heading"></a></h2>

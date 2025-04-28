@@ -99,8 +99,9 @@ def send_dicom_for_processing_action(modeladmin, request, queryset: QuerySet) ->
 
             logger.info(f"Series {series.id} has template file {template_file_path}")
 
+            destination_path = os.path.join(series.series_archive_directory, os.path.basename(template_file_path))
             # Copy the template file to the series folder
-            shutil.copyfile(template_file_path, series.series_archive_directory)
+            shutil.copyfile(template_file_path, destination_path)
 
             logger.info(f"Series {series.id} has copied template yaml file")
 

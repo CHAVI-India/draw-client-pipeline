@@ -157,6 +157,9 @@ class DicomDeidentifier:
         current_series_uid = None
         # Track the series folder for return
         deidentified_series_dir = None
+        
+        # List to store YAML files and their paths
+        yaml_files = []
 
         for root, _, files in os.walk(dicom_dir):
             logger.info(f"Processing directory: {root}")
@@ -165,23 +168,10 @@ class DicomDeidentifier:
                 file_path = os.path.join(root, file)
                 logger.info(f"Processing file: {file_path}")
                 
-                # Handle YAML files
+                # Handle YAML files - collect them for later processing
                 if file.lower().endswith(('.yml', '.yaml')):
                     logger.info(f"Found YAML file: {file}")
-                    if current_series_uid:  # We only need series UID now
-                        yaml_dest_dir = os.path.join(
-                            self.processed_dir,
-                            str(current_series_uid)  # Only use series UID
-                        )
-                        os.makedirs(yaml_dest_dir, exist_ok=True)
-                        yaml_dest = os.path.join(yaml_dest_dir, file)
-                        shutil.move(file_path, yaml_dest)
-                        logger.info(f'Moved YAML file: {file} to series folder')
-                    else:
-                        # If we don't have context yet, move to processed dir root
-                        yaml_dest = os.path.join(self.processed_dir, file)
-                        shutil.move(file_path, yaml_dest)
-                        logger.warning(f'Moved YAML file: {file} to root (no series context found)')
+                    yaml_files.append((file_path, file))
                     continue
 
                 try:
@@ -317,6 +307,23 @@ class DicomDeidentifier:
                     continue
                 except Exception as e:
                     logger.error(f'Error processing {file}: {str(e)}')
+                    continue
+        
+        # After processing all DICOM files, handle YAML files
+        if yaml_files and current_series_uid:
+            yaml_dest_dir = os.path.join(
+                self.processed_dir,
+                str(current_series_uid)
+            )
+            os.makedirs(yaml_dest_dir, exist_ok=True)
+            
+            for yaml_path, yaml_file in yaml_files:
+                try:
+                    yaml_dest = os.path.join(yaml_dest_dir, yaml_file)
+                    shutil.move(yaml_path, yaml_dest)
+                    logger.info(f'Moved YAML file: {yaml_file} to series folder')
+                except Exception as e:
+                    logger.error(f'Error moving YAML file {yaml_file}: {str(e)}')
                     continue
         
         # Change return to return the series directory instead of a specific file
