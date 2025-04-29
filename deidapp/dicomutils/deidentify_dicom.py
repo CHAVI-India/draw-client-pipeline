@@ -114,6 +114,14 @@ class DicomDeidentifier:
             ds.SeriesDescription = '#'
         if hasattr(ds, 'PhysiciansOfRecord'):
             ds.PhysiciansOfRecord = '#'
+        if hasattr(ds,'PatientAddress') :
+            ds.PatientAddress = "#" 
+        if hasattr(ds,'InstitutionAddress'):
+            ds.InstitutionAddress = "#" 
+        if hasattr(ds,"PersonTelephoneNumbers"):
+            ds.PersonTelephoneNumbers = "00000" 
+        if hasattr(ds,"PersonTelecomInformation"):
+            ds.PersonTelecomInformation = "00000"    
 
         # Generate new Patient ID and Study ID
         ds.PatientID = self.generate_unique_id()
