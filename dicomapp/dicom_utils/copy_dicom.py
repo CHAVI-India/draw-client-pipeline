@@ -159,27 +159,23 @@ def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
             logger.info(f"Directory {source_dir} modification time: {modification_time} (timezone: {modification_time.tzinfo})")
             
             # Check if directory exists in database and compare modification times
+            db_modification_time = None
             try:
                 existing_entry = CopyDicomTaskModel.objects.get(source_directory=source_dir)
+                db_modification_time = existing_entry.source_directory_modification_date
                 # check if the copy_completed field is True. If so skip the directory.
-                if existing_entry.copy_completed:
-                    logger.debug(f"Skipping {source_dir} as it has been already copied")
-                    continue
-                else:
-                    db_modification_time = existing_entry.source_directory_modification_date
-                    
-                # Skip if modification time hasn't changed
-                if db_modification_time and db_modification_time == modification_time:
-                    logger.debug(f"Skipping {source_dir} as modification time hasn't changed")
+                if existing_entry.copy_completed and db_modification_time == modification_time:
+                    logger.debug(f"Skipping {source_dir} as it has been already copied and modification time hasn't changed")
                     continue
             except CopyDicomTaskModel.DoesNotExist:
                 # Directory not in database, will be processed
                 pass
             
             # Check modification time conditions
+            logger.debug(f"Modification time: {modification_time} for {source_dir}. DB modification time: {db_modification_time}")
             if (modification_time >= pull_start_time and 
                 modification_time < ten_minutes_ago):
-                
+                logger.info(f"Processing {source_dir} as it meets the modification time conditions")
                 # Calculate size of only the files directly in this directory (not in subdirectories)
                 total_size = 0
                 files_count = 0
