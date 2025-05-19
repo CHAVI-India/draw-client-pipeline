@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Update CA certificates if any are mounted
+if [ -d "/usr/local/share/ca-certificates" ]; then
+    update-ca-certificates
+fi
+
 # Create staticfiles directory if it doesn't exist and set permissions
 mkdir -p /app/staticfiles
 chown -R appuser:appuser /app/staticfiles
@@ -24,3 +29,6 @@ elif [ "$1" = "celery-beat" ]; then
 else
     exec python -m gunicorn draw_client.wsgi:application --bind 0.0.0.0:8000 --workers 3
 fi
+
+# Execute the main command
+exec "$@"

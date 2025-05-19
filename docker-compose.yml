@@ -38,6 +38,7 @@ services:
       - ./dicom:/app/folders
       - ./yaml-templates:/app/yaml-templates
       - "/mnt/share/dicom_processing_test/datastore:/app/datastore"
+      - ./certs:/usr/local/share/ca-certificates:ro
     command: ["./entrypoint.docker.sh"]
     environment:
       - DOCKER_CONTAINER=true
@@ -57,6 +58,7 @@ services:
       - ./dicom:/app/folders      
       - ./yaml-templates:/app/yaml-templates
       - "/mnt/share/dicom_processing_test/datastore:/app/datastore"
+      - ./certs:/usr/local/share/ca-certificates:ro
     env_file:
       - .env.docker
     environment:
