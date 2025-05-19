@@ -9,6 +9,7 @@ from django.conf import settings
 from deidapp.models import *
 from dicomapp.models import *
 import shutil
+from uuid import UUID
 # Configure logger
 logger = logging.getLogger(__name__)
 
@@ -294,53 +295,108 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
                 logger.info(f"Dicom Series Processing ID: {dicom_series_processing_id}")
 
                 # Retreive the DicomSeriesProcessingModel object matching the dicom_series_processing_id
-                dicom_series_processing_model = DicomSeriesProcessingModel.objects.get(id=dicom_series_processing_id)
-                logger.info(f"Dicom Series Processing Model: {dicom_series_processing_model}")
+                try:
+                    dicom_series_processing_model = DicomSeriesProcessingModel.objects.get(id=UUID(dicom_series_processing_id))
+                    logger.info(f"Dicom Series Processing Model: {dicom_series_processing_model}")
 
-                # Update the processing_status field of the DicomSeriesProcessingModel object to RTSTRUCT_REIDENTIFIED and the corresponding DicomSeriesProcessingLogModel object to RTSTRUCT_REIDENTIFIED
-                dicom_series_processing_model.processing_status = 'RTSTRUCT_REIDENTIFIED'
-                dicom_series_processing_model.save()
-                logger.info(f"Updated processing status of DicomSeriesProcessingModel: {dicom_series_processing_id}")
+                    # Update the processing_status field of the DicomSeriesProcessingModel object to RTSTRUCT_REIDENTIFIED and the corresponding DicomSeriesProcessingLogModel object to RTSTRUCT_REIDENTIFIED
+                    dicom_series_processing_model.processing_status = 'RTSTRUCT_REIDENTIFIED'
+                    dicom_series_processing_model.save()
+                    logger.info(f"Updated processing status of DicomSeriesProcessingModel: {dicom_series_processing_id}")
 
-                # Create a new DicomSeriesProcessingLogModel object with the same dicom_series_processing_id and processing_status 'RTSTRUCT_REIDENTIFIED'
-                DicomSeriesProcessingLogModel.objects.create(
-                    dicom_series_processing_id=dicom_series_processing_model,
-                    processing_status='RTSTRUCT_REIDENTIFIED',
-                    processing_status_message=f"RTSTRUCT file reidentified successfully"
-                )
-                logger.info(f"Created new DicomSeriesProcessingLogModel: {dicom_series_processing_id}")
-                logger.info(f"Completed updating the DicomSeriesProcessingModel and DicomSeriesProcessingLogModel objects")
-            except Exception as e:
-                logger.warning(f"Dicom Series Processing Model not updated for series: {mask_phi(series.series_instance_uid)} because of error: {str(e)}", exc_info=True)
-                # continue to the next file.
-                continue    
-            # Delete the deidentified RTSTRUCT file
-            os.remove(file_path)
-            logger.info(f"Deleted deidentified RTSTRUCT file: {file_path}")
-            # Move to the datastore directory
-            logger.info(f"Starting to move the reidentified RTSTRUCT file to the datastore directory")
+                    # Create a new DicomSeriesProcessingLogModel object with the same dicom_series_processing_id and processing_status 'RTSTRUCT_REIDENTIFIED'
+                    DicomSeriesProcessingLogModel.objects.create(
+                        dicom_series_processing_id=dicom_series_processing_model,
+                        processing_status='RTSTRUCT_REIDENTIFIED',
+                        processing_status_message=f"RTSTRUCT file reidentified successfully"
+                    )
+                    logger.info(f"Created new DicomSeriesProcessingLogModel: {dicom_series_processing_id}")
+                    logger.info(f"Completed updating the DicomSeriesProcessingModel and DicomSeriesProcessingLogModel objects")
+                except Exception as e:
+                    logger.warning(f"Dicom Series Processing Model not updated for series: {mask_phi(series.series_instance_uid)} because of error: {str(e)}", exc_info=True)
+                    # continue to the next file.
+                    continue    
+                # Delete the deidentified RTSTRUCT file
+                os.remove(file_path)
+                logger.info(f"Deleted deidentified RTSTRUCT file: {file_path}")
+                # Move to the datastore directory
+                logger.info(f"Starting to move the reidentified RTSTRUCT file to the datastore directory")
 
-            try:
-                #  Get the datastore directory path from the CopyDicomTaskModel object referenced by the DicomSeriesProcessingModel object
-                copy_dicom_task_model = dicom_series_processing_model.copy_dicom_task_id
-                logger.info(f"Copy DICOM Task Model: {copy_dicom_task_model}")
-                datastore_directory_path = copy_dicom_task_model.source_directory
-                logger.info(f"Datastore Directory Path: {datastore_directory_path}")
-                # If the directory does not exist, create it and then move the file
-                if not os.path.exists(datastore_directory_path):
-                    try:
-                        os.makedirs(datastore_directory_path, exist_ok=True)
-                        logger.info(f"Created datastore directory: {datastore_directory_path}")
+                try:
+                    #  Get the datastore directory path from the CopyDicomTaskModel object referenced by the DicomSeriesProcessingModel object
+                    copy_dicom_task_model = dicom_series_processing_model.copy_dicom_task_id
+                    logger.info(f"Copy DICOM Task Model: {copy_dicom_task_model}")
+                    datastore_directory_path = copy_dicom_task_model.source_directory
+                    logger.info(f"Datastore Directory Path: {datastore_directory_path}")
+                    # If the directory does not exist, create it and then move the file
+                    if not os.path.exists(datastore_directory_path):
+                        try:
+                            os.makedirs(datastore_directory_path, exist_ok=True)
+                            logger.info(f"Created datastore directory: {datastore_directory_path}")
 
-                        # Use simple copy instead of copy2 to avoid permission issues with metadata
+                            # Use simple copy instead of copy2 to avoid permission issues with metadata
+                            destination_path = os.path.join(datastore_directory_path, unique_filename)
+                            try:
+                                # First try with copy file to avoid permission issues with metadata
+                                shutil.copyfile(output_path, destination_path)
+                            except PermissionError:
+                                # If that fails, try with simple copy
+                                logger.warning("Failed to copy with metadata. File is shaved in reidentified RTSTRUCT file.")
+                                
+                            # Remove the source file after successful copy
+                            os.remove(output_path)
+                            logger.info(f"Copied and removed reidentified RTSTRUCT file to datastore directory: {destination_path}")
+
+                            # Update the DicomSeriesProcessingModel and DicomSeriesProcessingLogModel objects to RTSTRUCT_EXPORTED
+                            dicom_series_processing_model.processing_status = 'RTSTRUCT_EXPORTED'
+                            dicom_series_processing_model.series_state = 'COMPLETE'
+                            dicom_series_processing_model.save()
+                            logger.info(f"Updated processing status of DicomSeriesProcessingModel: {dicom_series_processing_id}")
+
+                            # Create a new DicomSeriesProcessingLogModel object with the same dicom_series_processing_id and processing_status 'RTSTRUCT_EXPORTED'
+                            DicomSeriesProcessingLogModel.objects.create(
+                                dicom_series_processing_id=dicom_series_processing_model,
+                                processing_status='RTSTRUCT_EXPORTED',
+                                processing_status_message=f"RTSTRUCT file exported successfully"
+                            )
+                            logger.info(f"Created new DicomSeriesProcessingLogModel: {dicom_series_processing_id}")
+
+                            # Update the CopyDicomTaskModel object's source_directory modification date to the current date and time.
+                            # Compute the size of the source directory and update the source_directory_size field of the CopyDicomTaskModel object.
+                            source_directory_size = sum(os.path.getsize(os.path.join(datastore_directory_path, f)) for f in os.listdir(datastore_directory_path) if os.path.isfile(os.path.join(datastore_directory_path, f)))
+                            copy_dicom_task_model.source_directory_size = source_directory_size
+                            copy_dicom_task_model.source_directory_modification_date = datetime.now()
+                            copy_dicom_task_model.save()
+                            logger.info(f"Updated source directory modification date of CopyDicomTaskModel: {copy_dicom_task_model.id}")
+
+                        except Exception as e:
+                            logger.warning(f"Error moving reidentified RTSTRUCT file to datastore directory: {str(e)}", exc_info=True)
+                            # Update the DicomSeriesProcessingModel and DicomSeriesProcessingLogModel objects to RTSTRUCT_EXPORT_FAILED
+                            dicom_series_processing_model.processing_status = 'RTSTRUCT_EXPORT_FAILED'
+                            dicom_series_processing_model.series_state = 'FAILED'
+                            dicom_series_processing_model.save()
+                            logger.info(f"Updated processing status of DicomSeriesProcessingModel: {dicom_series_processing_id}")
+
+                            # Create a new DicomSeriesProcessingLogModel object with the same dicom_series_processing_id and processing_status 'RTSTRUCT_EXPORT_FAILED' and processing_status_message 'RTSTRUCT file export failed'
+                            DicomSeriesProcessingLogModel.objects.create(
+                                dicom_series_processing_id=dicom_series_processing_model,
+                                processing_status='RTSTRUCT_EXPORT_FAILED',
+                                processing_status_message=f"RTSTRUCT file export failed because of error: {str(e)}"
+                            )
+                            logger.info(f"Created new DicomSeriesProcessingLogModel: {dicom_series_processing_id}")
+                            
+                        continue
+
+                    else:
+                        # Directory exists, use simple copy instead of copy2 to avoid permission issues
                         destination_path = os.path.join(datastore_directory_path, unique_filename)
                         try:
-                            # First try with copy file to avoid permission issues with metadata
+                            # First try with copy2
                             shutil.copyfile(output_path, destination_path)
                         except PermissionError:
                             # If that fails, try with simple copy
-                            logger.warning("Failed to copy with metadata. File is shaved in reidentified RTSTRUCT file.")
-                            
+                            logger.warning("Failed to copy with metadata")
+
                         # Remove the source file after successful copy
                         os.remove(output_path)
                         logger.info(f"Copied and removed reidentified RTSTRUCT file to datastore directory: {destination_path}")
@@ -358,116 +414,61 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
                             processing_status_message=f"RTSTRUCT file exported successfully"
                         )
                         logger.info(f"Created new DicomSeriesProcessingLogModel: {dicom_series_processing_id}")
-
                         # Update the CopyDicomTaskModel object's source_directory modification date to the current date and time.
                         # Compute the size of the source directory and update the source_directory_size field of the CopyDicomTaskModel object.
                         source_directory_size = sum(os.path.getsize(os.path.join(datastore_directory_path, f)) for f in os.listdir(datastore_directory_path) if os.path.isfile(os.path.join(datastore_directory_path, f)))
                         copy_dicom_task_model.source_directory_size = source_directory_size
                         copy_dicom_task_model.source_directory_modification_date = datetime.now()
                         copy_dicom_task_model.save()
-                        logger.info(f"Updated source directory modification date of CopyDicomTaskModel: {copy_dicom_task_model.id}")
-
-                    except Exception as e:
-                        logger.warning(f"Error moving reidentified RTSTRUCT file to datastore directory: {str(e)}", exc_info=True)
-                        # Update the DicomSeriesProcessingModel and DicomSeriesProcessingLogModel objects to RTSTRUCT_EXPORT_FAILED
-                        dicom_series_processing_model.processing_status = 'RTSTRUCT_EXPORT_FAILED'
-                        dicom_series_processing_model.series_state = 'FAILED'
-                        dicom_series_processing_model.save()
-                        logger.info(f"Updated processing status of DicomSeriesProcessingModel: {dicom_series_processing_id}")
-
-                        # Create a new DicomSeriesProcessingLogModel object with the same dicom_series_processing_id and processing_status 'RTSTRUCT_EXPORT_FAILED' and processing_status_message 'RTSTRUCT file export failed'
-                        DicomSeriesProcessingLogModel.objects.create(
-                            dicom_series_processing_id=dicom_series_processing_model,
-                            processing_status='RTSTRUCT_EXPORT_FAILED',
-                            processing_status_message=f"RTSTRUCT file export failed because of error: {str(e)}"
-                        )
-                        logger.info(f"Created new DicomSeriesProcessingLogModel: {dicom_series_processing_id}")
+                        logger.info(f"Updated source directory modification date of CopyDicomTaskModel: {copy_dicom_task_model.id}")    
                         
-                        # continue to the next file.
-                        continue
-
-                else:
-                    # Directory exists, use simple copy instead of copy2 to avoid permission issues
-                    destination_path = os.path.join(datastore_directory_path, unique_filename)
-                    try:
-                        # First try with copy2
-                        shutil.copyfile(output_path, destination_path)
-                    except PermissionError:
-                        # If that fails, try with simple copy
-                        logger.warning("Failed to copy with metadata")
-
-                    # Remove the source file after successful copy
-                    os.remove(output_path)
-                    logger.info(f"Copied and removed reidentified RTSTRUCT file to datastore directory: {destination_path}")
-
-                    # Update the DicomSeriesProcessingModel and DicomSeriesProcessingLogModel objects to RTSTRUCT_EXPORTED
-                    dicom_series_processing_model.processing_status = 'RTSTRUCT_EXPORTED'
-                    dicom_series_processing_model.series_state = 'COMPLETE'
+                except Exception as e:
+                    logger.error(f"Error creating datastore directory: {str(e)}", exc_info=True)
+                    # Update the DicomSeriesProcessingModel and DicomSeriesProcessingLogModel objects to RTSTRUCT_EXPORT_FAILED
+                    dicom_series_processing_model.processing_status = 'RTSTRUCT_EXPORT_FAILED'
+                    dicom_series_processing_model.series_state = 'FAILED'
                     dicom_series_processing_model.save()
                     logger.info(f"Updated processing status of DicomSeriesProcessingModel: {dicom_series_processing_id}")
 
-                    # Create a new DicomSeriesProcessingLogModel object with the same dicom_series_processing_id and processing_status 'RTSTRUCT_EXPORTED'
+                    # Create a new DicomSeriesProcessingLogModel object with the same dicom_series_processing_id and processing_status 'RTSTRUCT_EXPORT_FAILED' and processing_status_message 'RTSTRUCT file export failed'
                     DicomSeriesProcessingLogModel.objects.create(
                         dicom_series_processing_id=dicom_series_processing_model,
-                        processing_status='RTSTRUCT_EXPORTED',
-                        processing_status_message=f"RTSTRUCT file exported successfully"
+                        processing_status='RTSTRUCT_EXPORT_FAILED',
+                        processing_status_message=f"RTSTRUCT file export failed because of error: {str(e)}"
                     )
                     logger.info(f"Created new DicomSeriesProcessingLogModel: {dicom_series_processing_id}")
-                    # Update the CopyDicomTaskModel object's source_directory modification date to the current date and time.
-                    # Compute the size of the source directory and update the source_directory_size field of the CopyDicomTaskModel object.
-                    source_directory_size = sum(os.path.getsize(os.path.join(datastore_directory_path, f)) for f in os.listdir(datastore_directory_path) if os.path.isfile(os.path.join(datastore_directory_path, f)))
-                    copy_dicom_task_model.source_directory_size = source_directory_size
-                    copy_dicom_task_model.source_directory_modification_date = datetime.now()
-                    copy_dicom_task_model.save()
-                    logger.info(f"Updated source directory modification date of CopyDicomTaskModel: {copy_dicom_task_model.id}")    
-                    
+                    continue
+
+                # Add the successfully processed file path and RTStructFile ID to our lists
+                processed_paths.append(str(output_path))
+                original_paths.append(str(file_path))
+                rtstruct_file_ids.append(rtstruct_file.series_instance_uid)
+                logger.info(f"Processed paths added to the list: {processed_paths}")
+                logger.info(f"Original paths added to the list: {original_paths}")
+                logger.info(f"RTStructFile IDs added to the list: {[mask_phi(id) for id in rtstruct_file_ids]}")
+
+                processed_count += 1
+
             except Exception as e:
-                logger.error(f"Error creating datastore directory: {str(e)}", exc_info=True)
-                # Update the DicomSeriesProcessingModel and DicomSeriesProcessingLogModel objects to RTSTRUCT_EXPORT_FAILED
-                dicom_series_processing_model.processing_status = 'RTSTRUCT_EXPORT_FAILED'
-                dicom_series_processing_model.series_state = 'FAILED'
-                dicom_series_processing_model.save()
-                logger.info(f"Updated processing status of DicomSeriesProcessingModel: {dicom_series_processing_id}")
-
-                # Create a new DicomSeriesProcessingLogModel object with the same dicom_series_processing_id and processing_status 'RTSTRUCT_EXPORT_FAILED' and processing_status_message 'RTSTRUCT file export failed'
-                DicomSeriesProcessingLogModel.objects.create(
-                    dicom_series_processing_id=dicom_series_processing_model,
-                    processing_status='RTSTRUCT_EXPORT_FAILED',
-                    processing_status_message=f"RTSTRUCT file export failed because of error: {str(e)}"
-                )
-                logger.info(f"Created new DicomSeriesProcessingLogModel: {dicom_series_processing_id}")
-                continue
-
-            # Add the successfully processed file path and RTStructFile ID to our lists
-            processed_paths.append(str(output_path))
-            original_paths.append(str(file_path))
-            rtstruct_file_ids.append(rtstruct_file.series_instance_uid)
-            logger.info(f"Processed paths added to the list: {processed_paths}")
-            logger.info(f"Original paths added to the list: {original_paths}")
-            logger.info(f"RTStructFile IDs added to the list: {[mask_phi(id) for id in rtstruct_file_ids]}")
-
-            processed_count += 1
-
-        except Exception as e:
-            logger.error(f"Error processing file {file_path}: {str(e)}", exc_info=True)
-            error_count += 1
-            failed_paths.append(str(file_path))
-            error_messages.append(str(e))
-            # Update database with error status
-            try:
-                RTStructFile.objects.update_or_create(
-                    series_instance_uid=ds.SeriesInstanceUID if 'ds' in locals() else 'UNKNOWN',
-                    original_file_path=file_path,
-                    defaults={
-                        'dicom_series': series if 'series' in locals() else None,
-                        'processing_date': date.today(),
-                        'processing_status': f'ERROR: {str(e)}'
-                    }
-                )
-            except Exception as db_error:
-                logger.error(f"Error updating database: {str(db_error)}", exc_info=True)
-            
-        logger.info(f"Completed processing of {file_path}")
+                logger.error(f"Error processing file {file_path}: {str(e)}", exc_info=True)
+                error_count += 1
+                failed_paths.append(str(file_path))
+                error_messages.append(str(e))
+                # Update database with error status
+                try:
+                    RTStructFile.objects.update_or_create(
+                        series_instance_uid=ds.SeriesInstanceUID if 'ds' in locals() else 'UNKNOWN',
+                        original_file_path=file_path,
+                        defaults={
+                            'dicom_series': series if 'series' in locals() else None,
+                            'processing_date': date.today(),
+                            'processing_status': f'ERROR: {str(e)}'
+                        }
+                    )
+                except Exception as db_error:
+                    logger.error(f"Error updating database: {str(db_error)}", exc_info=True)
+                
+            logger.info(f"Completed processing of {file_path}")
 
     logger.info(f"Finished processing all files. Processed: {processed_count}, Errors: {error_count}")
     logger.debug(f"Processed paths: {processed_paths}, Original paths: {original_paths}, RTStructFile IDs: {[mask_phi(id) for id in rtstruct_file_ids]}, Failed paths: {failed_paths}")
