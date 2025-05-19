@@ -159,6 +159,7 @@ def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
             logger.info(f"Directory {source_dir} modification time: {modification_time} (timezone: {modification_time.tzinfo})")
             
             # Check if directory exists in database and compare modification times
+            db_modification_time = None
             try:
                 existing_entry = CopyDicomTaskModel.objects.get(source_directory=source_dir)
                 db_modification_time = existing_entry.source_directory_modification_date
