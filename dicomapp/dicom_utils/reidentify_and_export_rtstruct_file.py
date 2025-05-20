@@ -10,6 +10,7 @@ from deidapp.models import *
 from dicomapp.models import *
 import shutil
 from uuid import UUID
+from django.utils import timezone
 # Configure logger
 logger = logging.getLogger(__name__)
 
@@ -418,9 +419,9 @@ def reidentify_rtstruct_file_and_export_to_datastore(dict):
                     # Compute the size of the source directory and update the source_directory_size field of the CopyDicomTaskModel object.
                     source_directory_size = sum(os.path.getsize(os.path.join(datastore_directory_path, f)) for f in os.listdir(datastore_directory_path) if os.path.isfile(os.path.join(datastore_directory_path, f)))
                     copy_dicom_task_model.source_directory_size = source_directory_size
-                    copy_dicom_task_model.source_directory_modification_date = datetime.now()
+                    copy_dicom_task_model.source_directory_modification_date = timezone.now()
                     copy_dicom_task_model.save()
-                    logger.info(f"Updated source directory modification date of CopyDicomTaskModel: {copy_dicom_task_model.id}")    
+                    logger.info(f"Updated source directory modification date of CopyDicomTaskModel: {copy_dicom_task_model.id} and source directory size: {source_directory_size} and source directory modification date: {copy_dicom_task_model.source_directory_modification_date}")    
                     
             except Exception as e:
                 logger.error(f"Error creating datastore directory: {str(e)}", exc_info=True)
