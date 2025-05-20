@@ -173,10 +173,10 @@ def copy_dicom(datastore_path, target_path = None, task_id=None) -> dict:
                 existing_entry = CopyDicomTaskModel.objects.get(source_directory=source_dir)
                 db_size = existing_entry.source_directory_size
                 logger.info(f"DB size: {db_size}")
-                # check if the copy_completed field is True and both modification time and size match
+                # check if the copy_completed field is True and current size exceeds DB size by at least 100KB
                 if (existing_entry.copy_completed and 
-                    db_size == current_size):
-                    logger.info(f"Skipping {source_dir} as it has been already copied, and size matches")
+                    current_size <= db_size + 102400):  # 100KB = 102400 bytes
+                    logger.info(f"Skipping {source_dir} as it has been already copied, and size difference is less than 100KB")
                     continue
             except CopyDicomTaskModel.DoesNotExist:
                 # Directory not in database, will be processed
